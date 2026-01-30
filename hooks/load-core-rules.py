@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Cross-platform hook script to load core rules at session start."""
-import json
+
 import os
 import sys
 

@@ -1,6 +1,6 @@
 ---
 description: Configure CCO for this project - analyze stack, create profile, load rules
-argument-hint: "[--check] [--force] [--auto]"
+argument-hint: "[--auto] [--preview] [--update]"
 allowed-tools: Read, Grep, Glob, Task, AskUserQuestion
 model: haiku
 ---
@@ -14,8 +14,8 @@ model: haiku
 
 ## Args
 
-- `--check`: Silent validation only, return status (for other commands)
-- `--force`: Skip confirmation, update even if profile exists
+- `--preview`: Silent validation only, return status (for other commands)
+- `--update`: Skip confirmation, update even if profile exists
 - `--auto`: Fully unattended mode - no questions, auto-detect everything
 
 ## Architecture
@@ -96,10 +96,10 @@ try {
 }
 ```
 
-### Check Mode (--check)
+### Preview Mode (--preview)
 
 ```javascript
-if (args.includes("--check")) {
+if (args.includes("--preview")) {
   if (validationResult.valid) {
     return { status: "ok", profile: profile }
   }
@@ -111,7 +111,7 @@ if (args.includes("--check")) {
 
 ```javascript
 const isUnattended = args.includes("--auto")
-const forceUpdate = args.includes("--force")
+const updateMode = args.includes("--update")
 
 // Unattended mode: never ask questions, always use auto detection
 if (isUnattended) {
@@ -123,7 +123,7 @@ if (isUnattended) {
 ### Profile Exists - Ask Update (Interactive Only)
 
 ```javascript
-if (!isUnattended && profile && validationResult.valid && !forceUpdate) {
+if (!isUnattended && profile && validationResult.valid && !updateMode) {
   const answer = await AskUserQuestion([{
     question: "CCO profile exists. Update it?",
     header: "Profile",
@@ -542,17 +542,17 @@ The profile has 11 sections:
 ```bash
 /cco:tune              # Interactive or auto setup
 /cco:tune --auto       # Fully unattended, auto-detect everything
-/cco:tune --check      # Silent validation
-/cco:tune --force      # Force update
+/cco:tune --preview    # Silent validation
+/cco:tune --update     # Update existing profile
 ```
 
 ---
 
 ## Integration
 
-Other commands call `--check` at start:
+Other commands call `--preview` at start:
 
 ```javascript
-const tuneResult = await Skill("tune", "--check")
+const tuneResult = await Skill("tune", "--preview")
 if (tuneResult.status === "skipped") return
 ```

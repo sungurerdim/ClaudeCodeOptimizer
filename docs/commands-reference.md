@@ -8,13 +8,13 @@ Complete parameter and flag documentation for all CCO commands.
 
 | Command | Purpose | Model | Flags |
 |---------|---------|-------|-------|
-| `/cco:tune` | Configure project | Haiku | `--auto`, `--check`, `--force` |
-| `/cco:optimize` | Fix code issues | Opus | `--auto`, `--security`, `--fix-all`, `--score` |
-| `/cco:align` | Architecture gaps | Opus | `--auto`, `--preview`, `--intensity=X` |
+| `/cco:tune` | Configure project | Haiku | `--auto`, `--preview`, `--update` |
+| `/cco:optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X` |
+| `/cco:align` | Architecture gaps | Opus | `--auto`, `--preview` |
 | `/cco:commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
-| `/cco:research` | Multi-source research | Opus | `--quick`, `--deep`, `--local` |
-| `/cco:preflight` | Pre-release checks | Opus | `--auto`, `--strict`, `--skip-tests` |
-| `/cco:docs` | Documentation gaps | Opus | `--auto`, `--check`, `--scope=X` |
+| `/cco:research` | Multi-source research | Opus | `--quick`, `--deep` |
+| `/cco:preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
+| `/cco:docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
 
 ---
 
@@ -27,8 +27,8 @@ Configure CCO for a project. Detects stack, creates profile, loads rules.
 | Flag | Effect |
 |------|--------|
 | `--auto` | Unattended mode - auto-detect everything, skip questions |
-| `--check` | Silent validation only, return status |
-| `--force` | Update even if profile exists |
+| `--preview` | Silent validation only, return status |
+| `--update` | Update even if profile exists |
 
 ### Interactive Questions (8 total)
 
@@ -63,8 +63,8 @@ Configure CCO for a project. Detects stack, creates profile, loads rules.
 ```bash
 /cco:tune              # Interactive setup
 /cco:tune --auto       # Auto-detect everything
-/cco:tune --check      # Validate existing profile
-/cco:tune --force      # Force update
+/cco:tune --preview    # Validate existing profile
+/cco:tune --update     # Update existing profile
 ```
 
 ---
@@ -77,22 +77,11 @@ Fix security, quality, and hygiene issues.
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode - all scopes, full fix, no questions |
-| `--security` | Security scope only (SEC-01 to SEC-12) |
-| `--hygiene` | Hygiene scope only (HYG-01 to HYG-15) |
-| `--types` | Types scope only (TYP-01 to TYP-10) |
-| `--lint` | Lint scope only (LNT-01 to LNT-08) |
-| `--performance` | Performance scope only (PRF-01 to PRF-10) |
-| `--ai-hygiene` | AI hygiene scope only (AIH-01 to AIH-08) |
-| `--robustness` | Robustness scope only (ROB-01 to ROB-10) |
-| `--doc-sync` | Doc-code sync scope only (DOC-01 to DOC-08) |
-| `--report` | Report only, no fixes |
-| `--fix-all` | Full fix intensity without approval |
-| `--score` | Quality score only (0-100) |
-| `--intensity=X` | Set intensity: quick-wins, standard, full-fix, report-only |
-| `--plan` | Show detailed fix plan before applying |
+| `--auto` | Unattended mode: all scopes, all severities, no questions |
+| `--preview` | Analyze only, show findings and quality score, don't apply fixes |
+| `--scope=<name>` | Run specific scope(s) only, comma-separated |
 
-### Scope Coverage (81 Checks)
+### Scope Coverage (105 Checks)
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
@@ -119,9 +108,8 @@ Fix security, quality, and hygiene issues.
 ```bash
 /cco:optimize                    # Interactive selection
 /cco:optimize --auto             # Silent full optimization
-/cco:optimize --security         # Security only
-/cco:optimize --fix-all          # Fix everything
-/cco:optimize --score            # Quick quality score
+/cco:optimize --scope=security   # Security only
+/cco:optimize --preview          # Analyze and show quality score
 ```
 
 ---
@@ -134,12 +122,10 @@ Architecture and pattern analysis. Compare current state to ideal.
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode - all scopes, full intensity |
+| `--auto` | Unattended mode: all scopes, all severities, no questions |
 | `--preview` | Analyze only, show gaps, don't apply |
-| `--intensity=X` | Set intensity level |
-| `--plan` | Show architectural plan before applying |
 
-### Scope Coverage (71 Checks)
+### Scope Coverage (77 Checks)
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
@@ -148,7 +134,7 @@ Architecture and pattern analysis. Compare current state to ideal.
 | Testing | TST-01-10 | Coverage, quality, gaps |
 | Maintainability | MNT-01-12 | Complexity, readability |
 | AI Architecture | AIA-01-10 | Over-engineering, drift |
-| Functional | FUN-01-12 | CRUD, pagination, edge cases |
+| Functional | FUN-01-18 | CRUD, pagination, edge cases, data management |
 
 ### Ideal Metrics by Project Type
 
@@ -165,7 +151,6 @@ Architecture and pattern analysis. Compare current state to ideal.
 /cco:align                       # Interactive review
 /cco:align --auto                # Full review, no questions
 /cco:align --preview             # Analysis only
-/cco:align --intensity=full-fix  # Fix all findings
 ```
 
 ---
@@ -181,7 +166,6 @@ Quality-gated atomic commits.
 | `--preview` | Show commit plan only, don't execute |
 | `--single` | Force single commit |
 | `--split` | Auto-split by scope |
-| `--skip-tests` | Skip test gate |
 | `--amend` | Amend last commit |
 | `--staged-only` | Commit only staged changes |
 
@@ -227,11 +211,6 @@ Multi-source research with reliability scoring.
 |------|--------|
 | `--quick` | T1-T2 sources only, 5 sources max |
 | `--deep` | All tiers, 20+ sources, resumable |
-| `--local` | Codebase-only search |
-| `--security` | Security advisories focus |
-| `--compare` | Comparison mode (A vs B) |
-| `--json` | JSON output format |
-| `--resume=ID` | Resume previous deep session |
 
 ### Source Tiers
 
@@ -256,9 +235,9 @@ Multi-source research with reliability scoring.
 
 ```bash
 /cco:research "best auth library for Node"
-/cco:research "Flask vs FastAPI" --compare
-/cco:research "CVE-2024-1234" --security
-/cco:research "our auth implementation" --local
+/cco:research "Flask vs FastAPI"
+/cco:research "best auth library for Node" --quick
+/cco:research "Flask vs FastAPI" --deep
 ```
 
 ---
@@ -273,9 +252,6 @@ Pre-release verification gate.
 |------|--------|
 | `--auto` | Unattended mode - full checks, no questions |
 | `--preview` | Run all checks, show results, don't release |
-| `--strict` | Treat warnings as blockers |
-| `--skip-tests` | Skip test suite |
-| `--skip-docs` | Skip documentation updates |
 
 ### Checks (14 total)
 
@@ -304,7 +280,6 @@ Pre-release verification gate.
 ```bash
 /cco:preflight              # Full release workflow
 /cco:preflight --auto       # Unattended checks
-/cco:preflight --strict     # Warnings = blockers
 /cco:preflight --preview    # Check without releasing
 ```
 
@@ -319,11 +294,9 @@ Documentation gap analysis and generation.
 | Flag | Effect |
 |------|--------|
 | `--auto` | Generate all missing docs |
-| `--check` | Validation only, return status |
-| `--report` | Show gaps only, don't generate |
+| `--preview` | Show gaps only, don't generate |
 | `--scope=X` | Single scope: readme, api, dev, user, ops, changelog |
-| `--plan` | Show plan before generating |
-| `--force` | Regenerate even if docs exist |
+| `--update` | Regenerate even if docs exist |
 
 ### Documentation Scopes
 
@@ -350,7 +323,7 @@ Documentation gap analysis and generation.
 ```bash
 /cco:docs                   # Interactive selection
 /cco:docs --auto            # Generate all missing
-/cco:docs --check           # Validate only
+/cco:docs --preview         # Show gaps only
 /cco:docs --scope=readme    # README only
 ```
 

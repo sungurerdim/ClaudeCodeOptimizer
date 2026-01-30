@@ -1,6 +1,6 @@
 ---
 description: Release verification gate - full optimization + review + tests + build
-argument-hint: "[--auto] [--preview] [--strict] [--skip-tests] [--skip-docs]"
+argument-hint: "[--auto] [--preview]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
@@ -25,11 +25,11 @@ PREFLIGHT
     |                                        │
     +-- [Sub-commands] PARALLEL ─────────────┤
     |       |                                │
-    |       +-- /cco:optimize --intensity=X      │
-    |       |   (all 7 scopes)               │
+    |       +-- /cco:optimize --auto             │
+    |       |   (all 10 scopes, 105 checks)  │
     |       |                                │
-    |       +-- /cco:align --intensity=X         │
-    |           (all 6 scopes)               │
+    |       +-- /cco:align --auto                │
+    |           (all 6 scopes, 77 checks)    │
     |                                        │
     +-- [Verification] PARALLEL ─────────────┤
     |       format, lint, type, test, build  │
@@ -48,13 +48,9 @@ PREFLIGHT
         Proceed / Fix Issues / Abort
 ```
 
-**Plan Review triggers automatically when:**
-- `--plan` flag is passed
-- Any blockers detected
-- >20 total fixes (optimize + align combined)
-- Breaking changes detected
+**Plan Review is MANDATORY when findings > 0 or blockers detected.**
 
-**Skipped when:** `--auto` mode (unless `--auto --plan`)
+**Skipped when:** `--auto` mode or 0 findings + 0 blockers
 
 ## Context
 
@@ -70,11 +66,11 @@ PREFLIGHT
 
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
-**Check:** Delegate to `/cco:tune --check` for profile validation:
+**Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
 // Delegate profile check to tune command
-const tuneResult = await Skill("tune", "--check")
+const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   // User declined setup - exit gracefully
@@ -95,7 +91,7 @@ if (tuneResult.status === "skipped") {
 // --auto mode: unattended, full fix, no questions, minimal output
 if (args.includes("--auto")) {
   config = {
-    intensity: "full-fix",        // All severities
+    fixMode: "full-fix",          // All severities
     unattended: true
   }
   // Skip Q1, proceed directly to Step-1
@@ -175,8 +171,8 @@ function gate4_postPlan(planResult, skipPlan) {
 
 ## Everything Mode [CRITICAL]
 
-When `--auto` or `--intensity=full-fix` or user selects "Full Fix":
-- Pass to both `/cco:optimize --intensity=full-fix` and `/cco:align --intensity=full-fix`
+When `--auto` or user selects "Full Fix":
+- Pass to both `/cco:optimize --auto` and `/cco:align --auto`
 - **Zero commentary** - No "this is complex", "needs refactor", "minor detail", "consider later"
 - **Zero deferrals** - No "future iteration", "lower priority", "recommend manual"
 - **Zero skips** - Every finding fixed NOW, no exceptions
@@ -241,7 +237,7 @@ if (!isUnattended) {
 ### Validation
 ```
 [x] User completed Q1 (all settings)
-→ Store as: config = { intensity, releaseMode, docs }
+→ Store as: config = { fixMode, releaseMode, docs }
 → Proceed to Step-1b
 ```
 
@@ -338,37 +334,27 @@ depResults = Task("cco-agent-research", `
 **CRITICAL:** Launch both Task calls in a SINGLE message for true parallelism:
 
 ```javascript
-// Map intensity to command args
-const intensityFlag = `--intensity=${config.intensity}`
-
 // BOTH calls in same message for parallel execution
 // Task tool executes multiple calls in parallel when in same message
 // Synchronous - each Task returns results directly
+// --auto skips plan review in sub-commands (preflight has its own plan review at Step-4.5)
 optimizeResults = Task("general-purpose", `
-  Execute /cco:optimize ${intensityFlag}
+  Execute /cco:optimize --auto
 
-  CRITICAL: Run ALL 6 scopes (security, hygiene, types, lint, performance, ai-hygiene)
-  Apply fixes based on intensity selection.
-
-  ${config.intensity === "full-fix" ? `
-  FULL FIX MODE: Fix ALL items. Effort categories are for reporting only, not filtering.
-  ` : ""}
+  CRITICAL: Run ALL 10 scopes (security, hygiene, types, lint, performance, ai-hygiene, robustness, privacy, doc-sync, simplify)
+  Fix ALL items. Effort categories are for reporting only, not filtering.
 
   Return: {
     accounting: { applied, failed, total },
-    scopes: { security, hygiene, types, lint, performance, "ai-hygiene" }
+    scopes: { security, hygiene, types, lint, performance, "ai-hygiene", robustness, privacy, "doc-sync", simplify }
   }
 `, { model: "opus" })  // Synchronous - no run_in_background for Task
 
 reviewResults = Task("general-purpose", `
-  Execute /cco:align ${intensityFlag}
+  Execute /cco:align --auto
 
-  CRITICAL: Run ALL 5 scopes (architecture, patterns, testing, maintainability, ai-architecture)
-  Apply recommendations based on intensity selection.
-
-  ${config.intensity === "full-fix" ? `
-  FULL FIX MODE: Fix ALL items. Effort categories are for reporting only, not filtering.
-  ` : ""}
+  CRITICAL: Run ALL 6 scopes (architecture, patterns, testing, maintainability, ai-architecture, functional-completeness)
+  Fix ALL items. Effort categories are for reporting only, not filtering.
 
   Return: {
     gaps: { coupling, cohesion, complexity, coverage },
@@ -482,13 +468,10 @@ const totalFixes = optimizeResults.accounting.total + reviewResults.accounting.t
 const hasBlockers = allBlockers.length > 0
 const hasBreaking = classified.breaking.length > 0
 
-const planMode = args.includes("--plan") ||
-  hasBlockers ||
-  (totalFixes > 20) ||
-  hasBreaking
+const planMode = (totalFixes > 0) || hasBlockers
 
-// Skip in pure --auto mode (unless --auto --plan)
-const skipPlan = isUnattended && !args.includes("--plan")
+// Skip in --auto mode
+const skipPlan = isUnattended
 
 if (planMode && !skipPlan) {
   // → Enter Plan Review
@@ -675,7 +658,7 @@ totalFindings = totalApplied + totalFailed
 | Version | {manifestVersion} → {suggestedVersion} ({suggestedBump}) |
 | Branch | {branch} |
 | Previous | {lastTag} |
-| Intensity | {config.intensity} |
+| Fix Mode | {config.fixMode} |
 | Release Mode | {config.releaseMode} |
 
 ### Sub-command Results
@@ -810,11 +793,8 @@ Mode: {config.releaseMode}
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode: full intensity, all checks, no questions |
+| `--auto` | Unattended mode: all scopes, all severities, no questions |
 | `--preview` | Run all checks, show results, don't release |
-| `--strict` | Treat warnings as blockers |
-| `--skip-tests` | Skip test suite |
-| `--skip-docs` | Skip documentation updates |
 
 ### Release-Specific Checks (14 total)
 
@@ -869,7 +849,7 @@ Mode: {config.releaseMode}
 | Changelog wrong | Edit CHANGELOG.md before commit |
 | Tests failed | Fix tests, re-run preflight |
 | Build failed | Fix build issues, re-run |
-| Blockers remain | Run with --intensity=full-fix |
+| Blockers remain | Run with --auto |
 
 ---
 
@@ -877,7 +857,7 @@ Mode: {config.releaseMode}
 
 1. **All settings upfront** - Intensity, release mode, and docs selected in single Q1
 2. **All parallel background** - Pre-flight, optimize, review, verification all background
-3. **Full scope** - Run ALL scopes for both optimize (6) and review (5)
+3. **Full scope** - Run ALL scopes for both optimize (10) and align (6)
 4. **No mid-flow questions** - All decisions made at start, uninterrupted execution
 5. **Git safety** - Clean state required, version sync verified
 6. **Blockers stop release** - Cannot proceed with blockers regardless of release mode

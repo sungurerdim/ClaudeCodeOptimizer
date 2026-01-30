@@ -186,7 +186,7 @@ Run `/cco:tune` to configure CCO for your project, or any CCO command will offer
 
 | Goal | Command |
 |------|---------|
-| Full security audit | `/cco:optimize --security` |
+| Full security audit | `/cco:optimize --scope=security` |
 | Architecture review | `/cco:align` |
 | Quality-gated commit | `/cco:commit` |
 | Pre-release check | `/cco:preflight` |

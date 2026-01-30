@@ -1,6 +1,6 @@
 ---
 description: Multi-source research with CRAAP+ reliability scoring
-argument-hint: "[--json] [--resume=ID]"
+argument-hint: "[--quick] [--deep]"
 allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 model: opus
 ---
@@ -162,7 +162,7 @@ if (depth !== "quick") {
   `, { model: "haiku" })
 }
 
-// Security Track (if --security or security-related query)
+// Security Track (if security-related query detected)
 let securityResults = null
 if (parsedQuery.mode === "security") {
   securityResults = Task("cco-agent-research", `
@@ -352,23 +352,6 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 | Type | API → API docs; CLI → man pages |
 | Priority | Speed → quick; Quality → deep |
 | Data | PII/Regulated → include compliance |
-
-### Special Modes
-
-| Mode | Focus | Extra Agents |
-|------|-------|--------------|
-| `--local` | Codebase only | Glob/Grep only |
-| `--changelog` | Breaking changes | GitHub releases track |
-| `--security` | CVEs, advisories | Security DB track |
-| `--dependency` | Package versions | npm/PyPI track |
-| `--compare` | Side-by-side | Dual track search |
-
-### Flags
-
-| Flag | Effect |
-|------|--------|
-| `--json` | JSON output format |
-| `--resume=ID` | Resume previous deep research session |
 
 ### Depth Levels
 

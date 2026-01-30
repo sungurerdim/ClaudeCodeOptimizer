@@ -1,6 +1,6 @@
 ---
 description: Smart git commits with quality gates and atomic grouping
-argument-hint: "[--preview] [--single] [--split] [--skip-tests] [--amend] [--staged-only]"
+argument-hint: "[--preview] [--single] [--staged-only]"
 allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 model: opus
 ---
@@ -401,9 +401,6 @@ if (stashList.trim()) {
 |------|--------|
 | `--preview` | Show commit plan only, don't execute |
 | `--single` | Force single commit |
-| `--split` | Auto-split by scope |
-| `--skip-tests` | Skip test gate |
-| `--amend` | Amend last commit (safety checks apply) |
 | `--staged-only` | Commit only staged changes |
 
 ---

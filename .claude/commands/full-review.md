@@ -1,6 +1,6 @@
 ---
 description: CCO system health check (~130 checks across 10 categories)
-argument-hint: [--auto] [--quick] [--focus=X] [--report] [--fix] [--fix-all]
+argument-hint: [--auto] [--quick] [--focus=X] [--preview] [--fix]
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), AskUserQuestion, Edit(*)
 model: opus
 ---
@@ -13,20 +13,19 @@ model: opus
 
 ## Args
 
-- `--auto` or `--unattended`: Fully unattended mode
+- `--auto`: Fully unattended mode
   - **No questions asked** - analyze and fix everything
   - **No progress output** - silent execution
   - **Only final summary** - single status line at end
 - `--quick`: CRITICAL and HIGH only, skip MEDIUM/LOW
 - `--focus=X`: Single category (1-10 or name)
-- `--report`: Report only, no fixes applied
+- `--preview`: Report only, no fixes applied
 - `--fix`: Auto-apply safe fixes (doc count updates, terminology)
-- `--fix-all`: Apply all fixes including manual ones
 
 **Usage:**
 - `/full-review` - Interactive mode with fix selection
 - `/full-review --auto` - Silent full review and fix
-- `/full-review --report` - Report only
+- `/full-review --preview` - Report only
 - `/full-review --quick --fix` - Fast check, auto-fix
 
 ## Context
@@ -48,8 +47,8 @@ Run this command from the ClaudeCodeOptimizer directory.
 
 ```javascript
 const args = "$ARGS"
-const isUnattended = args.includes("--auto") || args.includes("--unattended")
-const isReportOnly = args.includes("--report")
+const isUnattended = args.includes("--auto")
+const isReportOnly = args.includes("--preview")
 
 if (isUnattended) {
   // SILENT MODE: No questions, fix everything
@@ -61,8 +60,8 @@ if (isUnattended) {
 }
 
 if (isReportOnly) {
-  config = { action: "Report only", focus: "all" }
-  // → Skip Q1, report only
+  config = { action: "Preview only", focus: "all" }
+  // → Skip Q1, preview only
 }
 ```
 
@@ -92,7 +91,7 @@ When `--auto` or "Fix all" is selected:
 
 ---
 
-## Step-1: Setup [SKIP IF --auto or --report]
+## Step-1: Setup [SKIP IF --auto or --preview]
 
 ```javascript
 if (!isUnattended && !isReportOnly) {
@@ -171,7 +170,7 @@ const cat2 = Task("Explore", `
   1. Verify Architecture tables in commands/*.md
   2. Check AskUserQuestion usage (no plain text questions)
   3. Verify fix workflow: Analyze → Report → Approve → Apply
-  4. Check --auto and --dry-run mode consistency
+  4. Check --auto and --preview mode consistency
   Return: { category: 2, passed: n, failed: n, findings: [...] }
 `, { model: "haiku", run_in_background: true })
 
@@ -291,7 +290,7 @@ Compare detected counts against:
 ### 1.4 Dependency Chain
 - Agent invocations use valid agent types = CRITICAL
 - Scope parameters match agent capabilities = HIGH
-- Commands delegate to /cco:tune --check for profile validation = HIGH
+- Commands delegate to /cco:tune --preview for profile validation = HIGH
 - Input/output compatibility: agent outputs match consumer expectations = HIGH
 
 ### 1.5 Terminology Consistency
@@ -347,7 +346,7 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 | Mode | Behavior | Severity |
 |------|----------|----------|
 | `--auto` | Zero AskUserQuestion calls, smart defaults | HIGH |
-| `--dry-run` | Zero Edit/Write calls, preview only | HIGH |
+| `--preview` | Zero Edit/Write calls, preview only | HIGH |
 | Mode parity | `--auto` quality equals interactive | MEDIUM |
 
 ---
@@ -661,7 +660,7 @@ Use detected counts from Category 1.
 |-------|-------------|----------|
 | Dirty warning | Commands warn about uncommitted changes | HIGH |
 | Options | Commit / Stash / Continue presented | HIGH |
-| No force | Zero `--force` without explicit request | CRITICAL |
+| No force | Zero `--update` without explicit request | CRITICAL |
 
 ---
 
@@ -681,7 +680,7 @@ Use detected counts from Category 1.
 | Plugin manifest | `.claude-plugin/plugin.json` valid JSON | CRITICAL |
 | Hooks | `hooks/` contains SessionStart hook | HIGH |
 | Core rules | Core rules injected via hook additionalContext | HIGH |
-| Profile preservation | /cco:tune preserves existing profile unless --force | HIGH |
+| Profile preservation | /cco:tune preserves existing profile unless --update | HIGH |
 
 ### 9.3 Cross-Platform
 | Check | Requirement | Severity |
@@ -780,7 +779,7 @@ Accounting: quickWin:{n} + moderate:{n} + complex:{n} + major:{n} = total:{n}
 
 ---
 
-## Step-5: Fix Approval [SKIP IF --auto or --report or zero findings]
+## Step-5: Fix Approval [SKIP IF --auto or --preview or zero findings]
 
 ```javascript
 if (config.action !== "Report only" && findings.length > 0) {

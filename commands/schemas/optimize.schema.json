@@ -7,158 +7,49 @@
   "properties": {
     "auto": {
       "type": "boolean",
-      "description": "Fully unattended mode for CI/CD, pre-commit, cron jobs. No questions, all 8 scopes, Full Fix intensity."
-    },
-    "unattended": {
-      "type": "boolean",
-      "description": "Alias for --auto"
+      "description": "Fully unattended mode for CI/CD, pre-commit, cron jobs. No questions, all 10 scopes, all severities."
     },
     "preview": {
       "type": "boolean",
-      "description": "Analyze only, show findings, don't apply fixes"
+      "description": "Analyze only, show findings and quality score, don't apply fixes"
     },
-    "score": {
-      "type": "boolean",
-      "description": "Quality score only (0-100), skip all questions"
-    },
-    "report": {
-      "type": "boolean",
-      "description": "Report only, no fixes applied"
-    },
-    "fix": {
-      "type": "boolean",
-      "description": "Auto-fix safe items (default behavior)"
-    },
-    "fix-all": {
-      "type": "boolean",
-      "description": "Full Fix intensity without approval"
-    },
-    "plan": {
-      "type": "boolean",
-      "description": "Enable Plan Review phase - show detailed fix plan before applying"
-    },
-    "intensity": {
+    "scope": {
       "type": "string",
-      "enum": ["quick-wins", "standard", "full-fix", "report-only"],
-      "description": "Fix intensity level determining what severity thresholds to apply"
-    },
-    "security": {
-      "type": "boolean",
-      "description": "Security scope only (SEC-01 to SEC-12)"
-    },
-    "hygiene": {
-      "type": "boolean",
-      "description": "Hygiene scope only (HYG-01 to HYG-15)"
-    },
-    "types": {
-      "type": "boolean",
-      "description": "Types scope only (TYP-01 to TYP-10)"
-    },
-    "lint": {
-      "type": "boolean",
-      "description": "Lint scope only (LNT-01 to LNT-08)"
-    },
-    "performance": {
-      "type": "boolean",
-      "description": "Performance scope only (PRF-01 to PRF-10)"
-    },
-    "ai-hygiene": {
-      "type": "boolean",
-      "description": "AI hygiene scope only (AIH-01 to AIH-08)"
-    },
-    "robustness": {
-      "type": "boolean",
-      "description": "Robustness scope only (ROB-01 to ROB-10)"
-    },
-    "doc-sync": {
-      "type": "boolean",
-      "description": "Doc-code sync scope only (DOC-01 to DOC-08)"
+      "description": "Run specific scope(s) only. Comma-separated. Valid: security, hygiene, types, lint, performance, ai-hygiene, robustness, privacy, doc-sync, simplify"
     }
   },
   "allOf": [
     {
-      "description": "Mutual exclusivity: --auto and --plan are mutually exclusive unless explicitly combined",
-      "if": {
-        "properties": {
-          "auto": { "const": true }
-        },
-        "required": ["auto"]
-      },
-      "then": {
-        "description": "When --auto is set, --plan is allowed but optional (--auto --plan forces plan in auto mode)",
-        "properties": {
-          "plan": { "type": "boolean" }
-        }
-      }
-    },
-    {
-      "description": "Mutual exclusivity: --report and --fix-all are mutually exclusive",
+      "description": "Mutual exclusivity: --preview and --auto are mutually exclusive",
       "not": {
-        "required": ["report", "fix-all"],
+        "required": ["preview", "auto"],
         "properties": {
-          "report": { "const": true },
-          "fix-all": { "const": true }
-        }
-      }
-    },
-    {
-      "description": "Mutual exclusivity: --score and fix/fix-all are mutually exclusive",
-      "if": {
-        "properties": {
-          "score": { "const": true }
-        },
-        "required": ["score"]
-      },
-      "then": {
-        "properties": {
-          "fix": { "const": false },
-          "fix-all": { "const": false }
-        }
-      }
-    },
-    {
-      "description": "Consistency: --intensity=report-only implies no fixes",
-      "if": {
-        "properties": {
-          "intensity": { "const": "report-only" }
-        },
-        "required": ["intensity"]
-      },
-      "then": {
-        "properties": {
-          "fix-all": { "const": false }
+          "preview": { "const": true },
+          "auto": { "const": true }
         }
       }
     }
   ],
   "examples": [
     {
-      "description": "Silent full optimization (all scopes, full fix)",
+      "description": "Silent full optimization (all scopes, all severities)",
       "args": { "auto": true }
     },
     {
-      "description": "Security only, fix all",
-      "args": { "security": true, "fix-all": true }
+      "description": "Security only, unattended",
+      "args": { "scope": "security", "auto": true }
     },
     {
-      "description": "Quick quality score",
-      "args": { "score": true }
-    },
-    {
-      "description": "Plan review with full fix",
-      "args": { "plan": true, "fix-all": true }
-    },
-    {
-      "description": "Auto mode with plan (forces plan in unattended)",
-      "args": { "auto": true, "plan": true }
+      "description": "Preview findings without fixing (includes quality score)",
+      "args": { "preview": true }
     },
     {
       "description": "AI hygiene scan only",
-      "args": { "ai-hygiene": true }
+      "args": { "scope": "ai-hygiene" }
     },
     {
-      "description": "Standard intensity with specific scopes",
-      "args": { "intensity": "standard", "security": true, "types": true }
+      "description": "Multiple scopes",
+      "args": { "scope": "security,types" }
     }
   ]
 }

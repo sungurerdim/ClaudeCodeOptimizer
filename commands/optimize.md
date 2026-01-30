@@ -1,6 +1,6 @@
 ---
 description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
-argument-hint: "[--auto] [--preview] [--score] [--report] [--fix] [--fix-all] [--plan] [--intensity=<level>] [--security] [--hygiene] [--types] [--lint] [--performance] [--ai-hygiene] [--robustness] [--doc-sync]"
+argument-hint: "[--auto] [--preview] [--scope=<name>]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
@@ -17,37 +17,19 @@ model: opus
 
 ## Args
 
-- `--auto` or `--unattended`: Fully unattended mode for CI/CD, pre-commit, cron jobs
-  - **No questions asked** - all 8 scopes, Full Fix intensity
+- `--auto`: Fully unattended mode for CI/CD, pre-commit, cron jobs
+  - **No questions asked** - all 10 scopes, all severities
   - **No progress output** - silent execution
   - **Only final summary** - single status line (machine-readable)
   - Exit codes: 0 (success), 1 (warnings), 2 (failures)
-- `--security`: Security scope only (SEC-01 to SEC-12)
-- `--hygiene`: Hygiene scope only (HYG-01 to HYG-15)
-- `--types`: Types scope only (TYP-01 to TYP-10)
-- `--lint`: Lint scope only (LNT-01 to LNT-08)
-- `--performance`: Performance scope only (PRF-01 to PRF-10)
-- `--ai-hygiene`: AI hygiene scope only (AIH-01 to AIH-08)
-- `--robustness`: Robustness scope only (ROB-01 to ROB-10)
-- `--doc-sync`: Doc-code sync scope only (DOC-01 to DOC-08)
-- `--simplify`: Simplify scope only (SIM-01 to SIM-10)
-- `--report`: Report only, no fixes
-- `--fix`: Auto-fix safe items (default)
-- `--fix-all`: Full Fix intensity without approval
-- `--score`: Quality score only (0-100), skip all questions
-- `--intensity=<level>`: Set fix intensity (quick-wins, standard, full-fix, report-only)
-- `--plan`: Enable Plan Review phase - show detailed fix plan before applying
-  - Shows: what will change, why this approach, alternatives considered, risks
-  - Requires explicit approval before any changes
-  - Auto-enabled when: >10 findings OR any CRITICAL severity OR --fix-all
-  - Skipped in --auto mode (use --auto --plan to force)
+- `--preview`: Analyze and report findings without applying fixes (includes quality score)
+- `--scope=<name>`: Run specific scope only. Valid names: security, hygiene, types, lint, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
 
 **Usage:**
 - `/cco:optimize --auto` - Silent full optimization (all scopes, full fix)
-- `/cco:optimize --security --fix-all` - Security only, fix all
-- `/cco:optimize --ai-hygiene` - Find AI-generated code issues
-- `/cco:optimize --doc-sync` - Find doc↔code inconsistencies
-- `/cco:optimize --score` - Quick quality score
+- `/cco:optimize --scope=security --auto` - Security only, fix all
+- `/cco:optimize --scope=ai-hygiene` - Find AI-generated code issues
+- `/cco:optimize --preview` - Report findings without fixing (includes quality score)
 
 ## Core Principle [CRITICAL]
 
@@ -98,9 +80,9 @@ Do NOT flag or fix:
 
 **See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
-### No Deferrals in Auto/Fix-All [CRITICAL]
+### No Deferrals in Auto [CRITICAL]
 
-When `--auto` or `--fix-all` is active:
+When `--auto` is active:
 - **Zero commentary** - No "this is complex", "needs refactor", "minor detail"
 - **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
 - **Zero skips** - Every finding = FIXED or TECHNICAL FAILURE
@@ -117,11 +99,11 @@ When `--auto` or `--fix-all` is active:
 
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
-**Check:** Delegate to `/cco:tune --check` for profile validation:
+**Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
 // Delegate profile check to tune command
-const tuneResult = await Skill("tune", "--check")
+const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   // User declined setup - exit gracefully
@@ -139,10 +121,13 @@ if (tuneResult.status === "skipped") {
 ```javascript
 // Parse arguments
 const args = "$ARGS"
-const isUnattended = args.includes("--auto") || args.includes("--unattended")
+const isUnattended = args.includes("--auto")
+const isPreview = args.includes("--preview")
 
-// Parse intensity from args
-const intensityArg = args.match(/--intensity=(\w+)/)?.[1]
+// Parse scope filter (--scope=security or --scope=hygiene,types)
+const scopeArg = args.match(/--scope=([\w,-]+)/)?.[1]
+const validScopes = ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness", "privacy", "doc-sync", "simplify"]
+const scopeFilter = scopeArg ? scopeArg.split(",").filter(s => validScopes.includes(s)) : null
 
 if (isUnattended) {
   // UNATTENDED MODE: CI/CD, pre-commit hooks, cron jobs
@@ -150,8 +135,8 @@ if (isUnattended) {
   // Skip Q1, Q2, Q3 - proceed directly with full scope and full fix
 
   config = {
-    intensity: "full-fix",  // All severities
-    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness", "doc-sync", "simplify"],  // ALL 9 scopes
+    fixMode: "full-fix",  // All severities
+    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness", "privacy", "doc-sync", "simplify"],  // ALL 10 scopes
     action: "Everything",   // No approval needed
     gitState: "Continue anyway"  // Don't stash
   }
@@ -165,9 +150,9 @@ if (isUnattended) {
 }
 ```
 
-**Severity Thresholds by Intensity:**
+**Severity Thresholds by Fix Mode:**
 
-| Intensity | Severities Included | Use Case |
+| Fix Mode | Severities Included | Use Case |
 |-----------|---------------------|----------|
 | quick-wins | High impact + low effort only | 80/20 fast improvement |
 | standard | CRITICAL + HIGH + MEDIUM | Normal operation (default) |
@@ -181,9 +166,9 @@ if (isUnattended) {
 | **SETUP** | 1 | Config | Q1: Combined settings | Config validated |
 | **ANALYZE** | 2 | Scan | Parallel scope analysis | Findings collected |
 | **GATE-1** | - | Checkpoint | Validate findings ≥0, no errors | → Plan or Apply |
-| **PLAN** | 2.5 | Review | Show fix plan (conditional) | User approval |
+| **PLAN** | 2.5 | Review | Show fix plan (mandatory when findings >0) | User approval |
 | **GATE-2** | - | Checkpoint | Approval received or skipped | → Apply |
-| **APPLY** | 3 | Fix | Apply fixes based on intensity | Fixes verified |
+| **APPLY** | 3 | Fix | Apply fixes based on fix mode | Fixes verified |
 | **GATE-3** | - | Checkpoint | applied + failed = total | → Summary |
 | **SUMMARY** | 4 | Report | Show counts | Done |
 
@@ -217,13 +202,9 @@ function gate3_postApply(results) {
 > **Note:** Quality Gates (format, lint, type, test) removed from optimize.
 > LNT and TYP scopes already analyze lint/type issues. Use `/cco:commit` for pre-commit gates.
 
-**Plan Review triggers automatically when:**
-- `--plan` flag is passed
-- >10 findings detected
-- Any CRITICAL severity finding
-- `--fix-all` intensity selected
+**Plan Review is MANDATORY when findings > 0.**
 
-**Skipped when:** `--auto` mode (unless `--auto --plan`)
+**Skipped when:** `--auto` mode or 0 findings
 
 **Intensity determines what gets fixed:**
 - Quick Wins → High impact, low effort only
@@ -259,11 +240,10 @@ if (isUnattended) {
     question: "Which areas to check?",
     header: "Areas",
     options: [
-      { label: "Security (Recommended)", description: "Secrets, injection, defensive patterns (SEC + ROB)" },
-      { label: "Code Quality (Recommended)", description: "Unused code, types, style (HYG + TYP + LNT)" },
+      { label: "Security & Privacy (Recommended)", description: "Secrets, injection, defensive patterns, PII protection (SEC + ROB + PRV)" },
+      { label: "Code Quality (Recommended)", description: "Unused code, types, style, complexity, test cleanup (HYG + TYP + LNT + SIM)" },
       { label: "Performance", description: "N+1, caching, blocking I/O (PRF)" },
-      { label: "AI Cleanup", description: "Hallucinations, doc drift (AIH + DOC)" },
-      { label: "Simplify", description: "Reduce complexity, flatten nesting (SIM)" }
+      { label: "AI Cleanup", description: "Hallucinations, doc drift (AIH + DOC)" }
     ],
     multiSelect: true
   }
@@ -272,7 +252,7 @@ if (isUnattended) {
 **Q2: Fix Intensity:**
 
 ```javascript
-  intensityQuestion = {
+  fixModeQuestion = {
     question: "How much to fix?",
     header: "Intensity",
     options: [
@@ -287,7 +267,7 @@ if (isUnattended) {
 **Q3: Git State (conditional, only if dirty):**
 
 ```javascript
-  questions = [scopeQuestion, intensityQuestion]
+  questions = [scopeQuestion, fixModeQuestion]
 
   if (gitDirty) {
     questions.push({
@@ -318,22 +298,6 @@ if (isUnattended) {
 
 ---
 
-## Step-Score: Quality Score [OPTIONAL]
-
-**When `--score` flag is used, skip all steps and show score only:**
-
-```javascript
-agentResponse = Task("cco-agent-analyze", `
-  scopes: ["scan"]
-  Calculate overall quality score (0-100).
-`, { model: "haiku" })
-
-// Output score and exit
-console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
-```
-
-→ Exit after showing score
-
 ---
 
 ## Step-2: Analyze [PARALLEL SCOPES]
@@ -345,16 +309,16 @@ console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
 // Each Task returns results directly (synchronous)
 // Multiple Task calls in same message run in parallel automatically
 
-// Security group (SEC + ROB)
+// Security & Privacy group (SEC + ROB + PRV)
 securityResults = Task("cco-agent-analyze", `
-  scopes: ["security", "robustness"]
+  scopes: ["security", "robustness", "privacy"]
   Find all issues with severity, fix info, effort/impact scores, and confidence.
   Return: { findings: [...], summary: {...} }
 `, { model: "haiku" })
 
-// Code Quality group (HYG + TYP + LNT)
+// Code Quality group (HYG + TYP + LNT + SIM)
 qualityResults = Task("cco-agent-analyze", `
-  scopes: ["hygiene", "types", "lint"]
+  scopes: ["hygiene", "types", "lint", "simplify"]
   Find all issues with severity, fix info, effort/impact scores, and confidence.
   Return: { findings: [...], summary: {...} }
 `, { model: "haiku" })
@@ -373,23 +337,15 @@ aiResults = Task("cco-agent-analyze", `
   Return: { findings: [...], summary: {...} }
 `, { model: "haiku" })
 
-// Simplify group (SIM)
-simplifyResults = Task("cco-agent-analyze", `
-  scopes: ["simplify"]
-  Find all issues with severity, fix info, effort/impact scores, and confidence.
-  Return: { findings: [...], summary: {...} }
-`, { model: "haiku" })
-
 // Merge all parallel results
 allFindings = {
   findings: [
     ...securityResults.findings,
     ...qualityResults.findings,
     ...perfResults.findings,
-    ...aiResults.findings,
-    ...simplifyResults.findings
+    ...aiResults.findings
   ],
-  summary: mergeScoreSummaries([securityResults, qualityResults, perfResults, aiResults, simplifyResults])
+  summary: mergeScoreSummaries([securityResults, qualityResults, perfResults, aiResults])
 }
 
 // Confidence calculation (0-100) included in each agent call:
@@ -399,8 +355,8 @@ allFindings = {
 // - Test coverage (10%): Are there validating tests?
 ```
 
-// Map intensity to severity thresholds
-const intensityThresholds = {
+// Map fixMode to severity thresholds
+const fixModeThresholds = {
   "quick-wins": null,  // Special: filter by effort/impact, not severity
   "standard": ["CRITICAL", "HIGH", "MEDIUM"],
   "full-fix": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
@@ -411,9 +367,9 @@ const intensityThresholds = {
 selectedScopes = config.scopes.map(s => s.toLowerCase().replace(" ", "-"))
 let findings = allFindings.findings.filter(f => selectedScopes.includes(f.scope))
 
-// Filter by intensity
-const allowedSeverities = intensityThresholds[config.intensity]
-if (config.intensity === "quick-wins") {
+// Filter by fixMode
+const allowedSeverities = fixModeThresholds[config.fixMode]
+if (config.fixMode === "quick-wins") {
   // 80/20 mode: high impact, low effort only
   findings = findings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
 } else if (allowedSeverities) {
@@ -431,7 +387,7 @@ if (isUnattended) {
 }
 
 // Report-only mode: nothing to fix
-if (config.intensity === "report-only") {
+if (config.fixMode === "report-only") {
   autoFixable = []
   approvalRequired = []
 }
@@ -463,20 +419,21 @@ if (!isUnattended) {
 ```
 ## Analysis Results
 
-**Intensity:** {config.intensity} | **Scopes:** {selectedScopes.length}/6
+**Intensity:** {config.fixMode} | **Scopes:** {selectedScopes.length}/6
 
 | Scope | ID Range | Critical | High | Medium | Low | Auto-fix |
 |-------|----------|----------|------|--------|-----|----------|
 | Security | SEC-01-12 | {n} | {n} | {n} | {n} | {n} |
-| Hygiene | HYG-01-15 | {n} | {n} | {n} | {n} | {n} |
+| Hygiene | HYG-01-20 | {n} | {n} | {n} | {n} | {n} |
 | Types | TYP-01-10 | {n} | {n} | {n} | {n} | {n} |
 | Lint | LNT-01-08 | {n} | {n} | {n} | {n} | {n} |
 | Performance | PRF-01-10 | {n} | {n} | {n} | {n} | {n} |
 | AI Hygiene | AIH-01-08 | {n} | {n} | {n} | {n} | {n} |
 | Robustness | ROB-01-10 | {n} | {n} | {n} | {n} | {n} |
+| Privacy | PRV-01-08 | {n} | {n} | {n} | {n} | {n} |
 | Doc Sync | DOC-01-08 | {n} | {n} | {n} | {n} | {n} |
-| Simplify | SIM-01-10 | {n} | {n} | {n} | {n} | {n} |
-| **Total** | **91 checks** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
+| Simplify | SIM-01-11 | {n} | {n} | {n} | {n} | {n} |
+| **Total** | **105 checks** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
 
 **Severity Distribution:**
 - CRITICAL: {counts.bySeverity.critical}
@@ -487,7 +444,7 @@ if (!isUnattended) {
 **Fix Plan:**
 - Auto-fixable (safe): {autoFixable.length} items
 - Approval required (risky): {approvalRequired.length} items
-- Excluded by intensity: {allFindings.findings.length - findings.length} items
+- Excluded by fix mode: {allFindings.findings.length - findings.length} items
 ```
 
 ```javascript
@@ -500,32 +457,29 @@ if (!isUnattended) {
 [x] Analysis results collected
 [x] Findings categorized
 → If action = "Report only": Skip to Step-4
-→ If --auto (without --plan): Skip to Step-3
-→ Check Plan Review triggers → Step-2.5 or Step-3
+→ If --auto: Skip to Step-3
+→ If findings > 0: Step-2.5 (Plan Review)
+→ If findings = 0: Skip to Step-4
 ```
 
 ---
 
-## Step-2.5: Plan Review [CONDITIONAL]
+## Step-2.5: Plan Review [MANDATORY]
 
 **"Think before you act"** - Reduces errors and low-quality decisions (Karpathy insight).
 
 > **Pattern:** Plan Review is used in /cco:optimize, /cco:align, and /cco:preflight with command-specific
-> triggers and content. Each command has different thresholds (optimize: >10 findings,
-> align: >5 recommendations, preflight: any blockers). The structure is consistent:
-> 1. Trigger Conditions → 2. Plan Generation → 3. Plan Display → 4. User Decision
+> triggers and content. The structure is consistent:
+> 1. Check findings > 0 → 2. Plan Generation → 3. Plan Display → 4. User Decision
 
 ### Trigger Conditions
 
 ```javascript
-// Determine if Plan Review is needed
-const planMode = args.includes("--plan") ||
-  (findings.length > 10) ||
-  (findings.some(f => f.severity === "CRITICAL")) ||
-  (config.intensity === "full-fix")
+// Plan Review runs whenever there are findings
+const planMode = findings.length > 0
 
-// Skip in pure --auto mode (unless --auto --plan)
-const skipPlan = isUnattended && !args.includes("--plan")
+// Skip in --auto mode
+const skipPlan = isUnattended
 
 if (planMode && !skipPlan) {
   // → Enter Plan Review
@@ -564,7 +518,7 @@ const fixPlans = findings.map(finding => ({
 ```markdown
 ## Fix Plan Review
 
-**Mode:** {config.intensity} | **Findings:** {findings.length} | **Files:** {uniqueFiles.length}
+**Mode:** {config.fixMode} | **Findings:** {findings.length} | **Files:** {uniqueFiles.length}
 
 > This plan shows what will change and why. Review before approving.
 
@@ -655,20 +609,20 @@ switch (planDecision) {
 let fixResults = { applied: 0, failed: 0, total: 0 }
 
 if (config.action !== "Report only" && autoFixable.length > 0) {
-  // Determine if fix-all mode
-  const isFixAll = config.action.includes("Everything") || isUnattended
+  // Determine if unattended mode
+  const isUnattendedMode = config.action.includes("Everything") || isUnattended
 
   // NOTE: Synchronous execution - results returned directly
   // Do NOT use run_in_background: true - output file stays empty
   fixResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(autoFixable)}
-    fixAll: ${isFixAll}
+    fixAll: ${isUnattendedMode}
 
     Apply all auto-fixable items. Verify each fix.
     Group by file for efficiency.
 
-    ${isFixAll ? `
-    FIX-ALL MODE [MANDATORY]:
+    ${isUnattendedMode ? `
+    UNATTENDED MODE [MANDATORY]:
     Fix ALL items. Effort categories are for reporting only, not filtering.
 
     Rules:
@@ -701,7 +655,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 ### Validation
 ```
-[x] All fixes applied based on intensity
+[x] All fixes applied based on fix mode
 → Proceed to Step-4 (Summary)
 ```
 
@@ -713,7 +667,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 ```javascript
 // COUNTING STANDARD
-// - total: all findings in selected intensity scope
+// - total: all findings in selected fix mode scope
 // - applied: successfully fixed
 // - failed: couldn't fix (technical reason required)
 //
@@ -804,7 +758,6 @@ console.log(summary)
   "summary": "Applied 5, Failed 0, Total 5",
   "data": {
     "accounting": { "applied": 5, "failed": 0, "total": 5 },
-    "intensity": "standard",
     "by_scope": { "security": 2, "hygiene": 3, "types": 0 },
     "by_severity": { "critical": 0, "high": 2, "medium": 3, "low": 0 },
     "blockers": []
@@ -822,19 +775,20 @@ console.log(summary)
 
 **--auto mode:** Prints `summary` field only.
 
-### Scope Coverage (9 Scopes, 91 Checks)
+### Scope Coverage (10 Scopes, 105 Checks)
 
 | Scope | ID Range | Checks |
 |-------|----------|--------|
 | `security` | SEC-01-12 | Hardcoded secrets, SQL/command injection, path traversal, unsafe deserialization, input validation, cleartext logging, insecure temp files, missing HTTPS, eval/exec, debug endpoints, weak crypto |
-| `hygiene` | HYG-01-15 | Unused imports/vars/functions, dead code, orphan files, duplicate blocks, stale TODOs, empty files, commented code, line endings, whitespace, indentation, missing __init__.py, circular imports, bare except |
+| `hygiene` | HYG-01-20 | Unused imports/vars/functions, dead code, orphan files, duplicate blocks, stale TODOs, empty files, commented code, line endings, whitespace, indentation, missing __init__.py, circular imports, bare except, comment accuracy, comment staleness, obvious comments, missing rationale, misleading examples |
 | `types` | TYP-01-10 | Type errors (mypy/pyright), missing return types, untyped args, type:ignore without reason, Any in APIs, missing generics, union vs literal, optional handling, narrowing opportunities, override signatures |
 | `lint` | LNT-01-08 | Format violations, import order, line length, naming conventions, docstring format, magic numbers, string literals, quote style |
 | `performance` | PRF-01-10 | N+1 patterns, list on iterator, missing cache, blocking in async, large file reads, missing pagination, string concat loops, unnecessary copies, missing pooling, sync in hot paths |
-| `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, phantom imports, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
+| `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, over-documented trivial functions, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
 | `robustness` | ROB-01-10 | Code-level defensive patterns: missing timeouts, retries, endpoint guards, unbounded collections, implicit coercion, null checks, graceful degradation, circuit breakers, resource cleanup, concurrent safety |
+| `privacy` | PRV-01-08 | PII exposure in logs/responses, missing data masking, excessive data collection, missing consent checks, missing data retention policy, cross-border data transfer, missing audit trails, insecure PII storage |
 | `doc-sync` | DOC-01-08 | README outdated, API signature mismatch, deprecated references in docs, missing new feature docs, outdated examples, broken internal links, changelog not updated, comment-code drift |
-| `simplify` | SIM-01-10 | Deeply nested conditionals (>3 levels), duplicate/similar code blocks, unnecessary abstractions, single-use wrappers, over-engineered patterns, complex boolean expressions, long parameter lists, god functions (>50 lines), premature optimization, redundant null checks |
+| `simplify` | SIM-01-11 | Deeply nested conditionals (>3 levels), duplicate/similar code blocks, unnecessary abstractions, single-use wrappers, over-engineered patterns, complex boolean expressions, long parameter lists, god functions (>50 lines), premature optimization, redundant null checks, test bloat cleanup |
 
 ### Context Application
 
@@ -849,9 +803,9 @@ console.log(summary)
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode: all areas, full intensity, no questions |
-| `--preview` | Analyze only, show findings, don't apply fixes |
-| `--score` | Quality score only (0-100), skip questions |
+| `--auto` | Unattended mode: all scopes, all severities, no questions |
+| `--preview` | Analyze only, show findings and quality score, don't apply fixes |
+| `--scope=<name>` | Run specific scope(s) only, comma-separated |
 
 ### Model Strategy
 
@@ -867,11 +821,10 @@ console.log(summary)
 
 | Group | Scopes Included | Checks |
 |-------|-----------------|--------|
-| **Security** | security + robustness | SEC-01-12, ROB-01-10 (22 checks) |
-| **Code Quality** | hygiene + types + lint | HYG-01-15, TYP-01-10, LNT-01-08 (33 checks) |
+| **Security & Privacy** | security + robustness + privacy | SEC-01-12, ROB-01-10, PRV-01-08 (30 checks) |
+| **Code Quality** | hygiene + types + lint + simplify | HYG-01-20, TYP-01-10, LNT-01-08, SIM-01-11 (49 checks) |
 | **Performance** | performance | PRF-01-10 (10 checks) |
 | **AI Cleanup** | ai-hygiene + doc-sync | AIH-01-08, DOC-01-08 (16 checks) |
-| **Simplify** | simplify | SIM-01-10 (10 checks) |
 
 ---
 
@@ -891,7 +844,7 @@ console.log(summary)
 1. **Single question** - All settings in Q1, no approval questions
 2. **Background analysis** - Start analysis while asking Q1
 3. **Dynamic tabs** - Git State tab only if dirty
-4. **Intensity-driven** - Selected intensity determines what gets fixed automatically
+4. **Severity-driven** - User selection determines what gets fixed automatically
 5. **Single Recommended** - Each tab has one recommended option
 6. **Counting consistency** - Count findings, not locations
 
