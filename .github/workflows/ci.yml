@@ -55,8 +55,12 @@ jobs:
               exit 1
             fi
           done
-          count=$(find rules -name "cco-*.md" | wc -l)
+          count=$(find rules -name "cco-*.md" -type f | wc -l)
           echo "✓ Found $count rule files"
+          if [ "$count" -lt 1 ]; then
+            echo "Error: No rule files found"
+            exit 1
+          fi
 
       - name: Validate core rules exist
         run: |

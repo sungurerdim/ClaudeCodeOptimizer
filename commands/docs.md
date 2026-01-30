@@ -175,7 +175,7 @@ if (!isUnattended) {
 
 ---
 
-## Step-1b: Background Analysis
+## Step-1b: Parallel Analysis
 
 ```javascript
 // Scan existing documentation structure
@@ -229,8 +229,7 @@ analysisTask = Task("cco-agent-analyze", `
       buildTool: null
     }
   }
-`, { model: "haiku" })  // Synchronous - results returned directly
-// NOTE: Do NOT use run_in_background: true for Task (agent) calls
+`, { model: "haiku" })  // Synchronous - results needed immediately for gap analysis
 ```
 
 ---

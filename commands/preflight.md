@@ -23,16 +23,17 @@ PREFLIGHT
     |       Git state, version sync,         │
     |       markers, semver, dependencies    │
     |                                        │
-    +-- [Sub-commands] PARALLEL ─────────────┤
-    |       |                                │
+    +-- [Verification] BACKGROUND ──────────┤
+    |       format, lint, type, test, build  │
+    |       (Bash background, started FIRST) │
+    |                                        │
+    +-- [Sub-commands] SYNC PARALLEL ────────┤
+    |       |  (run while Bash tasks work)   │
     |       +-- /cco:optimize --auto             │
     |       |   (all 10 scopes, 105 checks)  │
     |       |                                │
     |       +-- /cco:align --auto                │
     |           (all 6 scopes, 77 checks)    │
-    |                                        │
-    +-- [Verification] PARALLEL ─────────────┤
-    |       format, lint, type, test, build  │
     |                                        │
     +-- [Changelog] ─────────────────────────┘
             Commit classification, version
@@ -109,17 +110,15 @@ if (args.includes("--auto")) {
 | **SETUP** | 0-1a | Config | Mode + Q1: Settings | Config validated |
 | **PRE-CHECK** | 1b | Verify | Git, version, deps (parallel) | Pre-checks done |
 | **GATE-1** | - | Checkpoint | No blocking pre-checks | → Sub-commands |
-| **OPTIMIZE** | 2a | Fix | /cco:optimize (parallel) | Fixes applied |
-| **ALIGN** | 2b | Arch | /cco:align (parallel) | Changes applied |
-| **VERIFY** | 3 | Test | test/build/lint (parallel) | Tests pass |
+| **VERIFY+FIX** | 2 | Parallel | 2a: verify (bg Bash) + 2b: optimize+align (sync Task) | All complete |
 | **GATE-2** | - | Checkpoint | All parallel complete | → Changelog |
-| **CHANGELOG** | 4 | Version | Generate + suggest | Entry ready |
+| **CHANGELOG** | 3 | Version | Generate + suggest | Entry ready |
 | **GATE-3** | - | Checkpoint | Blockers evaluated | → Plan or Release |
-| **PLAN** | 4.5 | Review | Combined plan (conditional) | User approval |
+| **PLAN** | 3.5 | Review | Combined plan (conditional) | User approval |
 | **GATE-4** | - | Checkpoint | Approval received | → Execute |
-| **RELEASE** | 5 | Execute | Tag/commit based on mode | Done |
+| **RELEASE** | 4 | Execute | Tag/commit based on mode | Done |
 
-**Execution Flow:** SETUP → PRE-CHECK → GATE-1 → (OPTIMIZE ‖ ALIGN ‖ VERIFY) → GATE-2 → CHANGELOG → GATE-3 → [PLAN if triggered] → GATE-4 → RELEASE
+**Execution Flow:** SETUP → PRE-CHECK → GATE-1 → (VERIFY-bg ‖ OPTIMIZE-sync ‖ ALIGN-sync) → GATE-2 → CHANGELOG → GATE-3 → [PLAN if triggered] → GATE-4 → RELEASE
 
 ### Phase Gates
 
@@ -314,8 +313,7 @@ depResults = Task("cco-agent-research", `
     security: [{ package, advisory, severity, cve }],
     summary: { total, outdated, security }
   }
-`, { model: "haiku" })  // Synchronous - Task returns results directly
-// NOTE: Do NOT use run_in_background for Task (agent) calls
+`, { model: "haiku" })  // Synchronous - result needed before GATE-1
 ```
 
 **Security advisories are BLOCKERS.** Outdated packages are warnings.
@@ -329,15 +327,36 @@ depResults = Task("cco-agent-research", `
 
 ---
 
-## Step-2: Optimize + Review [PARALLEL - BOTH IN ONE MESSAGE]
+## Step-2: Verify + Optimize + Align [PARALLEL]
 
-**CRITICAL:** Launch both Task calls in a SINGLE message for true parallelism:
+> **Pattern:** Quality Gates run external tools. Preflight runs full verification including
+> build command (unique to release). Unlike /cco:commit (conditional on changed files),
+> preflight runs comprehensive release verification on full project.
+
+**CRITICAL:** Launch Bash verification in background FIRST, then synchronous Task calls.
+All run concurrently: Bash tasks in background while Task agents execute in parallel (same message).
 
 ```javascript
-// BOTH calls in same message for parallel execution
-// Task tool executes multiple calls in parallel when in same message
-// Synchronous - each Task returns results directly
-// --auto skips plan review in sub-commands (preflight has its own plan review at Step-4.5)
+// Step-2a: Launch verification in background FIRST
+// Commands from profile (detected by /cco:tune) - FULL PROJECT
+formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
+lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
+typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
+testTask = Bash("{test_command} 2>&1", { run_in_background: true })
+buildTask = Bash("{build_command} 2>&1", { run_in_background: true })
+
+// Store task IDs for later collection via TaskOutput
+verificationTasks = {
+  format: formatTask.id,
+  lint: lintTask.id,
+  type: typeTask.id,
+  test: testTask.id,
+  build: buildTask.id
+}
+
+// Step-2b: Launch synchronous Task calls (parallel with each other AND with background Bash)
+// Multiple Task calls in same message execute in parallel automatically
+// --auto skips plan review in sub-commands (preflight has its own plan review at Step-3.5)
 optimizeResults = Task("general-purpose", `
   Execute /cco:optimize --auto
 
@@ -348,7 +367,7 @@ optimizeResults = Task("general-purpose", `
     accounting: { applied, failed, total },
     scopes: { security, hygiene, types, lint, performance, "ai-hygiene", robustness, privacy, "doc-sync", simplify }
   }
-`, { model: "opus" })  // Synchronous - no run_in_background for Task
+`, { model: "opus" })  // Synchronous - Task returns results directly
 
 reviewResults = Task("general-purpose", `
   Execute /cco:align --auto
@@ -361,54 +380,24 @@ reviewResults = Task("general-purpose", `
     accounting: { applied, failed, total },
     effortCategories: { quickWin, moderate, complex, major }
   }
-`, { model: "opus" })  // Synchronous - no run_in_background for Task
+`, { model: "opus" })  // Synchronous - Task returns results directly
+
+// At this point:
+// - optimizeResults and reviewResults are available (synchronous Task calls completed)
+// - Background Bash tasks may still be running (collected in Step-4 via TaskOutput)
 ```
 
 ### Validation
 ```
-[x] Both tasks launched in parallel
-→ Results collected in Step-5
+[x] Background Bash verification launched (Step-2a)
+[x] Both Task agents launched in parallel and completed (Step-2b)
+→ Background Bash results collected in Step-4 via TaskOutput
 → Proceed to Step-3
 ```
 
 ---
 
-## Step-3: Verification [BACKGROUND]
-
-> **Pattern:** Quality Gates run external tools. Preflight runs full verification including
-> build command (unique to release). Unlike /cco:commit (conditional on changed files),
-> preflight runs comprehensive release verification on full project.
-
-**Start all verification in background (full project):**
-
-```javascript
-// Commands from profile (detected by /cco:tune) - FULL PROJECT
-formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
-lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
-typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
-testTask = Bash("{test_command} 2>&1", { run_in_background: true })
-buildTask = Bash("{build_command} 2>&1", { run_in_background: true })
-
-// Store task IDs
-verificationTasks = {
-  format: formatTask.id,
-  lint: lintTask.id,
-  type: typeTask.id,
-  test: testTask.id,
-  build: buildTask.id
-}
-```
-
-### Validation
-```
-[x] Background tasks launched
-→ Results collected in Step-5
-→ Proceed to Step-4
-```
-
----
-
-## Step-4: Changelog [WHILE BACKGROUND RUNS]
+## Step-3: Changelog [WHILE BACKGROUND RUNS]
 
 **Generate changelog while tests run:**
 
@@ -451,12 +440,12 @@ changelogEntry = generateChangelogEntry(classified, suggestedVersion)
 [x] Commits classified
 [x] Version suggested
 [x] Changelog entry generated
-→ Check Plan Review triggers → Step-4.5 or Step-5
+→ Check Plan Review triggers → Step-3.5 or Step-4
 ```
 
 ---
 
-## Step-4.5: Plan Review [CONDITIONAL]
+## Step-3.5: Plan Review [CONDITIONAL]
 
 **"Think before you release"** - Consolidated view of all changes before release.
 
@@ -476,7 +465,7 @@ const skipPlan = isUnattended
 if (planMode && !skipPlan) {
   // → Enter Plan Review
 } else {
-  // → Skip to Step-5
+  // → Skip to Step-4
 }
 ```
 
@@ -595,29 +584,28 @@ switch (planDecision) {
 [x] All results consolidated
 [x] User decision captured
 → If Abort/Fix: Exit
-→ Proceed to Step-5 with config.releaseMode
+→ Proceed to Step-4 with config.releaseMode
 ```
 
 ---
 
-## Step-5: Results + Execute
+## Step-4: Results + Execute
 
 **Collect Bash background results, then show summary and execute based on Q1 settings:**
 
 ```javascript
-// Task (agent) results already collected in previous steps (synchronous)
-// Only Bash background results need TaskOutput
+// Synchronous Task results from Step-2b (already available)
+// optimizeResults, reviewResults - set from synchronous Task calls in Step-2b
+// depResults - set from synchronous Task call in Step-1b
 
-// Bash background results (TaskOutput works correctly for Bash)
+// Bash background results via TaskOutput (launched in Step-1b and Step-2a)
 formatResults = await TaskOutput(verificationTasks.format)
 lintResults = await TaskOutput(verificationTasks.lint)
 typeResults = await TaskOutput(verificationTasks.type)
 testResults = await TaskOutput(verificationTasks.test)
 buildResults = await TaskOutput(verificationTasks.build)
 markersResult = await TaskOutput(markersTask.id)
-// Note: commitsTask already processed in Step-4
-
-// NOTE: optimizeResults, reviewResults, depResults already set from synchronous Task calls
+// Note: commitsTask already processed in Step-3
 
 // Check if format made changes
 formatChanged = formatResults.stdout?.includes("reformatted") || formatResults.stdout?.includes("fixed")
@@ -856,7 +844,7 @@ Mode: {config.releaseMode}
 ## Rules
 
 1. **All settings upfront** - Intensity, release mode, and docs selected in single Q1
-2. **All parallel background** - Pre-flight, optimize, review, verification all background
+2. **All parallel execution** - Bash verification in background, Task agents synchronous parallel -- all run concurrently
 3. **Full scope** - Run ALL scopes for both optimize (10) and align (6)
 4. **No mid-flow questions** - All decisions made at start, uninterrupted execution
 5. **Git safety** - Clean state required, version sync verified

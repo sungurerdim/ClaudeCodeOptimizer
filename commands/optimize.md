@@ -613,7 +613,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
   const isUnattendedMode = config.action.includes("Everything") || isUnattended
 
   // NOTE: Synchronous execution - results returned directly
-  // Do NOT use run_in_background: true - output file stays empty
+  // Task agents must be synchronous -- TaskOutput doesn't work for background Task agents, results arrive via task-notification
   fixResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(autoFixable)}
     fixAll: ${isUnattendedMode}
@@ -842,7 +842,7 @@ console.log(summary)
 ## Rules
 
 1. **Single question** - All settings in Q1, no approval questions
-2. **Background analysis** - Start analysis while asking Q1
+2. **Parallel analysis** - Start analysis while asking Q1
 3. **Dynamic tabs** - Git State tab only if dirty
 4. **Severity-driven** - User selection determines what gets fixed automatically
 5. **Single Recommended** - Each tab has one recommended option

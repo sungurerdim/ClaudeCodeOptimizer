@@ -1,1 +1,4 @@
-{}
+{
+  "private": true,
+  "description": "Plugin manifest is in .claude-plugin/plugin.json. This file exists for package-lock.json compatibility only."
+}
