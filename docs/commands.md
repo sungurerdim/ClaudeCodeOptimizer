@@ -59,7 +59,7 @@ Run `/cco:tune` to configure CCO for your project:
 ```
 /cco:tune           # Interactive setup
 /cco:tune --auto    # Auto-detect, skip questions
-/cco:tune --check   # Validate existing profile
+/cco:tune --preview # Validate existing profile
 ```
 
 ### Dynamic Context
@@ -90,8 +90,8 @@ Commands pre-collect context at execution start:
 ```bash
 /cco:tune                # Interactive setup with questions
 /cco:tune --auto         # Unattended mode - auto-detect everything
-/cco:tune --check        # Silent validation only, return status
-/cco:tune --force        # Update even if profile exists
+/cco:tune --preview      # Silent validation only, return status
+/cco:tune --update       # Update even if profile exists
 ```
 
 ### Steps
@@ -148,14 +148,13 @@ Commands pre-collect context at execution start:
 **Usage:**
 ```bash
 /cco:optimize                      # Interactive selection
-/cco:optimize --security           # Security focus only
-/cco:optimize --hygiene            # Hygiene focus
-/cco:optimize --types              # Type annotations
-/cco:optimize --lint               # Lint/format fixes
-/cco:optimize --performance        # Performance issues
-/cco:optimize --report             # Report only, no fixes
+/cco:optimize --scope=security     # Security focus only
+/cco:optimize --scope=hygiene      # Hygiene focus
+/cco:optimize --scope=types        # Type annotations
+/cco:optimize --scope=lint         # Lint/format fixes
+/cco:optimize --scope=performance  # Performance issues
+/cco:optimize --preview            # Report only, no fixes
 /cco:optimize --auto               # Unattended mode: fix all, no questions
-/cco:optimize --fix-all            # Everything mode: zero deferrals
 ```
 
 ### Steps
@@ -192,10 +191,7 @@ Commands pre-collect context at execution start:
 **Usage:**
 ```bash
 /cco:align                         # Full review
-/cco:align --quick                 # Smart defaults, report only
-/cco:align --focus=architecture
-/cco:align --focus=patterns
-/cco:align --intensity=full-fix    # Fix all findings
+/cco:align --preview               # Analyze only, show gaps
 /cco:align --auto                  # Unattended mode
 ```
 
@@ -241,9 +237,6 @@ Compares current metrics to ideal targets:
 /cco:research "query"                    # Standard research
 /cco:research "query" --quick            # T1-T2 only, 5 sources
 /cco:research "query" --deep             # All tiers, 20+ sources
-/cco:research "A vs B" --compare         # Comparison mode
-/cco:research "query" --local            # Codebase-only search
-/cco:research "query" --security         # Security advisories
 ```
 
 ### Steps
@@ -285,10 +278,9 @@ Compares current metrics to ideal targets:
 **Usage:**
 ```bash
 /cco:commit                 # Full flow
-/cco:commit --dry-run       # Preview only
+/cco:commit --preview       # Show plan without committing
 /cco:commit --single        # One commit for all
 /cco:commit --staged-only   # Only staged changes
-/cco:commit --no-verify     # Skip quality gates
 ```
 
 ### Steps
@@ -332,10 +324,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 **Usage:**
 ```bash
 /cco:preflight                   # Full release workflow
-/cco:preflight --dry-run         # Check without fixing
-/cco:preflight --strict          # Fail on any warning
-/cco:preflight --tag             # Auto-create git tag
-/cco:preflight --tag --push      # Tag and push
+/cco:preflight --auto            # Unattended checks
+/cco:preflight --preview         # Check without releasing
 ```
 
 ### Steps
@@ -378,12 +368,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```bash
 /cco:docs                    # Interactive selection
 /cco:docs --auto             # Generate all missing docs
-/cco:docs --check            # Validation only, return status
-/cco:docs --report           # Show gaps, don't generate
+/cco:docs --preview          # Show gaps only, don't generate
 /cco:docs --scope=readme     # Single scope only
-/cco:docs --scope=api        # API docs only
-/cco:docs --plan             # Show plan before generating
-/cco:docs --force            # Regenerate even if docs exist
+/cco:docs --update           # Regenerate even if docs exist
 ```
 
 ### Steps

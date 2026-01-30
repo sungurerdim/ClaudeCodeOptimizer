@@ -82,7 +82,7 @@ Feature complete
 |------|---------|
 | Quick architecture check | `/cco:align --quick` |
 | Full architecture review | `/cco:align` |
-| Security focus | `/cco:optimize --security` |
+| Security focus | `/cco:optimize --scope=security` |
 | Full optimization | `/cco:optimize` |
 
 ---
@@ -164,9 +164,8 @@ When you need to make a decision:
 | Mode | Use Case |
 |------|----------|
 | Standard | `/cco:research "query"` |
-| Compare | `/cco:research "A vs B" --compare` |
-| Security | `/cco:research "query" --security` |
-| Local only | `/cco:research "query" --local` |
+| Quick | `/cco:research "query" --quick` |
+| Deep | `/cco:research "query" --deep` |
 
 ---
 

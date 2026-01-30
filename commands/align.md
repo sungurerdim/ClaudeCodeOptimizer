@@ -39,9 +39,9 @@ Do NOT flag:
 | `testing` | TST-01 to TST-10 | Coverage strategy, test quality, gaps | 10 |
 | `maintainability` | MNT-01 to MNT-12 | Complexity, readability, documentation | 12 |
 | `ai-architecture` | AIA-01 to AIA-10 | Over-engineering, local solutions, drift | 10 |
-| `functional-completeness` | FUN-01 to FUN-12 | API design completeness: CRUD coverage, pagination, filtering, edge cases, schema validation, state transitions, soft delete, data locking, timeout/retry config, API surface | 12 |
+| `functional-completeness` | FUN-01 to FUN-18 | API design completeness: CRUD coverage, pagination, filtering, edge cases, schema validation, state transitions, soft delete, data locking, timeout/retry config, API surface, data validation, caching, retrieval efficiency, consistency, indexing, bulk operations | 18 |
 
-**Total: 71 checks**
+**Total: 77 checks**
 
 ## Context
 
@@ -53,11 +53,11 @@ Do NOT flag:
 
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
-**Check:** Delegate to `/cco:tune --check` for profile validation:
+**Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
 // Delegate profile check to tune command
-const tuneResult = await Skill("tune", "--check")
+const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   // User declined setup - exit gracefully
@@ -78,7 +78,7 @@ if (tuneResult.status === "skipped") {
 // --auto mode: unattended, full scope, no questions, minimal output
 if (args.includes("--auto")) {
   config = {
-    intensity: "full-fix",        // All severities
+    fixMode: "full-fix",          // All severities
     scopes: ["architecture", "patterns", "testing", "maintainability", "ai-architecture", "functional-completeness"],
     applyMode: "apply-all",       // Apply everything
     unattended: true
@@ -100,7 +100,7 @@ if (args.includes("--auto")) {
 | **GATE-1** | - | Checkpoint | Validate findings, metrics | → Gap Analysis |
 | **ASSESS** | 2-3 | Gap | Current vs Ideal + Prioritize | Gaps quantified |
 | **GATE-2** | - | Checkpoint | Recommendations ready | → Plan or Apply |
-| **PLAN** | 3.5 | Review | Architectural plan (conditional) | User approval |
+| **PLAN** | 3.5 | Review | Architectural plan (mandatory when findings >0) | User approval |
 | **GATE-3** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 4 | Fix | Apply recommendations | Changes verified |
 | **GATE-4** | - | Checkpoint | applied + failed = total | → Summary |
@@ -139,13 +139,9 @@ function gate4_postApply(results) {
 }
 ```
 
-**Plan Review triggers automatically when:**
-- `--plan` flag is passed
-- >5 architectural recommendations
-- Any CRITICAL gap (coupling >70%, cohesion <50%)
-- `--intensity=full-fix` selected
+**Plan Review is MANDATORY when findings > 0.**
 
-**Skipped when:** `--auto` mode (unless `--auto --plan`)
+**Skipped when:** `--auto` mode or 0 findings
 
 ---
 
@@ -153,9 +149,9 @@ function gate4_postApply(results) {
 
 **See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
-### No Deferrals in Auto/Fix-All [CRITICAL]
+### No Deferrals in Auto [CRITICAL]
 
-When `--auto` or `--fix-all` is active:
+When `--auto` is active:
 - **Zero commentary** - No "this is complex", "needs refactor", "architectural decision"
 - **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
 - **Zero skips** - Every recommendation = APPLIED or TECHNICAL FAILURE
@@ -175,7 +171,7 @@ AskUserQuestion([
     options: [
       { label: "Structure (Recommended)", description: "Architecture, design patterns (ARC + PAT)" },
       { label: "Quality (Recommended)", description: "Testing, maintainability (TST + MNT)" },
-      { label: "Completeness", description: "API gaps, AI over-engineering (FUN + AIA)" }
+      { label: "Completeness & Data", description: "API gaps, data management, AI over-engineering (FUN + AIA)" }
     ],
     multiSelect: true
   },
@@ -204,7 +200,7 @@ AskUserQuestion([
 ### Validation
 ```
 [x] User completed Q1
-→ Store as: config = { intensity, scopes, applyMode }
+→ Store as: config = { fixMode, scopes, applyMode }
 → Proceed to Step-1b
 ```
 
@@ -287,7 +283,7 @@ analysisTask = {
   - ARC-07: Shotgun surgery indicators
   - ARC-08: Divergent change indicators
   - ARC-09: Missing abstraction layers
-  - ARC-10: Over-abstraction
+  - ARC-10: Inconsistent module size (wildly varying granularity)
   - ARC-11: Package/module organization
   - ARC-12: Dependency direction violations
   - ARC-13: Missing dependency injection
@@ -346,7 +342,7 @@ analysisTask = {
   - AIA-09: God module detection (too many responsibilities)
   - AIA-10: Missing abstraction (should exist but doesn't)
 
-  ## functional-completeness (FUN-01 to FUN-12)
+  ## functional-completeness (FUN-01 to FUN-18)
   - FUN-01: Missing CRUD operations (entity without create/read/update/delete)
   - FUN-02: Missing list pagination (collection endpoints without limit/offset)
   - FUN-03: Missing filter support (list endpoints without query params)
@@ -359,6 +355,12 @@ analysisTask = {
   - FUN-10: Missing timeout config (external calls without configurable timeout)
   - FUN-11: Missing retry strategy (no retry policy for transient failures)
   - FUN-12: Incomplete API surface (missing endpoints for common operations)
+  - FUN-13: Missing data validation layer (no schema validation at data layer)
+  - FUN-14: Missing caching strategy (frequently accessed data without cache)
+  - FUN-15: Inefficient data retrieval (SELECT * or N+1 without eager loading)
+  - FUN-16: Missing data consistency (no transaction or eventual consistency mechanism)
+  - FUN-17: Missing data indexing (frequently queried fields without index definitions)
+  - FUN-18: Missing bulk operations (no bulk data processing endpoint/function)
 
   Return: {
     findings: [{ id, scope, severity, title, location, description, recommendation, effort, impact, confidence }],
@@ -476,9 +478,9 @@ ${techAssessment.alternatives.map(a =>
 **Apply 80/20 prioritization:**
 
 ```javascript
-// Filter by intensity FIRST
+// Filter by fixMode FIRST
 function matchesIntensity(finding) {
-  switch(config.intensity) {
+  switch(config.fixMode) {
     case "critical-only": return finding.severity === "CRITICAL"
     case "high-priority": return ["CRITICAL", "HIGH"].includes(finding.severity)
     case "quick-wins": return finding.effort === "LOW" && finding.impact === "HIGH"
@@ -502,7 +504,7 @@ complex = filteredFindings.filter(f => f.impact === "MEDIUM")
 major = filteredFindings.filter(f => f.impact === "LOW" || f.effort === "HIGH")
 
 // For Quick Wins mode, only keep quickWin
-if (config.intensity === "quick-wins") {
+if (config.fixMode === "quick-wins") {
   moderate = []
   complex = []
   major = []
@@ -516,7 +518,7 @@ totalFindings = quickWin.length + moderate.length + complex.length + major.lengt
 ```markdown
 ## Findings by Effort Category
 
-Intensity: {config.intensity} | Scopes: {config.scopes.join(", ")}
+Intensity: {config.fixMode} | Scopes: {config.scopes.join(", ")}
 
 ### Quick Win (High Impact, Low Effort) - {quickWin.length} items
 
@@ -539,27 +541,25 @@ Intensity: {config.intensity} | Scopes: {config.scopes.join(", ")}
 ```
 [x] Recommendations displayed
 [x] Prioritization applied
-→ If intensity = "report-only": Skip to Step-5
-→ Check Plan Review triggers → Step-3.5 or Step-4
+→ If fixMode = "report-only": Skip to Step-5
+→ If findings > 0: Step-3.5 (Plan Review)
+→ If findings = 0: Skip to Step-5
 ```
 
 ---
 
-## Step-3.5: Plan Review [CONDITIONAL]
+## Step-3.5: Plan Review [MANDATORY]
 
 **"Think before you act"** - For architectural changes, reasoning matters more.
 
 ### Trigger Conditions
 
 ```javascript
-// Determine if Plan Review is needed
-const planMode = args.includes("--plan") ||
-  (filteredFindings.length > 5) ||
-  (gaps.coupling.gap > 20 || gaps.cohesion.gap > 20) ||  // CRITICAL gaps
-  (config.intensity === "full-fix")
+// Plan Review runs whenever there are findings
+const planMode = filteredFindings.length > 0
 
-// Skip in pure --auto mode (unless --auto --plan)
-const skipPlan = isUnattended && !args.includes("--plan")
+// Skip in --auto mode
+const skipPlan = isUnattended
 
 if (planMode && !skipPlan) {
   // → Enter Plan Review
@@ -602,7 +602,7 @@ const architecturalPlans = filteredFindings.map(finding => ({
 ```markdown
 ## Architectural Plan Review
 
-**Intensity:** {config.intensity} | **Gaps:** {gapCount} | **Modules Affected:** {uniqueModules.length}
+**Intensity:** {config.fixMode} | **Gaps:** {gapCount} | **Modules Affected:** {uniqueModules.length}
 
 > Architectural changes have wider impact. Review reasoning before proceeding.
 
@@ -701,11 +701,11 @@ switch (planDecision) {
 
 ```javascript
 let toApply = []
-let skipped = []  // Items excluded by intensity filter (not AI declining)
+let skipped = []  // Items excluded by fixMode filter (not AI declining)
 
 // NOTE: Effort categories (quickWin/moderate/complex/major) are for REPORTING only
 // In full-fix mode, ALL items are applied regardless of effort category
-switch(config.intensity) {
+switch(config.fixMode) {
   case "critical-only":
     toApply = quickWin.filter(f => f.severity === "CRITICAL")
     skipped = [...quickWin.filter(f => f.severity !== "CRITICAL"), ...moderate, ...complex, ...major]
@@ -739,7 +739,7 @@ switch(config.intensity) {
 ```markdown
 ## Applying Recommendations
 
-Intensity: {config.intensity}
+Intensity: {config.fixMode}
 
 | # | ID | Effort | Issue | Location | Action |
 |---|-----|--------|-------|----------|--------|
@@ -750,7 +750,7 @@ Applying: {toApply.length} | Total: {totalFindings}
 
 ```javascript
 if (toApply.length > 0) {
-  const isFixAll = config.intensity === "full-fix"
+  const isFixAll = config.fixMode === "full-fix"
 
   applyResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(toApply)}
@@ -805,7 +805,7 @@ if (toApply.length > 0) {
 
 ```javascript
 // COUNTING STANDARD
-// - total: all findings in selected intensity scope
+// - total: all findings in selected fixMode scope
 // - applied: successfully fixed
 // - failed: couldn't fix (technical reason required)
 //
@@ -836,7 +836,7 @@ assert(applied + failed === toApply.length,
 ### Accounting
 | Metric | Value |
 |--------|-------|
-| Intensity | {config.intensity} |
+| Fix Mode | {config.fixMode} |
 | Scopes | {config.scopes.join(", ")} |
 | Files modified | {n} |
 | **Total findings** | **{totalFindings}** |
@@ -922,8 +922,8 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode: all areas, full intensity, no questions |
-| `--preview` | Analyze only, show gaps, don't apply changes |
+| `--auto` | Unattended mode: all scopes, all severities, no questions |
+| `--preview` | Analyze only, show gaps and findings, don't apply changes |
 
 ### Scope Groups
 
@@ -931,7 +931,7 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 |-------|-----------------|--------|
 | **Structure** | architecture + patterns | ARC-01-15, PAT-01-12 (27 checks) |
 | **Quality** | testing + maintainability | TST-01-10, MNT-01-12 (22 checks) |
-| **Completeness** | functional + ai-architecture | FUN-01-12, AIA-01-10 (22 checks) |
+| **Completeness & Data** | functional + ai-architecture | FUN-01-18, AIA-01-10 (28 checks) |
 
 ### Model Strategy
 
@@ -1014,7 +1014,7 @@ const thresholds = {
 | Fix broke something | `git checkout -- {file}` |
 | Multiple files affected | `git checkout .` |
 | Want to review | `git diff` |
-| Wrong intensity selected | Re-run with `--intensity=X` |
+| Wrong fix mode selected | Re-run and select different option |
 
 ---
 

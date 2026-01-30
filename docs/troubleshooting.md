@@ -82,7 +82,7 @@ Common issues and solutions.
 
 1. **Force update:**
    ```
-   /cco:tune --force
+   /cco:tune --update
    ```
 
 2. **Check required fields:**
@@ -111,7 +111,7 @@ Common issues and solutions.
 
 3. **Re-run with force:**
    ```
-   /cco:tune --force
+   /cco:tune --update
    ```
 
 ---
@@ -127,11 +127,11 @@ Common issues and solutions.
 1. **Check project size** - Large projects take longer
 2. **Use scope flags:**
    ```
-   /cco:optimize --security  # Single scope faster
+   /cco:optimize --scope=security  # Single scope faster
    ```
 3. **Use quick mode:**
    ```
-   /cco:align --quick
+   /cco:align --preview
    ```
 
 ### "Applied: 0" when issues exist
@@ -142,14 +142,14 @@ Common issues and solutions.
 
 1. **Check intensity level:**
    ```
-   /cco:optimize --fix-all  # All severities
+   /cco:optimize --auto  # All severities, unattended
    ```
 
 2. **Check scope selection** - Issues might be in unselected scope
 
 3. **Use report mode to see findings:**
    ```
-   /cco:optimize --report
+   /cco:optimize --preview
    ```
 
 ### Git state warnings
@@ -184,7 +184,7 @@ Common issues and solutions.
 
 1. **Re-run tune to detect commands:**
    ```
-   /cco:tune --force
+   /cco:tune --update
    ```
 
 2. **Check profile commands section:**
@@ -212,9 +212,9 @@ Common issues and solutions.
    pytest tests/ -v
    ```
 
-2. **Skip tests (not recommended):**
+2. **Commit only staged changes:**
    ```
-   /cco:commit --skip-tests
+   /cco:commit --staged-only
    ```
 
 3. **Run tests manually to see errors:**
@@ -299,10 +299,10 @@ Common issues and solutions.
 
 ### Enable verbose output
 
-Most commands support `--report` or `--preview` for dry-run:
+Most commands support `--preview` for dry-run:
 
 ```
-/cco:optimize --report    # Show findings without fixing
+/cco:optimize --preview   # Show findings without fixing
 /cco:commit --preview     # Show plan without committing
 /cco:preflight --preview  # Check without releasing
 ```
@@ -310,7 +310,7 @@ Most commands support `--report` or `--preview` for dry-run:
 ### Check what tune detected
 
 ```
-/cco:tune --check
+/cco:tune --preview
 ```
 
 Returns detection status and profile validation.
@@ -334,7 +334,7 @@ Should show:
 
 ### "Can I customize generated rules?"
 
-Yes. Edit `.claude/rules/cco-profile.md` directly. Changes persist until next `/cco:tune --force`.
+Yes. Edit `.claude/rules/cco-profile.md` directly. Changes persist until next `/cco:tune --update`.
 
 ### "How do I see what rules are active?"
 
@@ -349,7 +349,7 @@ No. CCO only manages files with `cco-` prefix. Your rules (without prefix) are n
 Check:
 1. Intensity level - `quick-wins` filters heavily
 2. Selected scopes - Issues might be in unselected scope
-3. Use `--report` to see what was analyzed
+3. Use `--preview` to see what was analyzed
 
 ### "Can I run CCO in CI/CD?"
 

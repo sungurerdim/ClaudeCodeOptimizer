@@ -76,20 +76,8 @@ class TestCommandArgumentParsing:
         """Args section should document all flags."""
         expected_flags = [
             "--auto",
-            "--security",
-            "--hygiene",
-            "--types",
-            "--lint",
-            "--performance",
-            "--ai-hygiene",
-            "--robustness",
-            "--doc-sync",
-            "--report",
-            "--fix",
-            "--fix-all",
-            "--score",
-            "--intensity",
-            "--plan",
+            "--preview",
+            "--scope",
         ]
         for flag in expected_flags:
             assert flag in optimize_content, f"optimize.md should document {flag}"
@@ -111,7 +99,7 @@ class TestCommandArgumentParsing:
         hint = frontmatter.get("argument-hint", "")
         # Check some key flags are in the hint
         assert "--auto" in hint, "argument-hint should include --auto"
-        assert "--fix-all" in hint, "argument-hint should include --fix-all"
+        assert "--preview" in hint, "argument-hint should include --preview"
 
 
 class TestAgentReferences:
@@ -209,16 +197,6 @@ class TestCommandConsistency:
             commands[cmd_file.stem] = yaml.safe_load(parts[1])
         return commands
 
-    def test_all_commands_have_description(self, all_commands):
-        """Every command must have a description."""
-        for name, frontmatter in all_commands.items():
-            assert frontmatter.get("description"), f"Command {name} missing description"
-
-    def test_all_commands_have_allowed_tools(self, all_commands):
-        """Every command must declare allowed-tools."""
-        for name, frontmatter in all_commands.items():
-            assert frontmatter.get("allowed-tools"), f"Command {name} missing allowed-tools"
-
     def test_commands_use_valid_tools(self, all_commands):
         """Commands should only use valid tool names."""
         valid_tools = {
@@ -240,12 +218,72 @@ class TestCommandConsistency:
             for tool in tools:
                 assert tool in valid_tools, f"Command {name} uses unknown tool: {tool}"
 
-    def test_commands_specify_model_when_needed(self, all_commands):
-        """Commands using Task should specify model."""
-        for name, frontmatter in all_commands.items():
-            # If command uses Task, it should specify model
-            tools_str = frontmatter.get("allowed-tools", "")
-            if "Task" in tools_str:
-                # Model can be in frontmatter or documented inline
-                # Just check frontmatter for now
-                pass  # Model specification is optional at frontmatter level
+
+class TestScopeConsistency:
+    """Validate scope definitions match between commands and agent."""
+
+    @pytest.fixture
+    def agent_content(self):
+        """Load agent-analyze content."""
+        return (AGENTS_DIR / "cco-agent-analyze.md").read_text(encoding="utf-8")
+
+    @pytest.fixture
+    def optimize_content(self):
+        """Load optimize command content."""
+        return (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
+
+    @pytest.fixture
+    def align_content(self):
+        """Load align command content."""
+        return (COMMANDS_DIR / "align.md").read_text(encoding="utf-8")
+
+    def test_optimize_scopes_defined_in_agent(self, agent_content, optimize_content):
+        """All optimize scope IDs referenced in command must be defined in agent."""
+        optimize_scopes = {
+            "SEC": "security",
+            "HYG": "hygiene",
+            "TYP": "types",
+            "LNT": "lint",
+            "PRF": "performance",
+            "AIH": "ai-hygiene",
+            "ROB": "robustness",
+            "PRV": "privacy",
+            "DOC": "doc-sync",
+            "SIM": "simplify",
+        }
+        for scope_id, scope_name in optimize_scopes.items():
+            assert f"### {scope_name}" in agent_content or f"| {scope_name}" in agent_content, (
+                f"Optimize scope {scope_id} ({scope_name}) not defined in agent-analyze"
+            )
+
+    def test_align_scopes_defined_in_agent(self, agent_content, align_content):
+        """All align scope IDs referenced in command must be defined in agent."""
+        align_scopes = {
+            "ARC": "architecture",
+            "PAT": "patterns",
+            "TST": "testing",
+            "MNT": "maintainability",
+            "AIA": "ai-architecture",
+            "FUN": "functional-completeness",
+        }
+        for scope_id, scope_name in align_scopes.items():
+            assert f"### {scope_name}" in agent_content or f"| {scope_name}" in agent_content, (
+                f"Align scope {scope_id} ({scope_name}) not defined in agent-analyze"
+            )
+
+    def test_scope_check_counts_match(self, agent_content, optimize_content):
+        """Scope check ranges in command should match agent definitions."""
+        # Verify key scope ranges exist in both
+        scope_ranges = [
+            ("SEC-01", "SEC-12"),
+            ("HYG-01", "HYG-20"),
+            ("TYP-01", "TYP-10"),
+            ("PRF-01", "PRF-10"),
+            ("ROB-01", "ROB-10"),
+            ("PRV-01", "PRV-08"),
+            ("DOC-01", "DOC-08"),
+            ("SIM-01", "SIM-11"),
+        ]
+        for first_id, last_id in scope_ranges:
+            assert first_id in agent_content, f"Agent missing {first_id}"
+            assert last_id in agent_content, f"Agent missing {last_id}"

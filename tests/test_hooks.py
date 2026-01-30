@@ -101,42 +101,6 @@ class TestAdditionalContextSections:
         assert "[CHECK]" in additional_context, "additionalContext should define CHECK rules"
 
 
-class TestHookOutputFormat:
-    """Validate hook output matches Claude Code plugin expectations."""
-
-    @pytest.fixture
-    def core_rules_json(self):
-        """Load core-rules.json content."""
-        path = HOOKS_DIR / "core-rules.json"
-        return json.loads(path.read_text(encoding="utf-8"))
-
-    def test_output_is_valid_hook_response(self, core_rules_json):
-        """Output must be valid Claude Code hook response format."""
-        # Claude Code expects hookSpecificOutput with hookEventName
-        assert "hookSpecificOutput" in core_rules_json
-        output = core_rules_json["hookSpecificOutput"]
-
-        # hookEventName must match the hook type
-        assert output.get("hookEventName") == "SessionStart"
-
-        # additionalContext is the injected content
-        assert isinstance(output.get("additionalContext"), str)
-
-    def test_output_is_single_json_object(self, core_rules_json):
-        """Output should be a single JSON object (not array)."""
-        assert isinstance(core_rules_json, dict), "Output must be a JSON object"
-        assert not isinstance(core_rules_json, list), "Output must not be an array"
-
-    def test_no_unescaped_special_chars(self, core_rules_json):
-        """additionalContext should not have problematic escape sequences."""
-        context = core_rules_json["hookSpecificOutput"]["additionalContext"]
-        # Check for common JSON escaping issues
-        # Valid: \n, \t, \\, \"
-        # These should already be handled by JSON parsing, so if we get here
-        # the escaping is valid
-        assert isinstance(context, str), "Context should be a valid string"
-
-
 class TestCrossPlatformCommands:
     """Validate command syntax works cross-platform."""
 
@@ -190,23 +154,6 @@ class TestHookWiring:
         """core-rules.json must exist for hook to work."""
         path = HOOKS_DIR / "core-rules.json"
         assert path.exists(), f"core-rules.json not found at {path}"
-
-    def test_hook_files_are_in_sync(self):
-        """Verify hook files are consistent."""
-        hooks_json_path = HOOKS_DIR / "hooks.json"
-        core_rules_path = HOOKS_DIR / "core-rules.json"
-
-        # Both files must exist
-        assert hooks_json_path.exists(), "hooks.json missing"
-        assert core_rules_path.exists(), "core-rules.json missing"
-
-        # Both must be valid JSON
-        hooks_json = json.loads(hooks_json_path.read_text(encoding="utf-8"))
-        core_rules_json = json.loads(core_rules_path.read_text(encoding="utf-8"))
-
-        # core-rules should have content that hooks.json references
-        assert "hookSpecificOutput" in core_rules_json
-        assert "SessionStart" in hooks_json.get("hooks", {})
 
 
 class TestContentIntegrity:

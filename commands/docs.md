@@ -1,6 +1,6 @@
 ---
 description: Documentation gap analysis - compare ideal vs current docs, generate missing content
-argument-hint: "[--auto] [--check] [--report] [--preview] [--scope=<scope>] [--plan] [--force]"
+argument-hint: "[--auto] [--preview] [--scope=<name>] [--update]"
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 model: opus
 ---
@@ -33,11 +33,9 @@ model: opus
 ## Args
 
 - `--auto`: Fully unattended mode - detect, analyze, generate all missing docs
-- `--check`: Validation only, return status (for other commands)
-- `--report`: Analyze gaps only, no generation (alias: `--dry-run`)
+- `--preview`: Analyze gaps only, no generation
 - `--scope=X`: Single scope: readme, api, dev, user, ops, changelog
-- `--plan`: Show detailed plan before generating (auto-enabled for >3 docs)
-- `--force`: Regenerate even if docs exist (update mode)
+- `--update`: Regenerate even if docs exist (update mode)
 
 ## Scopes
 
@@ -68,11 +66,11 @@ CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's
 
 This data is reused by docs command - no duplicate detection needed.
 
-**Check:** Delegate to `/cco:tune --check` for profile validation:
+**Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
 // Delegate profile check to tune command
-const tuneResult = await Skill("tune", "--check")
+const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   // User declined setup - exit gracefully
@@ -93,10 +91,8 @@ if (tuneResult.status === "skipped") {
 ```javascript
 const args = "$ARGS"
 const isUnattended = args.includes("--auto")
-const isCheckOnly = args.includes("--check")
-const isReportOnly = args.includes("--report") || args.includes("--dry-run")
-const forceUpdate = args.includes("--force")
-const showPlan = args.includes("--plan")
+const isReportOnly = args.includes("--preview")
+const updateMode = args.includes("--update")
 
 // Parse scope filter
 const scopeArg = args.match(/--scope=(\w+)/)?.[1]
@@ -130,11 +126,11 @@ if (isUnattended) {
 **Execution Flow:** Step-0 → (1a ‖ 1b) → 2 → [3 if plan mode] → 4 → 5
 
 **Plan Review triggers automatically when:**
-- `--plan` flag is passed
+- Findings > 0
 - >3 documents to generate
 - API documentation scope selected
 
-**Skipped when:** `--auto` mode (unless `--auto --plan`)
+**Skipped when:** `--auto` mode or 0 findings
 
 ---
 
@@ -350,23 +346,10 @@ Project Type: {projectType} | Mode: {config.mode}
 **Summary:** {gapCount} scopes need documentation
 ```
 
-### Check Mode (--check)
-
-```javascript
-if (isCheckOnly) {
-  const status = gapCount === 0 ? "ok" : "warn"
-  return {
-    status: status,
-    gaps: gapCount,
-    missing: Object.entries(gaps).filter(([k, v]) => v.needed).map(([k]) => k)
-  }
-}
-```
-
 ### Validation
 ```
 [x] Gap analysis complete
-→ If --report: Skip to Step-5
+→ If --preview: Skip to Step-5
 → If gapCount === 0: Skip to Step-5
 → Check Plan Review triggers → Step-3 or Step-4
 ```
@@ -378,11 +361,11 @@ if (isCheckOnly) {
 ### Trigger Conditions
 
 ```javascript
-const planMode = showPlan ||
+const planMode = (findings.length > 0) ||
   (gapCount > 3) ||
   (config.scopes.includes("api"))
 
-const skipPlan = isUnattended && !args.includes("--plan")
+const skipPlan = isUnattended
 
 if (planMode && !skipPlan && !isReportOnly) {
   // → Enter Plan Review
@@ -587,7 +570,7 @@ cco-docs: {OK|WARN|FAIL} | Generated: {applied} | Failed: {failed} | Scopes: {co
 | Scenario | Questions | Total |
 |----------|-----------|-------|
 | --auto mode | 0 | 0 |
-| --check mode | 0 | 0 |
+| --preview mode | 0 | 0 |
 | Interactive | Q1 (Scopes + Mode) | 1 |
 
 ### Output Schema (when called as sub-command)
@@ -615,9 +598,8 @@ cco-docs: {OK|WARN|FAIL} | Generated: {applied} | Failed: {failed} | Scopes: {co
 | Flag | Effect |
 |------|--------|
 | `--auto` | Unattended mode: all areas, generate all missing |
-| `--check` | Validation only, return gap status |
 | `--preview` | Show gaps only, don't generate |
-| `--force` | Regenerate even if docs exist |
+| `--update` | Regenerate even if docs exist |
 
 ### Scope Groups
 
@@ -696,8 +678,8 @@ Create a new user.
 | Situation | Recovery |
 |-----------|----------|
 | Generated doc is wrong | `git checkout -- {file}` |
-| Want to review first | Use `--report` flag |
-| Update existing | Use `--force` flag |
+| Want to review first | Use `--preview` flag |
+| Update existing | Use `--update` flag |
 
 ---
 

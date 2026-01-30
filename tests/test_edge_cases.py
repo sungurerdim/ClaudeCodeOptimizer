@@ -2,19 +2,15 @@
 
 These tests validate:
 - Invalid argument combinations are rejected
-- Missing profile handling is graceful
-- Malformed JSON is detected
-- Missing required fields are caught
-
-Tests use fixtures and mocks to avoid file system dependencies.
+- Profile exists and is valid
+- Hook JSON structure is correct
+- Schema files exist and are valid
 """
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
-import yaml
 
 ROOT = Path(__file__).parent.parent
 
@@ -30,97 +26,44 @@ class TestInvalidArgumentCombinations:
             return json.loads(schema_path.read_text(encoding="utf-8"))
         return None
 
-    def test_report_and_fix_all_mutually_exclusive(self, schema):
-        """--report and --fix-all cannot be used together."""
-        # These flags have opposite intents: report only vs fix everything
+    def test_preview_and_auto_mutually_exclusive(self, schema):
+        """--preview and --auto cannot be used together."""
+        # These flags have opposite intents: preview only vs fix everything
         assert schema is not None, "Schema file must exist"
 
         # The schema should define this constraint in allOf
         all_of = schema.get("allOf", [])
         has_constraint = any(
-            "report" in str(constraint) and "fix-all" in str(constraint) for constraint in all_of
+            "preview" in str(constraint) and "auto" in str(constraint) for constraint in all_of
         )
-        assert has_constraint, "Schema should define report/fix-all mutual exclusivity"
+        assert has_constraint, "Schema should define preview/auto mutual exclusivity"
 
-    def test_score_excludes_fix_operations(self, schema):
-        """--score should not allow --fix or --fix-all."""
+    def test_schema_has_no_removed_flags(self, schema):
+        """Schema should not have --score or --fix-all (removed flags)."""
         assert schema is not None, "Schema file must exist"
-
-        all_of = schema.get("allOf", [])
-        has_constraint = any(
-            "score" in str(constraint) and "fix" in str(constraint) for constraint in all_of
-        )
-        assert has_constraint, "Schema should define score/fix mutual exclusivity"
-
-    def test_intensity_report_only_excludes_fix_all(self, schema):
-        """--intensity=report-only should not allow --fix-all."""
-        assert schema is not None, "Schema file must exist"
-
-        all_of = schema.get("allOf", [])
-        has_constraint = any(
-            "report-only" in str(constraint) and "fix-all" in str(constraint)
-            for constraint in all_of
-        )
-        assert has_constraint, "Schema should constrain report-only intensity"
-
-    def test_intensity_enum_values(self, schema):
-        """--intensity must be one of the valid enum values."""
-        assert schema is not None, "Schema file must exist"
-
-        intensity_prop = schema.get("properties", {}).get("intensity", {})
-        expected_values = ["quick-wins", "standard", "full-fix", "report-only"]
-        assert intensity_prop.get("enum") == expected_values, (
-            f"Intensity enum should be {expected_values}"
-        )
+        props = schema.get("properties", {})
+        assert "score" not in props, "Schema should not have score property"
+        assert "fix-all" not in props, "Schema should not have fix-all property"
+        assert "intensity" not in props, "Schema should not have intensity property"
 
 
 class TestMissingProfileHandling:
     """Validate graceful handling when profile doesn't exist."""
 
-    def test_profile_path_is_conventional(self):
-        """Profile should be at standard location."""
-        expected_path = ROOT / ".claude" / "rules" / "cco-profile.md"
-        # This test documents the expected path, not that it exists
-        assert expected_path.parent.name == "rules"
-        assert expected_path.suffix == ".md"
+    def test_actual_profile_exists_at_conventional_path(self):
+        """Actual project profile should exist at .claude/rules/cco-profile.md."""
+        profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
+        assert profile_path.exists(), f"Profile not found at {profile_path}"
 
-    def test_missing_profile_detection(self):
-        """Missing profile should be detectable without crash."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            fake_root = Path(tmpdir)
-            profile_path = fake_root / ".claude" / "rules" / "cco-profile.md"
-            assert not profile_path.exists()
-            # Detection should return False, not raise
-            assert profile_path.exists() is False
-
-    def test_profile_yaml_frontmatter_extraction(self):
-        """Profile YAML frontmatter should be extractable when present."""
-        profile_content = """---
-project:
-  purpose: Test project
-stack:
-  languages: [Python]
-maturity: active
-commands:
-  test: pytest
----
-
-# Profile Content
-"""
-        lines = profile_content.split("\n")
-        assert lines[0] == "---", "Profile must start with frontmatter"
-
-        # Extract YAML between markers
-        yaml_end = -1
-        for i, line in enumerate(lines[1:], 1):
-            if line == "---":
-                yaml_end = i
-                break
-
-        assert yaml_end > 0, "Profile must have closing frontmatter marker"
-        yaml_content = "\n".join(lines[1:yaml_end])
-        data = yaml.safe_load(yaml_content)
-        assert data.get("project", {}).get("purpose") == "Test project"
+    def test_actual_profile_is_valid_markdown(self):
+        """Actual project profile should be readable and non-empty."""
+        profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
+        if profile_path.exists():
+            content = profile_path.read_text(encoding="utf-8")
+            assert len(content) > 50, "Profile content is too short"
+            assert "## Stack" in content or "## stack" in content.lower(), (
+                "Profile should contain Stack section"
+            )
 
 
 class TestMalformedJsonHandling:
@@ -135,19 +78,6 @@ class TestMalformedJsonHandling:
         except json.JSONDecodeError as e:
             pytest.fail(f"core-rules.json is malformed: {e}")
 
-    def test_malformed_json_is_detectable(self):
-        """Malformed JSON should raise JSONDecodeError."""
-        malformed_samples = [
-            '{"key": "value",}',  # Trailing comma
-            "{'key': 'value'}",  # Single quotes
-            '{"key": undefined}',  # undefined value
-            '{"key": }',  # Missing value
-            "{key: value}",  # Unquoted keys
-        ]
-        for sample in malformed_samples:
-            with pytest.raises(json.JSONDecodeError):
-                json.loads(sample)
-
     def test_hook_output_structure_validation(self):
         """Hook output must have required structure."""
         core_rules_path = ROOT / "hooks" / "core-rules.json"
@@ -160,61 +90,26 @@ class TestMalformedJsonHandling:
         assert "additionalContext" in output, "Missing additionalContext"
 
 
-class TestProfileYamlValidation:
-    """Validate profile YAML structure requirements."""
+class TestActualProfileValidation:
+    """Validate actual project profile structure."""
 
     @pytest.fixture
-    def valid_profile_yaml(self):
-        """Return minimal valid profile YAML."""
-        return """project:
-  purpose: Test project for validation
-stack:
-  languages: [Python]
-maturity: active
-commands:
-  test: pytest
-"""
+    def profile_content(self):
+        """Load actual profile content."""
+        profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
+        if not profile_path.exists():
+            pytest.skip("Profile not found")
+        return profile_path.read_text(encoding="utf-8")
 
-    def test_required_fields_present(self, valid_profile_yaml):
-        """Profile must have project, stack, maturity, commands."""
-        data = yaml.safe_load(valid_profile_yaml)
-        required = ["project", "stack", "maturity", "commands"]
-        for field in required:
-            assert field in data, f"Missing required field: {field}"
+    def test_profile_has_stack_section(self, profile_content):
+        """Profile must document the project stack."""
+        assert "## Stack" in profile_content, "Profile missing Stack section"
 
-    def test_project_purpose_required(self, valid_profile_yaml):
-        """project.purpose is required."""
-        data = yaml.safe_load(valid_profile_yaml)
-        assert data.get("project", {}).get("purpose"), "project.purpose is required"
-
-    def test_invalid_yaml_detection(self):
-        """Invalid YAML should be detected."""
-        invalid_samples = [
-            "project:\n  purpose: [unclosed bracket",  # Unclosed bracket
-            "project:\n\tpurpose: tabs",  # Tab indentation (YAML spec allows but discouraged)
-            "project: {nested: {deep: [mixed}]}",  # Mismatched brackets
-        ]
-        for sample in invalid_samples:
-            try:
-                yaml.safe_load(sample)
-            except yaml.YAMLError:
-                pass  # Expected for truly invalid YAML
-            # Note: some "invalid" YAML may parse - this tests detection capability
-
-    def test_empty_purpose_is_invalid(self):
-        """Empty project.purpose should be flagged."""
-        empty_purpose_yaml = """project:
-  purpose: ""
-stack:
-  languages: [Python]
-maturity: active
-commands:
-  test: pytest
-"""
-        data = yaml.safe_load(empty_purpose_yaml)
-        purpose = data.get("project", {}).get("purpose")
-        # Empty string is falsy in Python
-        assert not purpose, "Empty purpose should be falsy"
+    def test_profile_has_language_info(self, profile_content):
+        """Profile must list at least one language."""
+        assert "Languages" in profile_content or "languages" in profile_content, (
+            "Profile missing language information"
+        )
 
 
 class TestSchemaExistence:

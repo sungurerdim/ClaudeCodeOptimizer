@@ -1,6 +1,6 @@
 ---
 name: cco-agent-analyze
-description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for /cco:tune (scope=tune).
+description: Codebase analysis with severity scoring - security, privacy, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for /cco:tune (scope=tune).
 tools: Glob, Read, Grep, Bash
 model: haiku
 ---
@@ -184,8 +184,10 @@ Return detected commands in profile format.
 | performance | PRF-01 to PRF-10 patterns | Performance tuning |
 | ai-hygiene | AIH-01 to AIH-08 patterns | AI-generated code cleanup |
 | robustness | ROB-01 to ROB-10 patterns | Robustness (timeouts, retries, validation) |
+| privacy | PRV-01 to PRV-08 patterns | Privacy (PII exposure, data masking, consent) |
 | doc-sync | DOC-01 to DOC-08 patterns | Documentation-code consistency |
-| ALL OPTIMIZE | All 81 checks in single grep batch | Full optimization |
+| simplify | SIM-01 to SIM-11 patterns | Complexity reduction, test cleanup |
+| ALL OPTIMIZE | All 105 checks in single grep batch | Full optimization |
 
 **REVIEW Scope Sets:**
 
@@ -196,8 +198,9 @@ Return detected commands in profile format.
 | testing | TST-01 to TST-10 + coverage data | Testing strategy |
 | maintainability | MNT-01 to MNT-12 patterns | Code health |
 | ai-architecture | AIA-01 to AIA-10 patterns | AI drift detection |
-| functional-completeness | FUN-01 to FUN-12 patterns | Functional coverage (CRUD, edge cases) |
-| ALL REVIEW | All 71 checks + metrics | Full strategic review |
+| functional-completeness | FUN-01 to FUN-18 patterns | Functional coverage (CRUD, edge cases, data management) |
+| ALL REVIEW | All 77 checks + metrics | Full strategic review |
+
 
 **Cross-Command Scopes:**
 
@@ -442,6 +445,7 @@ HYG-03: unused_functions: Grep function defs → verify call sites
 HYG-04: dead_code: Unreachable after return/raise
 HYG-05: orphan_files: Glob *.py → verify imports anywhere
 HYG-06: duplicate_blocks: >10 lines identical (use diff)
+        # Note: PAT-05 (align) checks >3 similar blocks codebase-wide. SIM-02 checks similar (not just identical)
 HYG-07: stale_todos: TODO|FIXME with date >30 days old
 HYG-08: empty_files: wc -l < 5 (excluding __init__.py)
 HYG-09: commented_code: #.*def |#.*class |#.*import
@@ -506,6 +510,7 @@ LNT-03: line_length: lines > 88|120 chars
 LNT-04: naming_violations: [a-z][A-Z]|[A-Z]{3,}[a-z]
 LNT-05: docstring_format: """(?!.*\n.*Args:|Returns:|Raises:)
 LNT-06: magic_numbers: (?<!\w)\d{2,}(?!\w|\.|\d)(?!.*# constant)
+        # Note: MNT-06 (align) checks magic numbers in business logic context
 LNT-07: string_literals: ["'](?!.*# i18n)[^"']{20,}["']
 LNT-08: quote_style: mixed ' and " in same file
 ```
@@ -528,7 +533,8 @@ PRF-10: sync_in_hot_path: @app\.(route|get).*\n(?!.*async).*def
 ```
 AIH-01: hallucinated_api: method calls that don't exist in imports
 AIH-02: orphan_abstractions: class.*ABC|Protocol.*\n(?!.*\(\w+\))
-AIH-03: phantom_imports: import \w+ (not used in file)
+AIH-03: over_documented: Excessive docstrings on trivial/obvious functions (one-liners, self-explanatory names)
+        # AI pattern: LLMs add docstrings to every function regardless of complexity
 AIH-04: dead_feature_flags: FEATURE_|FLAG_.*=(?!.*if.*FLAG)
 AIH-05: stale_mocks: @mock\.patch\(["'][^"']+["']\) (target doesn't exist)
 AIH-06: incomplete_impl: def.*:\s*\n\s*(TODO|pass|\.\.\.|\.\.\.)
@@ -560,6 +566,7 @@ ROB-08: missing_circuit_breaker: for.*in.*retry(?!.*circuit|breaker)
         # Code pattern: Retry loops without circuit breaker
 ROB-09: resource_no_cleanup: open\((?!.*with)|connect\((?!.*close|with)
         # Code pattern: Resource acquisition without context manager
+        # Note: MNT-10 (align) checks same pattern at architecture level
 ROB-10: concurrent_unsafe: threading\.Thread|asyncio\.create_task(?!.*lock|semaphore)
         # Code pattern: Concurrency primitives without synchronization
 ```
@@ -573,6 +580,7 @@ DOC-01: readme_outdated: Compare README.md last_modified with src/ changes
         # Check: Code files changed but README not updated in 30+ days
 DOC-02: api_signature_mismatch: Compare docstring signatures with actual function signatures
         # Check: @param/@return in docs don't match actual parameters/return type
+        # Note: HYG-16 checks broader docstring accuracy. DOC-02 focuses specifically on parameter/return signatures
 DOC-03: deprecated_in_docs: References to removed functions/classes in markdown files
         # Check: docs/ references identifiers that no longer exist in codebase
 DOC-04: missing_new_feature_docs: New public APIs without documentation
@@ -585,6 +593,65 @@ DOC-07: changelog_not_updated: Version bump without CHANGELOG entry
         # Check: package.json/pyproject.toml version changed, CHANGELOG.md not
 DOC-08: comment_code_drift: Inline comments describing different behavior than code
         # Check: Comments mention removed variables/functions, or describe old logic
+        # Note: HYG-17 checks staleness (removed refs). DOC-08 is broader (behavioral drift)
+```
+
+### simplify (SIM-01 to SIM-11)
+
+**Scope Focus:** Reduce complexity, flatten nesting, eliminate unnecessary code. Tactical simplification for immediate code improvement.
+
+```
+SIM-01: deep_nesting: if|for|while|with|try nested >3 levels
+        # Pattern: Deeply nested conditionals reducing readability
+        # Note: MNT-05 (align) checks >4 levels. SIM-01 is stricter for tactical fixes
+SIM-02: duplicate_similar: >5 lines of structurally similar code (same shape, different names)
+        # Pattern: Similar (not just identical) code blocks suggesting extraction
+        # Note: HYG-06 checks >10 identical lines. SIM-02 is broader (structural similarity)
+SIM-03: unnecessary_abstractions: (ABC|Protocol|Interface)\w*(?!.*\w+\(\w+\).*\w+\(\w+\))
+        # Pattern: Abstract class/Protocol with 0-1 concrete implementations
+        # Tactical counterpart of AIA-01 (align). Focuses on removal, not architecture assessment
+SIM-04: single_use_wrappers: def \w+\(.*\):\s*\n\s*return \w+\.\w+\(
+        # Pattern: Functions that only delegate to another single call
+SIM-05: over_engineered: (Factory|Builder|Strategy|Visitor|Observer)(?!.*#\s*justified)
+        # Pattern: Design patterns applied where simple code suffices
+SIM-06: complex_booleans: (and|or|&&|\|\|).*?(and|or|&&|\|\|).*?(and|or|&&|\|\|)
+        # Pattern: Boolean expressions with >3 conditions
+SIM-07: long_params: def \w+\([^)]{5,}\) counting commas >3
+        # Pattern: Functions with >4 parameters
+        # Note: MNT-04 (align) checks >5 params. SIM-07 is stricter for tactical fixes
+SIM-08: god_functions: Functions exceeding 50 lines
+        # Pattern: Functions too long to understand at a glance
+        # Note: MNT-03 (align) checks same threshold. SIM-08 focuses on splitting
+SIM-09: premature_optimization: @(cache|lru_cache|memoize)|pool|async\s+def(?!.*#\s*hot.path)
+        # Pattern: Caching/pooling/async for non-hot paths
+SIM-10: redundant_null: if\s+\w+\s+is\s+not\s+None.*if\s+\w+\s+is\s+not\s+None|Optional\[.*\]\s*=\s*None.*if.*is\s+not\s+None
+        # Pattern: Redundant None checks already guaranteed by type/flow
+SIM-11: test_bloat: Tests without concrete assertions, verifying trivial/stdlib behavior, or duplicating other tests
+        # Pattern: Test functions with no assert, only pass, or testing language builtins
+        # Action: Remove valueless tests or add concrete project-specific assertions
+```
+
+### privacy (PRV-01 to PRV-08)
+
+**Scope Focus:** PII protection and data privacy compliance. Detects personal data exposure and missing privacy controls.
+
+```
+PRV-01: pii_exposure: logging\..*(email|phone|ssn|address|birth|name)|response.*(email|phone|ssn)
+        # Code pattern: PII fields logged or returned in API responses without masking
+PRV-02: missing_data_masking: (email|phone|ssn|credit_card|address)(?!.*mask|redact|sanitize|hash)
+        # Code pattern: PII fields processed without masking/redaction
+PRV-03: excessive_data_collection: (request\.(body|json|form))\[["'](email|phone|ssn|address|birth)
+        # Code pattern: Collecting more PII than necessary for the operation
+PRV-04: missing_consent_check: (email|phone|ssn|address)(?!.*consent|gdpr|opt_in|permission)
+        # Code pattern: PII processing without consent verification
+PRV-05: missing_data_retention: (delete|remove|purge|expire)(?!.*(schedule|policy|retention|ttl|cron))
+        # Code pattern: No data retention/deletion policy for PII
+PRV-06: cross_border_data: (transfer|send|export|replicate).*(?!.*region|jurisdiction|compliance)
+        # Code pattern: Data transfer without region/jurisdiction checks
+PRV-07: missing_audit_trail: (update|delete|modify).*(email|phone|ssn|user)(?!.*audit|log_action|track)
+        # Code pattern: PII access/modification without audit logging
+PRV-08: insecure_pii_storage: (email|phone|ssn|credit_card).*=.*(?!.*encrypt|hash|vault|kms)
+        # Code pattern: PII stored in plaintext without encryption
 ```
 
 ---
@@ -602,7 +669,8 @@ ARC-06: feature_envy: method accesses other.* more than self.*
 ARC-07: shotgun_surgery: single change requires >5 file edits
 ARC-08: divergent_change: single file changed for unrelated reasons
 ARC-09: missing_abstraction: repeated similar code without interface
-ARC-10: over_abstraction: interface with single implementation
+ARC-10: inconsistent_module_size: Modules vary wildly in size (some <10 lines, others >500+)
+        # Architecture: Module granularity should be consistent within a layer
 ARC-11: package_organization: flat vs nested, consistent naming
 ARC-12: dependency_direction: concrete depends on concrete (no interface)
 ARC-13: missing_di: direct instantiation in __init__ (no injection)
@@ -661,13 +729,18 @@ TST-10: naming_violations: test_* or *_test pattern inconsistent
 MNT-01: complexity_hotspots: cyclomatic complexity >15
 MNT-02: cognitive_complexity: deep nesting + many conditions
 MNT-03: long_methods: >50 lines per method/function
+        # Note: SIM-08 (optimize) checks same threshold tactically for splitting
 MNT-04: long_params: >5 parameters in function
+        # Note: SIM-07 (optimize) checks >4 params with stricter threshold
 MNT-05: deep_nesting: >4 levels of indentation
+        # Note: SIM-01 (optimize) checks >3 levels with stricter threshold
 MNT-06: magic_in_logic: numeric literals in business logic
+        # Note: LNT-06 (optimize) checks magic numbers via regex pattern
 MNT-07: missing_docs: complex logic without inline comment
 MNT-08: naming_inconsistent: camelCase vs snake_case mix
 MNT-09: missing_error_context: raise \w+\((?!.*context|cause)
 MNT-10: missing_cleanup: with statement not used for resources
+        # Note: ROB-09 (optimize) checks same pattern tactically with regex
 MNT-11: hardcoded_config: HOST|PORT|URL.*=.*["']
 MNT-12: missing_boundary_validation: public function no validation
 ```
@@ -686,9 +759,9 @@ AIA-09: god_module: module with >10 public exports
 AIA-10: missing_abstraction: 3+ similar patterns without interface
 ```
 
-### functional-completeness (FUN-01 to FUN-12)
+### functional-completeness (FUN-01 to FUN-18)
 
-**Scope Focus:** API design and functional coverage. Complements ROB scope which focuses on code-level patterns.
+**Scope Focus:** API design, functional coverage, and data management. Complements ROB scope which focuses on code-level patterns.
 
 ```
 FUN-01: missing_crud: Entity without Create|Read|Update|Delete (check models vs routes)
@@ -719,6 +792,21 @@ FUN-11: missing_retry_strategy: No retry policy defined for transient failures
         # Note: ROB-02 checks for retry code presence, this checks for strategy/policy
 FUN-12: incomplete_api_surface: Missing common endpoints (search, bulk, export)
         # API design: Standard operations missing from API surface
+FUN-13: missing_data_validation_layer: Data layer without schema validation
+        # Data management: No validation at persistence/repository layer
+        # Note: FUN-06 checks API-level validation, this checks data layer validation
+FUN-14: missing_caching_strategy: Frequently accessed data without cache mechanism
+        # Data management: Hot data served directly from DB without caching
+        # Note: PRF-03 checks code-level cache patterns, this checks strategic caching
+FUN-15: inefficient_data_retrieval: SELECT \*|\.all\(\)(?!.*select|only|defer|prefetch)
+        # Data management: Fetching all columns/rows without optimization
+        # Note: PRF-01 checks N+1 loops, PRF-06 checks missing LIMIT. FUN-15 checks column/query optimization
+FUN-16: missing_data_consistency: Transaction-sensitive operations without consistency mechanism
+        # Data management: Multi-step data changes without transaction or eventual consistency
+FUN-17: missing_data_indexing: Frequently queried fields without index definitions
+        # Data management: Query patterns not backed by database indexes
+FUN-18: missing_bulk_operations: No bulk processing endpoint or batch function
+        # Data management: Only single-record operations, no batch/bulk support
 ```
 
 ---
