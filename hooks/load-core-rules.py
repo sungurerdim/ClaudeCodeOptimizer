@@ -13,3 +13,6 @@ try:
 except FileNotFoundError:
     print(f"core-rules.json not found at {rules_path}", file=sys.stderr)
     sys.exit(1)
+except OSError as e:
+    print(f"Failed to read core-rules.json: {e}", file=sys.stderr)
+    sys.exit(1)

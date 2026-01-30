@@ -38,4 +38,4 @@ jobs:
           echo "### Contents" >> $GITHUB_STEP_SUMMARY
           echo "- **Commands:** $(ls -1 commands/*.md | wc -l) slash commands" >> $GITHUB_STEP_SUMMARY
           echo "- **Agents:** $(ls -1 agents/*.md | wc -l) subagents" >> $GITHUB_STEP_SUMMARY
-          echo "- **Rules:** $(ls -1 rules/*.md | wc -l) rule files" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rules:** $(find rules -name 'cco-*.md' -type f | wc -l) rule files" >> $GITHUB_STEP_SUMMARY

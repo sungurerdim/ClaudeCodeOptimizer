@@ -1023,7 +1023,7 @@ const thresholds = {
 1. **Ideal-first** - Define ideal state before evaluating current
 2. **Gap analysis** - Quantify current vs ideal differences
 3. **Technology assessment** - Question stack/framework choices
-4. **Background analysis** - Start analysis immediately
+4. **Parallel analysis** - Start analysis immediately
 5. **Single question** - Intensity + Scopes combined in Q1
 6. **80/20 filter** - Prioritize high-impact, low-effort items
 7. **Evidence required** - Every recommendation needs file:line reference

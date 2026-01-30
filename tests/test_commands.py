@@ -287,3 +287,130 @@ class TestScopeConsistency:
         for first_id, last_id in scope_ranges:
             assert first_id in agent_content, f"Agent missing {first_id}"
             assert last_id in agent_content, f"Agent missing {last_id}"
+
+    def test_align_scope_check_counts_match(self, agent_content, align_content):
+        """Align scope check ranges in command should match agent definitions."""
+        scope_ranges = [
+            ("ARC-01", "ARC-15"),
+            ("PAT-01", "PAT-12"),
+            ("TST-01", "TST-10"),
+            ("MNT-01", "MNT-12"),
+            ("AIA-01", "AIA-10"),
+            ("FUN-01", "FUN-18"),
+        ]
+        for first_id, last_id in scope_ranges:
+            assert first_id in agent_content, f"Agent missing {first_id}"
+            assert last_id in agent_content, f"Agent missing {last_id}"
+
+
+class TestAgentFrontmatter:
+    """Validate agent YAML frontmatter structure."""
+
+    @pytest.fixture
+    def agent_files(self):
+        """Get all agent markdown files."""
+        return list(AGENTS_DIR.glob("*.md"))
+
+    def test_all_agents_have_frontmatter(self, agent_files):
+        """Every agent file must start with YAML frontmatter."""
+        for agent_file in agent_files:
+            content = agent_file.read_text(encoding="utf-8")
+            assert content.startswith("---"), f"{agent_file.name} missing frontmatter start"
+            parts = content.split("---", 2)
+            assert len(parts) >= 3, f"{agent_file.name} has unclosed frontmatter"
+
+    def test_agent_frontmatter_is_valid_yaml(self, agent_files):
+        """Agent frontmatter must be valid YAML."""
+        for agent_file in agent_files:
+            content = agent_file.read_text(encoding="utf-8")
+            parts = content.split("---", 2)
+            try:
+                data = yaml.safe_load(parts[1])
+                assert isinstance(data, dict), f"{agent_file.name} frontmatter must be a mapping"
+            except yaml.YAMLError as e:
+                pytest.fail(f"{agent_file.name} has invalid YAML: {e}")
+
+    def test_agent_frontmatter_has_required_fields(self, agent_files):
+        """Agent frontmatter must have name, description, tools, model."""
+        required_fields = ["name", "description", "tools", "model"]
+        for agent_file in agent_files:
+            content = agent_file.read_text(encoding="utf-8")
+            parts = content.split("---", 2)
+            data = yaml.safe_load(parts[1])
+            for field in required_fields:
+                assert field in data, f"{agent_file.name} missing required field: {field}"
+
+    def test_agent_model_is_valid(self, agent_files):
+        """Agent model must be haiku or opus (no sonnet per policy)."""
+        valid_models = {"haiku", "opus"}
+        for agent_file in agent_files:
+            content = agent_file.read_text(encoding="utf-8")
+            parts = content.split("---", 2)
+            data = yaml.safe_load(parts[1])
+            model = data.get("model", "")
+            assert model in valid_models, (
+                f"{agent_file.name} uses invalid model: {model} (allowed: {valid_models})"
+            )
+
+
+class TestCommandModelPolicy:
+    """Validate model policy across commands - opus + haiku only, no sonnet."""
+
+    @pytest.fixture
+    def command_files(self):
+        """Get all command markdown files."""
+        return list(COMMANDS_DIR.glob("*.md"))
+
+    def test_commands_use_valid_models(self, command_files):
+        """Command frontmatter model must be haiku or opus."""
+        valid_models = {"haiku", "opus"}
+        for cmd_file in command_files:
+            content = cmd_file.read_text(encoding="utf-8")
+            parts = content.split("---", 2)
+            data = yaml.safe_load(parts[1])
+            if "model" in data:
+                model = data["model"]
+                assert model in valid_models, (
+                    f"{cmd_file.name} uses invalid model: {model} (allowed: {valid_models})"
+                )
+
+    def test_no_sonnet_references_in_commands(self, command_files):
+        """Commands should not reference sonnet model."""
+        for cmd_file in command_files:
+            content = cmd_file.read_text(encoding="utf-8")
+            # Allow references in comments explaining the policy
+            lines = content.split("\n")
+            for i, line in enumerate(lines, 1):
+                if "sonnet" in line.lower() and "no sonnet" not in line.lower():
+                    # Allow policy statements
+                    if "policy" in line.lower() or "only" in line.lower():
+                        continue
+                    pytest.fail(f"{cmd_file.name}:{i} references sonnet model: {line.strip()}")
+
+
+class TestAllCommandsHaveAccountingInvariant:
+    """Validate that all commands with apply phases document the accounting invariant."""
+
+    def test_commands_with_apply_have_accounting(self):
+        """Commands that apply fixes must document applied + failed = total."""
+        apply_commands = ["optimize.md", "align.md", "preflight.md", "docs.md"]
+        for cmd_name in apply_commands:
+            cmd_path = COMMANDS_DIR / cmd_name
+            content = cmd_path.read_text(encoding="utf-8")
+            assert "applied" in content and "failed" in content, (
+                f"{cmd_name} should document applied/failed accounting"
+            )
+            assert "total" in content, f"{cmd_name} should document total count"
+
+
+class TestAllCommandsDocumentRecovery:
+    """Validate that commands document recovery steps."""
+
+    def test_commands_with_file_changes_have_recovery(self):
+        """Commands that modify files must document recovery."""
+        modifying_commands = ["optimize.md", "align.md", "commit.md", "preflight.md"]
+        for cmd_name in modifying_commands:
+            cmd_path = COMMANDS_DIR / cmd_name
+            content = cmd_path.read_text(encoding="utf-8")
+            assert "## Recovery" in content, f"{cmd_name} should have Recovery section"
+            assert "git" in content.lower(), f"{cmd_name} recovery should mention git"

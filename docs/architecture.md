@@ -166,11 +166,11 @@ User: /cco:optimize
     └─────┬─────┘
           |
     ┌─────┴─────┐
-    │  Analyze  │  ← cco-agent-analyze (81 checks)
+    │  Analyze  │  ← cco-agent-analyze (105 checks)
     └─────┬─────┘
           |
     ┌─────┴─────┐
-    │Plan Review│  ← If >10 findings or CRITICAL
+    │Plan Review│  ← If findings > 0 (mandatory)
     └─────┬─────┘
           |
     ┌─────┴─────┐
@@ -201,7 +201,7 @@ Pre-flight checks    /cco:optimize      Verification
           └─────┬─────┘
                 |
           ┌─────┴─────┐
-          │Plan Review│  ← If blockers or >20 fixes
+          │Plan Review│  ← If blockers or findings > 0
           └─────┬─────┘
                 |
           Go/No-Go Decision
