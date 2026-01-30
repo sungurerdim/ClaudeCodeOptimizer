@@ -67,6 +67,10 @@ A finding is **FIXABLE** if ALL conditions are met:
 | Security fixes | Approval | High impact, needs review |
 | Refactoring | Approval | Subjective, needs context |
 
+> **Note:** In `--auto` and `full-fix` modes, the `fixable` flag is ignored.
+> ALL findings are sent to the apply agent. Items that truly cannot be fixed
+> are reported as `failed` with a technical reason — not silently skipped.
+
 ## Skip Patterns [CONSTRAINT]
 
 Do NOT flag or fix:
@@ -377,13 +381,16 @@ if (config.fixMode === "quick-wins") {
 }
 
 // Categorize for fix flow
-autoFixable = findings.filter(f => f.fixable && !f.approvalRequired)
-approvalRequired = findings.filter(f => f.approvalRequired || !f.fixable)
-
-// In --auto mode: ALL findings are auto-fixable (no approval needed)
-if (isUnattended) {
-  autoFixable = findings.filter(f => f.fixable)
-  approvalRequired = []  // No approval in unattended mode
+if (isUnattended || config.fixMode === "full-fix") {
+  // FULL-FIX / AUTO MODE: ALL findings attempted, none skipped
+  // The fixable flag is a HINT for interactive mode only.
+  // In auto/full-fix, every finding is sent to the apply agent.
+  // Truly unfixable items will be reported as "failed" with a technical reason.
+  autoFixable = [...findings]
+  approvalRequired = []
+} else {
+  autoFixable = findings.filter(f => f.fixable && !f.approvalRequired)
+  approvalRequired = findings.filter(f => f.approvalRequired || !f.fixable)
 }
 
 // Report-only mode: nothing to fix
@@ -618,7 +625,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     fixes: ${JSON.stringify(autoFixable)}
     fixAll: ${isUnattendedMode}
 
-    Apply all auto-fixable items. Verify each fix.
+    Apply all items. Verify each fix.
     Group by file for efficiency.
 
     ${isUnattendedMode ? `

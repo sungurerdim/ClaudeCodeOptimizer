@@ -19,14 +19,14 @@ class TestInvalidArgumentCombinations:
     """Validate that conflicting argument combinations are detected."""
 
     @pytest.fixture
-    def schema(self):
+    def schema(self) -> dict | None:
         """Load the optimize command schema."""
         schema_path = ROOT / "commands" / "schemas" / "optimize.schema.json"
         if schema_path.exists():
             return json.loads(schema_path.read_text(encoding="utf-8"))
         return None
 
-    def test_preview_and_auto_mutually_exclusive(self, schema):
+    def test_preview_and_auto_mutually_exclusive(self, schema: dict | None) -> None:
         """--preview and --auto cannot be used together."""
         # These flags have opposite intents: preview only vs fix everything
         assert schema is not None, "Schema file must exist"
@@ -38,7 +38,7 @@ class TestInvalidArgumentCombinations:
         )
         assert has_constraint, "Schema should define preview/auto mutual exclusivity"
 
-    def test_schema_has_no_removed_flags(self, schema):
+    def test_schema_has_no_removed_flags(self, schema: dict | None) -> None:
         """Schema should not have --score or --fix-all (removed flags)."""
         assert schema is not None, "Schema file must exist"
         props = schema.get("properties", {})
@@ -50,12 +50,12 @@ class TestInvalidArgumentCombinations:
 class TestMissingProfileHandling:
     """Validate graceful handling when profile doesn't exist."""
 
-    def test_actual_profile_exists_at_conventional_path(self):
+    def test_actual_profile_exists_at_conventional_path(self) -> None:
         """Actual project profile should exist at .claude/rules/cco-profile.md."""
         profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
         assert profile_path.exists(), f"Profile not found at {profile_path}"
 
-    def test_actual_profile_is_valid_markdown(self):
+    def test_actual_profile_is_valid_markdown(self) -> None:
         """Actual project profile should be readable and non-empty."""
         profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
         if profile_path.exists():
@@ -69,7 +69,7 @@ class TestMissingProfileHandling:
 class TestMalformedJsonHandling:
     """Validate detection of malformed JSON in hook files."""
 
-    def test_core_rules_json_is_valid(self):
+    def test_core_rules_json_is_valid(self) -> None:
         """hooks/core-rules.json must be valid JSON."""
         core_rules_path = ROOT / "hooks" / "core-rules.json"
         try:
@@ -78,7 +78,7 @@ class TestMalformedJsonHandling:
         except json.JSONDecodeError as e:
             pytest.fail(f"core-rules.json is malformed: {e}")
 
-    def test_hook_output_structure_validation(self):
+    def test_hook_output_structure_validation(self) -> None:
         """Hook output must have required structure."""
         core_rules_path = ROOT / "hooks" / "core-rules.json"
         data = json.loads(core_rules_path.read_text(encoding="utf-8"))
@@ -94,18 +94,18 @@ class TestActualProfileValidation:
     """Validate actual project profile structure."""
 
     @pytest.fixture
-    def profile_content(self):
+    def profile_content(self) -> str:
         """Load actual profile content."""
         profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
         if not profile_path.exists():
             pytest.skip("Profile not found")
         return profile_path.read_text(encoding="utf-8")
 
-    def test_profile_has_stack_section(self, profile_content):
+    def test_profile_has_stack_section(self, profile_content: str) -> None:
         """Profile must document the project stack."""
         assert "## Stack" in profile_content, "Profile missing Stack section"
 
-    def test_profile_has_language_info(self, profile_content):
+    def test_profile_has_language_info(self, profile_content: str) -> None:
         """Profile must list at least one language."""
         assert "Languages" in profile_content or "languages" in profile_content, (
             "Profile missing language information"
@@ -115,12 +115,12 @@ class TestActualProfileValidation:
 class TestSchemaExistence:
     """Validate that schema files exist and are loadable."""
 
-    def test_optimize_schema_exists(self):
+    def test_optimize_schema_exists(self) -> None:
         """optimize.schema.json must exist."""
         schema_path = ROOT / "commands" / "schemas" / "optimize.schema.json"
         assert schema_path.exists(), f"Schema not found: {schema_path}"
 
-    def test_optimize_schema_is_valid_json(self):
+    def test_optimize_schema_is_valid_json(self) -> None:
         """optimize.schema.json must be valid JSON."""
         schema_path = ROOT / "commands" / "schemas" / "optimize.schema.json"
         if schema_path.exists():

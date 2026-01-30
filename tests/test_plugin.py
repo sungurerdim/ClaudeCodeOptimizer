@@ -22,16 +22,16 @@ class TestPluginJson:
     """Validate plugin.json schema - catches malformed plugin config."""
 
     @pytest.fixture
-    def plugin_json(self):
+    def plugin_json(self) -> dict:
         path = ROOT / ".claude-plugin" / "plugin.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
     @pytest.fixture
-    def hooks_json(self):
+    def hooks_json(self) -> dict:
         path = ROOT / "hooks" / "hooks.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_has_required_fields(self, plugin_json, hooks_json):
+    def test_has_required_fields(self, plugin_json: dict, hooks_json: dict) -> None:
         """Plugin must have name, version, description. Hooks in separate file."""
         assert plugin_json.get("name") == "cco"
         assert isinstance(plugin_json.get("version"), str)
@@ -44,11 +44,11 @@ class TestMarketplaceJson:
     """Validate marketplace.json schema - catches broken marketplace listing."""
 
     @pytest.fixture
-    def marketplace_json(self):
+    def marketplace_json(self) -> dict:
         path = ROOT / ".claude-plugin" / "marketplace.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_has_required_fields(self, marketplace_json):
+    def test_has_required_fields(self, marketplace_json: dict) -> None:
         """Marketplace listing must have name, version, description, owner."""
         required = ["name", "version", "description", "owner"]
         for field in required:
@@ -58,7 +58,7 @@ class TestMarketplaceJson:
 class TestRuleConventions:
     """Validate rule naming conventions - catches accidental pollution."""
 
-    def test_all_rules_have_cco_prefix(self):
+    def test_all_rules_have_cco_prefix(self) -> None:
         """All rule files must use cco- prefix for safe updates."""
         rules_dir = ROOT / "rules"
         for subdir in ["core", "languages", "frameworks", "operations"]:

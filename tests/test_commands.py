@@ -24,11 +24,11 @@ class TestCommandFrontmatter:
     """Validate command YAML frontmatter structure."""
 
     @pytest.fixture
-    def command_files(self):
+    def command_files(self) -> list[Path]:
         """Get all command markdown files."""
         return list(COMMANDS_DIR.glob("*.md"))
 
-    def test_all_commands_have_frontmatter(self, command_files):
+    def test_all_commands_have_frontmatter(self, command_files: list[Path]) -> None:
         """Every command file must start with YAML frontmatter."""
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8")
@@ -36,7 +36,7 @@ class TestCommandFrontmatter:
             parts = content.split("---", 2)
             assert len(parts) >= 3, f"{cmd_file.name} has unclosed frontmatter"
 
-    def test_frontmatter_is_valid_yaml(self, command_files):
+    def test_frontmatter_is_valid_yaml(self, command_files: list[Path]) -> None:
         """Frontmatter must be valid YAML."""
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8")
@@ -48,7 +48,7 @@ class TestCommandFrontmatter:
             except yaml.YAMLError as e:
                 pytest.fail(f"{cmd_file.name} has invalid YAML: {e}")
 
-    def test_frontmatter_has_required_fields(self, command_files):
+    def test_frontmatter_has_required_fields(self, command_files: list[Path]) -> None:
         """Frontmatter must have description and allowed-tools."""
         required_fields = ["description", "allowed-tools"]
         for cmd_file in command_files:
@@ -63,16 +63,16 @@ class TestCommandArgumentParsing:
     """Validate command argument documentation and parsing."""
 
     @pytest.fixture
-    def optimize_content(self):
+    def optimize_content(self) -> str:
         """Load optimize command content."""
         path = COMMANDS_DIR / "optimize.md"
         return path.read_text(encoding="utf-8")
 
-    def test_optimize_has_args_section(self, optimize_content):
+    def test_optimize_has_args_section(self, optimize_content: str) -> None:
         """optimize.md must have ## Args section."""
         assert "## Args" in optimize_content, "optimize.md missing Args section"
 
-    def test_args_section_documents_flags(self, optimize_content):
+    def test_args_section_documents_flags(self, optimize_content: str) -> None:
         """Args section should document all flags."""
         expected_flags = [
             "--auto",
@@ -82,7 +82,7 @@ class TestCommandArgumentParsing:
         for flag in expected_flags:
             assert flag in optimize_content, f"optimize.md should document {flag}"
 
-    def test_argument_hint_in_frontmatter(self):
+    def test_argument_hint_in_frontmatter(self) -> None:
         """Commands with args should have argument-hint in frontmatter."""
         cmd_path = COMMANDS_DIR / "optimize.md"
         content = cmd_path.read_text(encoding="utf-8")
@@ -90,7 +90,7 @@ class TestCommandArgumentParsing:
         frontmatter = yaml.safe_load(parts[1])
         assert "argument-hint" in frontmatter, "optimize.md should have argument-hint"
 
-    def test_argument_hint_lists_flags(self):
+    def test_argument_hint_lists_flags(self) -> None:
         """argument-hint should include key flags."""
         cmd_path = COMMANDS_DIR / "optimize.md"
         content = cmd_path.read_text(encoding="utf-8")
@@ -106,12 +106,12 @@ class TestAgentReferences:
     """Validate that commands reference existing agents."""
 
     @pytest.fixture
-    def existing_agents(self):
+    def existing_agents(self) -> list[str]:
         """Get list of existing agent names."""
         agent_files = list(AGENTS_DIR.glob("cco-agent-*.md"))
         return [f.stem for f in agent_files]
 
-    def test_optimize_references_valid_agents(self, existing_agents):
+    def test_optimize_references_valid_agents(self, existing_agents: list[str]) -> None:
         """optimize.md should reference existing agents."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         # Find Task() calls with agent names
@@ -122,7 +122,7 @@ class TestAgentReferences:
                 f"optimize.md references non-existent agent: {agent_name}"
             )
 
-    def test_all_commands_reference_valid_agents(self, existing_agents):
+    def test_all_commands_reference_valid_agents(self, existing_agents: list[str]) -> None:
         """All commands should only reference existing agents."""
         # Claude Code built-in agent types
         builtin_agents = {
@@ -143,7 +143,7 @@ class TestAgentReferences:
                     f"{cmd_file.name} references non-existent agent: {agent_name}"
                 )
 
-    def test_agents_declared_in_plugin_json(self, existing_agents):
+    def test_agents_declared_in_plugin_json(self, existing_agents: list[str]) -> None:
         """All agents should be declared in plugin.json."""
         plugin_path = ROOT / ".claude-plugin" / "plugin.json"
         plugin_json = yaml.safe_load(plugin_path.read_text(encoding="utf-8"))
@@ -155,20 +155,20 @@ class TestAgentReferences:
 class TestCommandFlowDocumentation:
     """Validate command flow documentation completeness."""
 
-    def test_optimize_has_architecture_section(self):
+    def test_optimize_has_architecture_section(self) -> None:
         """optimize.md should document its execution architecture."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         assert "## Architecture" in content or "## Execution" in content, (
             "optimize.md should have Architecture or Execution section"
         )
 
-    def test_optimize_documents_steps(self):
+    def test_optimize_documents_steps(self) -> None:
         """optimize.md should document execution steps."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         # Should have step documentation
         assert "Step-1" in content or "Step 1" in content, "optimize.md should document steps"
 
-    def test_optimize_has_validation_blocks(self):
+    def test_optimize_has_validation_blocks(self) -> None:
         """optimize.md should have validation checkpoints."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         # Should have validation blocks
@@ -176,7 +176,7 @@ class TestCommandFlowDocumentation:
             "optimize.md should have validation checkpoints"
         )
 
-    def test_optimize_documents_output_schema(self):
+    def test_optimize_documents_output_schema(self) -> None:
         """optimize.md should document output schema."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         assert "Output Schema" in content or "accounting" in content, (
@@ -188,7 +188,7 @@ class TestCommandConsistency:
     """Validate consistency across all commands."""
 
     @pytest.fixture
-    def all_commands(self):
+    def all_commands(self) -> dict[str, dict]:
         """Load all command frontmatters."""
         commands = {}
         for cmd_file in COMMANDS_DIR.glob("*.md"):
@@ -197,7 +197,7 @@ class TestCommandConsistency:
             commands[cmd_file.stem] = yaml.safe_load(parts[1])
         return commands
 
-    def test_commands_use_valid_tools(self, all_commands):
+    def test_commands_use_valid_tools(self, all_commands: dict[str, dict]) -> None:
         """Commands should only use valid tool names."""
         valid_tools = {
             "Read",
@@ -223,21 +223,23 @@ class TestScopeConsistency:
     """Validate scope definitions match between commands and agent."""
 
     @pytest.fixture
-    def agent_content(self):
+    def agent_content(self) -> str:
         """Load agent-analyze content."""
         return (AGENTS_DIR / "cco-agent-analyze.md").read_text(encoding="utf-8")
 
     @pytest.fixture
-    def optimize_content(self):
+    def optimize_content(self) -> str:
         """Load optimize command content."""
         return (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
 
     @pytest.fixture
-    def align_content(self):
+    def align_content(self) -> str:
         """Load align command content."""
         return (COMMANDS_DIR / "align.md").read_text(encoding="utf-8")
 
-    def test_optimize_scopes_defined_in_agent(self, agent_content, optimize_content):
+    def test_optimize_scopes_defined_in_agent(
+        self, agent_content: str, optimize_content: str
+    ) -> None:
         """All optimize scope IDs referenced in command must be defined in agent."""
         optimize_scopes = {
             "SEC": "security",
@@ -256,7 +258,7 @@ class TestScopeConsistency:
                 f"Optimize scope {scope_id} ({scope_name}) not defined in agent-analyze"
             )
 
-    def test_align_scopes_defined_in_agent(self, agent_content, align_content):
+    def test_align_scopes_defined_in_agent(self, agent_content: str, align_content: str) -> None:
         """All align scope IDs referenced in command must be defined in agent."""
         align_scopes = {
             "ARC": "architecture",
@@ -271,7 +273,7 @@ class TestScopeConsistency:
                 f"Align scope {scope_id} ({scope_name}) not defined in agent-analyze"
             )
 
-    def test_scope_check_counts_match(self, agent_content, optimize_content):
+    def test_scope_check_counts_match(self, agent_content: str, optimize_content: str) -> None:
         """Scope check ranges in command should match agent definitions."""
         # Verify key scope ranges exist in both
         scope_ranges = [
@@ -288,7 +290,7 @@ class TestScopeConsistency:
             assert first_id in agent_content, f"Agent missing {first_id}"
             assert last_id in agent_content, f"Agent missing {last_id}"
 
-    def test_align_scope_check_counts_match(self, agent_content, align_content):
+    def test_align_scope_check_counts_match(self, agent_content: str, align_content: str) -> None:
         """Align scope check ranges in command should match agent definitions."""
         scope_ranges = [
             ("ARC-01", "ARC-15"),
@@ -307,11 +309,11 @@ class TestAgentFrontmatter:
     """Validate agent YAML frontmatter structure."""
 
     @pytest.fixture
-    def agent_files(self):
+    def agent_files(self) -> list[Path]:
         """Get all agent markdown files."""
         return list(AGENTS_DIR.glob("*.md"))
 
-    def test_all_agents_have_frontmatter(self, agent_files):
+    def test_all_agents_have_frontmatter(self, agent_files: list[Path]) -> None:
         """Every agent file must start with YAML frontmatter."""
         for agent_file in agent_files:
             content = agent_file.read_text(encoding="utf-8")
@@ -319,7 +321,7 @@ class TestAgentFrontmatter:
             parts = content.split("---", 2)
             assert len(parts) >= 3, f"{agent_file.name} has unclosed frontmatter"
 
-    def test_agent_frontmatter_is_valid_yaml(self, agent_files):
+    def test_agent_frontmatter_is_valid_yaml(self, agent_files: list[Path]) -> None:
         """Agent frontmatter must be valid YAML."""
         for agent_file in agent_files:
             content = agent_file.read_text(encoding="utf-8")
@@ -330,7 +332,7 @@ class TestAgentFrontmatter:
             except yaml.YAMLError as e:
                 pytest.fail(f"{agent_file.name} has invalid YAML: {e}")
 
-    def test_agent_frontmatter_has_required_fields(self, agent_files):
+    def test_agent_frontmatter_has_required_fields(self, agent_files: list[Path]) -> None:
         """Agent frontmatter must have name, description, tools, model."""
         required_fields = ["name", "description", "tools", "model"]
         for agent_file in agent_files:
@@ -340,7 +342,7 @@ class TestAgentFrontmatter:
             for field in required_fields:
                 assert field in data, f"{agent_file.name} missing required field: {field}"
 
-    def test_agent_model_is_valid(self, agent_files):
+    def test_agent_model_is_valid(self, agent_files: list[Path]) -> None:
         """Agent model must be haiku or opus (no sonnet per policy)."""
         valid_models = {"haiku", "opus"}
         for agent_file in agent_files:
@@ -357,11 +359,11 @@ class TestCommandModelPolicy:
     """Validate model policy across commands - opus + haiku only, no sonnet."""
 
     @pytest.fixture
-    def command_files(self):
+    def command_files(self) -> list[Path]:
         """Get all command markdown files."""
         return list(COMMANDS_DIR.glob("*.md"))
 
-    def test_commands_use_valid_models(self, command_files):
+    def test_commands_use_valid_models(self, command_files: list[Path]) -> None:
         """Command frontmatter model must be haiku or opus."""
         valid_models = {"haiku", "opus"}
         for cmd_file in command_files:
@@ -374,7 +376,7 @@ class TestCommandModelPolicy:
                     f"{cmd_file.name} uses invalid model: {model} (allowed: {valid_models})"
                 )
 
-    def test_no_sonnet_references_in_commands(self, command_files):
+    def test_no_sonnet_references_in_commands(self, command_files: list[Path]) -> None:
         """Commands should not reference sonnet model."""
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8")
@@ -391,7 +393,7 @@ class TestCommandModelPolicy:
 class TestAllCommandsHaveAccountingInvariant:
     """Validate that all commands with apply phases document the accounting invariant."""
 
-    def test_commands_with_apply_have_accounting(self):
+    def test_commands_with_apply_have_accounting(self) -> None:
         """Commands that apply fixes must document applied + failed = total."""
         apply_commands = ["optimize.md", "align.md", "preflight.md", "docs.md"]
         for cmd_name in apply_commands:
@@ -406,7 +408,7 @@ class TestAllCommandsHaveAccountingInvariant:
 class TestAllCommandsDocumentRecovery:
     """Validate that commands document recovery steps."""
 
-    def test_commands_with_file_changes_have_recovery(self):
+    def test_commands_with_file_changes_have_recovery(self) -> None:
         """Commands that modify files must document recovery."""
         modifying_commands = ["optimize.md", "align.md", "commit.md", "preflight.md"]
         for cmd_name in modifying_commands:

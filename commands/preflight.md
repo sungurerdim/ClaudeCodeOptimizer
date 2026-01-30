@@ -27,13 +27,9 @@ PREFLIGHT
     |       format, lint, type, test, build  │
     |       (Bash background, started FIRST) │
     |                                        │
-    +-- [Sub-commands] SYNC PARALLEL ────────┤
-    |       |  (run while Bash tasks work)   │
-    |       +-- /cco:optimize --auto             │
-    |       |   (all 10 scopes, 105 checks)  │
-    |       |                                │
-    |       +-- /cco:align --auto                │
-    |           (all 6 scopes, 77 checks)    │
+    +-- [Sub-commands] via Skill ────────────┤
+    |       +-- Skill("optimize", "--auto")  │
+    |       +-- Skill("align", "--auto")     │
     |                                        │
     +-- [Changelog] ─────────────────────────┘
             Commit classification, version
@@ -110,7 +106,7 @@ if (args.includes("--auto")) {
 | **SETUP** | 0-1a | Config | Mode + Q1: Settings | Config validated |
 | **PRE-CHECK** | 1b | Verify | Git, version, deps (parallel) | Pre-checks done |
 | **GATE-1** | - | Checkpoint | No blocking pre-checks | → Sub-commands |
-| **VERIFY+FIX** | 2 | Parallel | 2a: verify (bg Bash) + 2b: optimize+align (sync Task) | All complete |
+| **VERIFY+FIX** | 2 | Parallel | 2a: verify (bg Bash) + 2b: optimize+align (Skill) | All complete |
 | **GATE-2** | - | Checkpoint | All parallel complete | → Changelog |
 | **CHANGELOG** | 3 | Version | Generate + suggest | Entry ready |
 | **GATE-3** | - | Checkpoint | Blockers evaluated | → Plan or Release |
@@ -118,7 +114,7 @@ if (args.includes("--auto")) {
 | **GATE-4** | - | Checkpoint | Approval received | → Execute |
 | **RELEASE** | 4 | Execute | Tag/commit based on mode | Done |
 
-**Execution Flow:** SETUP → PRE-CHECK → GATE-1 → (VERIFY-bg ‖ OPTIMIZE-sync ‖ ALIGN-sync) → GATE-2 → CHANGELOG → GATE-3 → [PLAN if triggered] → GATE-4 → RELEASE
+**Execution Flow:** SETUP → PRE-CHECK → GATE-1 → (VERIFY-bg ‖ OPTIMIZE-skill ‖ ALIGN-skill) → GATE-2 → CHANGELOG → GATE-3 → [PLAN if triggered] → GATE-4 → RELEASE
 
 ### Phase Gates
 
@@ -133,14 +129,12 @@ function gate1_postPrechecks(prechecks) {
 }
 
 // GATE-2: Post Parallel Execution
-function gate2_postParallel(optimize, align, verify) {
-  const allComplete = optimize.done && align.done && verify.done
-  if (!allComplete) throw new Error("Parallel execution incomplete")
+function gate2_postParallel(optimizeResults, alignResults, testResults) {
   return {
     pass: true,
-    optimizeApplied: optimize.applied,
-    alignApplied: align.applied,
-    testsPass: verify.test.exitCode === 0
+    optimizeApplied: optimizeResults.accounting?.applied || 0,
+    alignApplied: alignResults.accounting?.applied || 0,
+    testsPass: testResults.exitCode === 0
   }
 }
 
@@ -249,6 +243,9 @@ if (!isUnattended) {
 ### 1.1: Git State [BLOCKER]
 
 ```javascript
+const blockers = []
+const warnings = []
+
 // Check from context
 if (gitStatus.trim().length > 0) {
   blockers.push({
@@ -333,8 +330,8 @@ depResults = Task("cco-agent-research", `
 > build command (unique to release). Unlike /cco:commit (conditional on changed files),
 > preflight runs comprehensive release verification on full project.
 
-**CRITICAL:** Launch Bash verification in background FIRST, then synchronous Task calls.
-All run concurrently: Bash tasks in background while Task agents execute in parallel (same message).
+**CRITICAL:** Launch Bash verification in background FIRST, then Skill calls.
+All run concurrently: Bash tasks in background while Skill calls execute.
 
 ```javascript
 // Step-2a: Launch verification in background FIRST
@@ -354,43 +351,19 @@ verificationTasks = {
   build: buildTask.id
 }
 
-// Step-2b: Launch synchronous Task calls (parallel with each other AND with background Bash)
-// Multiple Task calls in same message execute in parallel automatically
-// --auto skips plan review in sub-commands (preflight has its own plan review at Step-3.5)
-optimizeResults = Task("general-purpose", `
-  Execute /cco:optimize --auto
-
-  CRITICAL: Run ALL 10 scopes (security, hygiene, types, lint, performance, ai-hygiene, robustness, privacy, doc-sync, simplify)
-  Fix ALL items. Effort categories are for reporting only, not filtering.
-
-  Return: {
-    accounting: { applied, failed, total },
-    scopes: { security, hygiene, types, lint, performance, "ai-hygiene", robustness, privacy, "doc-sync", simplify }
-  }
-`, { model: "opus" })  // Synchronous - Task returns results directly
-
-reviewResults = Task("general-purpose", `
-  Execute /cco:align --auto
-
-  CRITICAL: Run ALL 6 scopes (architecture, patterns, testing, maintainability, ai-architecture, functional-completeness)
-  Fix ALL items. Effort categories are for reporting only, not filtering.
-
-  Return: {
-    gaps: { coupling, cohesion, complexity, coverage },
-    accounting: { applied, failed, total },
-    effortCategories: { quickWin, moderate, complex, major }
-  }
-`, { model: "opus" })  // Synchronous - Task returns results directly
+// Step-2b: Delegate to sub-commands via Skill (--auto = unattended, full scope)
+optimizeResults = Skill("optimize", "--auto")
+alignResults = Skill("align", "--auto")
 
 // At this point:
-// - optimizeResults and reviewResults are available (synchronous Task calls completed)
+// - optimizeResults and alignResults are available (Skill calls completed)
 // - Background Bash tasks may still be running (collected in Step-4 via TaskOutput)
 ```
 
 ### Validation
 ```
 [x] Background Bash verification launched (Step-2a)
-[x] Both Task agents launched in parallel and completed (Step-2b)
+[x] Both Skill calls completed (Step-2b)
 → Background Bash results collected in Step-4 via TaskOutput
 → Proceed to Step-3
 ```
@@ -453,11 +426,11 @@ changelogEntry = generateChangelogEntry(classified, suggestedVersion)
 
 ```javascript
 // Determine if Plan Review is needed
-const totalFixes = optimizeResults.accounting.total + reviewResults.accounting.total
+const totalFindings = (optimizeResults.accounting?.total || 0) + (alignResults.accounting?.total || 0)
 const hasBlockers = allBlockers.length > 0
 const hasBreaking = classified.breaking.length > 0
 
-const planMode = (totalFixes > 0) || hasBlockers
+const planMode = (totalFindings > 0) || hasBlockers
 
 // Skip in --auto mode
 const skipPlan = isUnattended
@@ -492,7 +465,7 @@ if (planMode && !skipPlan) {
 | Command | Applied | Failed | Key Changes |
 |---------|---------|--------|-------------|
 | /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeKeyChanges} |
-| /cco:align | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {alignKeyChanges} |
+| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignKeyChanges} |
 | **Total** | **{totalApplied}** | **{totalFailed}** | |
 
 ### Verification Results
@@ -594,8 +567,8 @@ switch (planDecision) {
 **Collect Bash background results, then show summary and execute based on Q1 settings:**
 
 ```javascript
-// Synchronous Task results from Step-2b (already available)
-// optimizeResults, reviewResults - set from synchronous Task calls in Step-2b
+// Skill results from Step-2b (already available)
+// optimizeResults, alignResults - set from Skill calls in Step-2b
 // depResults - set from synchronous Task call in Step-1b
 
 // Bash background results via TaskOutput (launched in Step-1b and Step-2a)
@@ -612,16 +585,16 @@ formatChanged = formatResults.stdout?.includes("reformatted") || formatResults.s
 
 // Aggregate blockers and warnings
 allBlockers = [
-  ...preflight.blockers,
+  ...blockers,
   ...(testResults.exitCode !== 0 ? [{ id: "VER-01", type: "TESTS", message: "Tests failed" }] : []),
   ...(buildResults.exitCode !== 0 ? [{ id: "VER-02", type: "BUILD", message: "Build failed" }] : []),
   ...(typeResults.exitCode !== 0 ? [{ id: "VER-03", type: "TYPES", message: "Type errors found" }] : []),
   ...(depResults.security || []).map(s => ({ id: "DEP-SEC", type: "SECURITY", message: `${s.package}: ${s.advisory} (${s.cve})` })),
-  ...(optimizeResults.accounting?.failed > 0 && optimizeResults.blockers?.filter(b => b.severity === "CRITICAL") || [])
+  ...(optimizeResults.accounting?.failed > 0 && optimizeResults.data?.blockers?.filter(b => b.severity === "CRITICAL") || [])
 ]
 
 allWarnings = [
-  ...preflight.warnings,
+  ...warnings,
   ...(lintResults.exitCode !== 0 ? [{ id: "VER-04", type: "LINT", message: "Lint warnings" }] : []),
   ...(formatChanged ? [{ id: "VER-05", type: "FORMAT", message: "Files reformatted - review changes" }] : []),
   ...(markersResult.stdout?.trim() ? [{ id: "PRE-04", type: "MARKERS", message: "TODO/FIXME markers found" }] : []),
@@ -631,8 +604,8 @@ allWarnings = [
 hasBlockers = allBlockers.length > 0
 
 // Calculate combined accounting
-totalApplied = (optimizeResults.accounting?.applied || 0) + (reviewResults.accounting?.applied || 0)
-totalFailed = (optimizeResults.accounting?.failed || 0) + (reviewResults.accounting?.failed || 0)
+totalApplied = (optimizeResults.accounting?.applied || 0) + (alignResults.accounting?.applied || 0)
+totalFailed = (optimizeResults.accounting?.failed || 0) + (alignResults.accounting?.failed || 0)
 totalFindings = totalApplied + totalFailed
 ```
 
@@ -653,13 +626,13 @@ totalFindings = totalApplied + totalFailed
 | Command | Applied | Failed | Total |
 |---------|---------|--------|-------|
 | /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
-| /cco:align | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
+| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignResults.accounting.total} |
 | **Combined** | **{totalApplied}** | **{totalFailed}** | **{totalFindings}** |
 
 ### Verification Results
 | Check | Status | Detail |
 |-------|--------|--------|
-| Pre-flight | {preflight.blockers.length === 0 ? "PASS" : "FAIL"} | {detail} |
+| Pre-flight | {blockers.length === 0 ? "PASS" : "FAIL"} | {detail} |
 | Tests | {testResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
 | Build | {buildResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
 | Types | {typeResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
@@ -822,8 +795,8 @@ Mode: {config.releaseMode}
 
 | Task | Model | Reason |
 |------|-------|--------|
-| /cco:optimize | Opus | Code modifications require accuracy |
-| /cco:align | Opus | Architectural changes require accuracy |
+| /cco:optimize | Skill (owns model) | Delegated — optimize controls its own models |
+| /cco:align | Skill (owns model) | Delegated — align controls its own models |
 | Dependency audit | Haiku | Read-only research |
 | Verification | Bash | Direct execution |
 
@@ -844,7 +817,7 @@ Mode: {config.releaseMode}
 ## Rules
 
 1. **All settings upfront** - Intensity, release mode, and docs selected in single Q1
-2. **All parallel execution** - Bash verification in background, Task agents synchronous parallel -- all run concurrently
+2. **All parallel execution** - Bash verification in background, Skill calls for sub-commands
 3. **Full scope** - Run ALL scopes for both optimize (10) and align (6)
 4. **No mid-flow questions** - All decisions made at start, uninterrupted execution
 5. **Git safety** - Clean state required, version sync verified
@@ -874,6 +847,6 @@ Consensus: Both agree risk → BLOCKER. Only dev concern → WARNING
 **No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason is acceptable.
 
 Combined from both sub-commands:
-- totalApplied = optimize.applied + review.applied
-- totalFailed = optimize.failed + review.failed
+- totalApplied = optimize.applied + align.applied
+- totalFailed = optimize.failed + align.failed
 - totalFindings = totalApplied + totalFailed
