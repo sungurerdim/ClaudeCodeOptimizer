@@ -211,11 +211,6 @@ AskUserQuestion([
 **Run analysis with parallel scope groups - multiple Task calls in same message execute concurrently:**
 
 ```javascript
-// Dynamic model selection
-const analyzeModel = args.includes("--quick") ? "haiku"
-  : (context.scale === "10K+" || context.scale === "Large") ? "opus"
-  : "haiku"
-
 // Map user-selected scopes to agent scopes
 const scopeMapping = {
   "Architecture": "architecture",
@@ -237,7 +232,7 @@ structureResults = Task("cco-agent-analyze", `
   mode: review
   Analyze coupling, cohesion, layers, dependencies, design patterns.
   Return: { findings: [...], metrics: {...} }
-`, { model: analyzeModel })
+`, { model: "haiku" })
 
 // Quality group (TST + MNT)
 qualityResults = Task("cco-agent-analyze", `
@@ -245,7 +240,7 @@ qualityResults = Task("cco-agent-analyze", `
   mode: review
   Analyze test coverage, complexity, readability.
   Return: { findings: [...], metrics: {...} }
-`, { model: analyzeModel })
+`, { model: "haiku" })
 
 // Completeness group (FUN + AIA)
 completenessResults = Task("cco-agent-analyze", `
@@ -253,7 +248,7 @@ completenessResults = Task("cco-agent-analyze", `
   mode: review
   Analyze API gaps, over-engineering, architectural drift.
   Return: { findings: [...], metrics: {...} }
-`, { model: analyzeModel })
+`, { model: "haiku" })
 
 // Merge parallel results
 analysisTask = {
@@ -373,7 +368,7 @@ analysisTask = {
   - Pattern recognition (30%): Does it match known anti-patterns?
   - Impact clarity (20%): Is improvement benefit clear?
   - Migration safety (10%): Can change be made safely?
-// `, { model: analyzeModel })
+// `, { model: "haiku" })
 // NOTE: Parallel execution above replaces single-call pattern
 ```
 
@@ -940,9 +935,7 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 | Task | Model | Reason |
 |------|-------|--------|
 | Analysis (parallel scopes) | Haiku | Fast, cost-effective scanning |
-| Analysis (10K+ scale) | Opus | Complex codebases need accuracy |
 | Apply fixes | Opus | 50-75% fewer tool errors |
-| Research/read-only | Haiku | Speed over accuracy |
 
 ### Ideal Metrics by Project Type
 
