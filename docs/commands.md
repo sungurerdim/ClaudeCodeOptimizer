@@ -78,7 +78,7 @@ Commands pre-collect context at execution start:
 
 - **Interactive Mode**: Complex changes prompt user for approval
 - **Unattended Mode (--auto)**: ALL findings fixed, no questions
-- **Accounting**: `applied + failed = total` (no AI declines allowed)
+- **Accounting**: `applied + failed + deferred = total` (no AI declines allowed)
 
 ---
 
@@ -310,7 +310,7 @@ Compares current metrics to ideal targets:
 
 {description}
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```

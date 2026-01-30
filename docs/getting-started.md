@@ -123,7 +123,7 @@ Injected automatically at session start via hook. These are **enforceable constr
 |----------|-----------|
 | **Foundation** | Uncertainty Protocol (stop & ask), Complexity Limits (method ≤50 lines), Change Scope (only requested changes) |
 | **Safety** | Security Violations (no secrets in source, no bare except, no eval), Validation Boundaries |
-| **Workflow** | Read-Before-Edit (must read before editing), Accounting (applied + failed = total) |
+| **Workflow** | Read-Before-Edit (must read before editing), Accounting (applied + failed + deferred = total) |
 
 **Hard Limits (exceeding = STOP):**
 - Cyclomatic complexity ≤ 15

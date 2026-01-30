@@ -73,45 +73,42 @@ A finding is **FIXABLE** if ALL conditions are met:
 
 ## Skip Patterns [CONSTRAINT]
 
-Do NOT flag or fix:
-- `# noqa`, `# intentional`, `# safe:` marked code
-- `_` prefixed variables (intentional unused)
-- `TYPE_CHECKING` blocks (type-only imports)
-- Platform guards (`sys.platform`, `msvcrt`, `fcntl`)
-- Test fixtures in `fixtures/`, `testdata/`, `__snapshots__/`
+| Pattern | Reason |
+|---------|--------|
+| `# noqa`, `# intentional`, `# safe:` | Explicitly marked as intentional |
+| `_` prefixed variables | Intentional unused (convention) |
+| `TYPE_CHECKING` blocks | Type-only imports, not runtime |
+| `sys.platform`, `msvcrt`, `fcntl` | Platform-specific guards |
+| `fixtures/`, `testdata/`, `__snapshots__/` | Test data, not production code |
 
 ## Policies
 
-**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
-
-### No Deferrals in Auto [CRITICAL]
-
-When `--auto` is active:
-- **Zero commentary** - No "this is complex", "needs refactor", "minor detail"
-- **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
-- **Zero skips** - Every finding = FIXED or TECHNICAL FAILURE
-- **Only technical failures** - File not found, parse error, permission denied
+**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, Quality Thresholds, and Accounting invariant.
 
 ## Context
 
-- Git status: !`git status --short`
+- Git status: !`git status --short 2>/dev/null || echo ""`
 - Args: $ARGS
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
 ## Profile Requirement [CRITICAL]
 
+<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
+
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
 **Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
-// Delegate profile check to tune command
+// Standard profile validation: delegate to tune, handle skip/error/success
 const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
-  // User declined setup - exit gracefully
   console.log("CCO setup skipped. Run /cco:tune when ready.")
+  return
+} else if (tuneResult.status === "error") {
+  console.error("Profile validation failed:", tuneResult.reason)
   return
 }
 
@@ -121,6 +118,8 @@ if (tuneResult.status === "skipped") {
 **After tune completes → continue to Mode Detection**
 
 ## Mode Detection
+
+<!-- Config shape: { fixMode: string, scopes: string[], action: string, gitState: string } -->
 
 ```javascript
 // Parse arguments
@@ -173,35 +172,18 @@ if (isUnattended) {
 | **PLAN** | 2.5 | Review | Show fix plan (mandatory when findings >0) | User approval |
 | **GATE-2** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 3 | Fix | Apply fixes based on fix mode | Fixes verified |
-| **GATE-3** | - | Checkpoint | applied + failed = total | → Summary |
+| **GATE-3** | - | Checkpoint | applied + failed + deferred = total | → Summary |
 | **SUMMARY** | 4 | Report | Show counts | Done |
 
 **Execution Flow:** SETUP → ANALYZE → GATE-1 → [PLAN if triggered] → GATE-2 → APPLY → GATE-3 → SUMMARY
 
 ### Phase Gates
 
-```javascript
-// GATE-1: Post-Analysis
-function gate1_postAnalysis(findings) {
-  if (findings.error) throw new Error("Analysis failed: " + findings.error)
-  if (!Array.isArray(findings.findings)) throw new Error("Invalid findings structure")
-  return { pass: true, count: findings.findings.length }
-}
-
-// GATE-2: Post-Plan (or skip)
-function gate2_postPlan(planResult, skipPlan) {
-  if (skipPlan) return { pass: true, reason: "Plan skipped" }
-  if (planResult === "Abort") return { pass: false, reason: "User aborted" }
-  return { pass: true, mode: planResult }
-}
-
-// GATE-3: Post-Apply
-function gate3_postApply(results) {
-  const valid = results.applied + results.failed === results.total
-  if (!valid) throw new Error("Accounting mismatch: applied + failed != total")
-  return { pass: true, applied: results.applied, failed: results.failed }
-}
-```
+| Gate | Pass | Fail |
+|------|------|------|
+| GATE-1 (Post-Analysis) | findings is valid array | Analysis error or invalid structure |
+| GATE-2 (Post-Plan) | Approval received or plan skipped | User aborted |
+| GATE-3 (Post-Apply) | `applied + failed + deferred = total` | Accounting mismatch |
 
 > **Note:** Quality Gates (format, lint, type, test) removed from optimize.
 > LNT and TYP scopes already analyze lint/type issues. Use `/cco:commit` for pre-commit gates.
@@ -613,7 +595,7 @@ switch (planDecision) {
 **Run fixes synchronously - Task tool returns results directly:**
 
 ```javascript
-let fixResults = { applied: 0, failed: 0, total: 0 }
+let fixResults = { applied: 0, failed: 0, deferred: 0, total: 0 }
 
 if (config.action !== "Report only" && autoFixable.length > 0) {
   // Determine if unattended mode
@@ -629,24 +611,8 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     Group by file for efficiency.
 
     ${isUnattendedMode ? `
-    UNATTENDED MODE [MANDATORY]:
-    Fix ALL items. Effort categories are for reporting only, not filtering.
-
-    Rules:
-    - ALL findings must be fixed regardless of effort level
-    - Zero agent-initiated skips
-    - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
-    - If unsure → fix it anyway, user reviews with git diff
-
-    FORBIDDEN RESPONSES (never use these as skip reasons):
-    - "This is too complex" → Fix it
-    - "This requires refactoring" → Do the refactor
-    - "This is a minor detail" → Fix it anyway
-    - "Consider doing this later" → Do it NOW
-    - "This might break something" → Fix it, user reviews
-    - "Recommend manual review" → Apply the fix
-
-    ONLY VALID FAILURES: File not found, parse error, permission denied
+    UNATTENDED MODE: Fix ALL items. No Deferrals Policy applies (see Core Rules).
+    Every item = applied, failed (Technical: reason), or deferred (Deferred: reason).
     ` : ""}
 
     CRITICAL - Counting:
@@ -655,7 +621,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     - Example: "Type ignore comments" with 3 locations = 1 finding
 
     Return accounting at FINDING level:
-    { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
+    { applied: <findings_fixed>, failed: <findings_failed>, deferred: <findings_deferred>, total: <findings_attempted> }
   `, { model: "opus" })  // No run_in_background - synchronous execution
 }
 ```
@@ -678,8 +644,8 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 // - applied: successfully fixed
 // - failed: couldn't fix (technical reason required)
 //
-// Invariant: applied + failed = total
-// NOTE: No "declined" category - AI has no option to decline. Fix or fail with reason.
+// Invariant: applied + failed + deferred = total
+// NOTE: No "declined" category - AI has no option to decline. Fix, defer (architectural), or fail with reason.
 
 // fixResults already set in Step-3 (synchronous execution)
 // Default: { applied: 0, failed: 0, total: 0 } if no fixes needed
@@ -688,12 +654,13 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 finalCounts = {
   applied: fixResults.applied || 0,
   failed: fixResults.failed || 0,
+  deferred: fixResults.deferred || 0,
   total: fixResults.total || 0
 }
 
 // Final verification - these MUST balance
-assert(finalCounts.applied + finalCounts.failed === finalCounts.total,
-  "Count mismatch: applied + failed must equal total")
+assert(finalCounts.applied + finalCounts.failed + finalCounts.deferred === finalCounts.total,
+  "Count mismatch: applied + failed + deferred must equal total")
 ```
 
 ### Unattended Mode Output [--auto]
@@ -703,7 +670,7 @@ assert(finalCounts.applied + finalCounts.failed === finalCounts.total,
 ```javascript
 if (isUnattended) {
   const status = finalCounts.failed > 0 ? "WARN" : "OK"
-  console.log(`cco-optimize: ${status} | Fixed: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Scopes: all`)
+  console.log(`cco-optimize: ${status} | Applied: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Deferred: ${finalCounts.deferred} | Total: ${finalCounts.total}`)
   return
 }
 ```
@@ -718,6 +685,7 @@ let summary = `
 |--------|-------|
 | Applied | ${finalCounts.applied} |
 | Failed | ${finalCounts.failed} |
+| Deferred | ${finalCounts.deferred} |
 | **Total** | **${finalCounts.total}** |
 
 Status: ${finalCounts.failed > 0 ? "WARN" : "OK"}
@@ -762,9 +730,9 @@ console.log(summary)
 ```json
 {
   "status": "OK|WARN|FAIL",
-  "summary": "Applied 5, Failed 0, Total 5",
+  "summary": "Applied 5, Failed 0, Deferred 0, Total 5",
   "data": {
-    "accounting": { "applied": 5, "failed": 0, "total": 5 },
+    "accounting": { "applied": 5, "failed": 0, "deferred": 0, "total": 5 },
     "by_scope": { "security": 2, "hygiene": 3, "types": 0 },
     "by_severity": { "critical": 0, "high": 2, "medium": 3, "low": 0 },
     "blockers": []
@@ -778,7 +746,7 @@ console.log(summary)
 - `WARN`: failed > 0 but no CRITICAL
 - `FAIL`: any CRITICAL unfixed OR error != null
 
-**Accounting invariant:** `applied + failed = total`
+**Accounting invariant:** `applied + failed + deferred = total`
 
 **--auto mode:** Prints `summary` field only.
 
@@ -816,13 +784,7 @@ console.log(summary)
 
 ### Model Strategy
 
-**Policy:** Opus + Haiku only (no Sonnet)
-
-| Task | Model | Reason |
-|------|-------|--------|
-| Analysis (parallel scopes) | Haiku | Fast, cost-effective scanning |
-| Apply fixes | Opus | 50-75% fewer tool errors |
-| Score calculation | Haiku | Simple aggregation |
+**See Core Rules:** `Model Strategy` for Opus/Haiku policy.
 
 ### Scope Groups
 
@@ -857,10 +819,11 @@ console.log(summary)
 
 ---
 
-## Reasoning Strategies
+## Reasoning & Guards
 
-### Step-Back (Before Analysis)
-Ask broader question before diving into code:
+**See Core Rules:** `Reasoning`, `Anti-Overengineering Guard`, `Severity Levels` for shared patterns.
+
+**Optimize-specific Step-Back questions:**
 
 | Scope | Step-Back Question |
 |-------|-------------------|
@@ -868,51 +831,6 @@ Ask broader question before diving into code:
 | Quality | "What are the quality standards for this project?" |
 | Hygiene | "What is considered 'dead' in this context?" |
 | Best Practices | "What patterns does this project follow?" |
-
-### Chain of Thought (Each Finding)
-```
-1. Identify: What exactly is the issue?
-2. Impact: Who/what is affected?
-3. Evidence: What confirms this assessment?
-4. Severity: Based on evidence, what level?
-```
-
-### Self-Consistency (CRITICAL Only)
-For CRITICAL severity findings, validate with multiple reasoning paths:
-```
-Path A: Analyze as if this is a real security/quality issue
-Path B: Analyze as if this might be intentional or acceptable
-Consensus: Both agree → confirm CRITICAL. Disagree → downgrade to HIGH
-```
-
----
-
-## Anti-Overengineering Guard
-
-Before flagging ANY finding:
-1. Does this actually break something or pose a risk?
-2. Does this cause real problems for developers/users?
-3. Is fixing it worth the effort and potential side effects?
-
-**All NO → not a finding.**
-
-NON-findings:
-- Unused import in a file being actively developed
-- Missing type hint on internal helper
-- Code style preference that doesn't affect functionality
-
----
-
-## Severity Definitions
-
-| Severity | Criteria |
-|----------|----------|
-| CRITICAL | Security vulnerability, data loss risk, broken functionality |
-| HIGH | Significant bug, type error, missing validation |
-| MEDIUM | Code smell, minor type issue, suboptimal pattern |
-| LOW | Style, naming, nice-to-have improvement |
-
-**When uncertain → choose lower severity.**
 
 ---
 
@@ -954,6 +872,6 @@ confidence = (patternMatch * 0.4) + (contextClarity * 0.3) +
 
 ## Accounting
 
-**Invariant:** `applied + failed = total` (count findings, not locations)
+**Invariant:** `applied + failed + deferred = total` (count findings, not locations)
 
-**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason is acceptable.
+**See Core Rules:** `Accounting` for status definitions and no-declined policy.

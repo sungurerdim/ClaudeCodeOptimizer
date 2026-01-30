@@ -1,6 +1,8 @@
 # Real-time
 *Real-time communication rules*
 
+**Trigger:** {websocket_deps}, {sse_endpoints}, {socket_io}
+
 **Inheritance:** Higher tiers include lower.
 
 ## Basic (RT:Basic)

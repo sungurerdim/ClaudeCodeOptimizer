@@ -68,7 +68,7 @@ Execution patterns and accounting.
 **Key rules:**
 - Read-Before-Edit - Must read before editing
 - No Deferrals - AI cannot skip fixes in auto mode
-- Accounting - applied + failed = total
+- Accounting - applied + failed + deferred = total
 
 ---
 

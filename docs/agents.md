@@ -92,7 +92,7 @@ Need changes?
 | `testing`          | TST-01 to TST-10 | 10     | Coverage strategy, test quality, gaps    |
 | `maintainability`  | MNT-01 to MNT-12 | 12     | Complexity, readability, naming          |
 | `ai-architecture`  | AIA-01 to AIA-10 | 10     | Over-engineering, drift, premature abstraction |
-| `functional-completeness` | FUN-01 to FUN-12 | 12 | CRUD completeness, edge cases            |
+| `functional-completeness` | FUN-01 to FUN-18 | 18 | CRUD completeness, edge cases            |
 
 **Other Scopes:**
 
@@ -130,7 +130,7 @@ Returns structured JSON with:
 - Dirty state check (pre-op `git status`)
 - Post-change verification (runs lint/type/test)
 - Cascade handling (fixes errors caused by fixes)
-- Accounting (done + fail = total)
+- Accounting (applied + failed + deferred = total)
 - No deferrals mode (zero agent-initiated skips)
 - Batch efficiency (groups by file)
 
@@ -181,14 +181,15 @@ After each change:
 
 - Interactive Mode: Complex changes prompt user for approval
 - Unattended Mode (fixAll: true): ALL findings fixed, no questions
-- Accounting: `applied + failed = total` (no AI declines allowed)
+- Accounting: `applied + failed + deferred = total` (no AI declines allowed)
 
 ### Status Definitions
 
 | Status     | Meaning                  |
 |------------|--------------------------|
-| `done`     | Applied and verified     |
-| `fail`     | Technical impossibility (reason required) |
+| `applied`  | Applied and verified     |
+| `failed`   | Technical impossibility (reason required) |
+| `deferred` | Architectural change beyond single-file scope (reason required) |
 
 ---
 

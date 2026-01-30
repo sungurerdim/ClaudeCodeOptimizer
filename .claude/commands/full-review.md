@@ -65,15 +65,9 @@ if (isReportOnly) {
 }
 ```
 
-## No Deferrals Policy [CRITICAL]
+## Policies
 
-When `--auto` or "Fix all" is selected:
-- **Zero commentary** - No "this is complex", "needs refactor", "minor detail"
-- **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
-- **Zero skips** - Every finding = FIXED or TECHNICAL FAILURE
-- **Only technical failures** - File not found, parse error, permission denied
-
-**See Core Rules:** `No Deferrals Policy` for forbidden responses and valid failure reasons.
+**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Accounting invariant, and valid failure reasons.
 
 ## Architecture
 
@@ -156,6 +150,10 @@ TaskCreate({ subject: "CCO Full Review", description: "10-category system health
 // Explore agent: fast codebase search, pattern matching, keyword search
 
 // BATCH 1: Structure & Quality (5 categories)
+// PARALLEL EXECUTION: All 10 Task calls in single message run in parallel automatically
+// NOTE: Do NOT use run_in_background for Task (agent) calls.
+// Results are returned directly (synchronous). Multiple Task calls in same message = true parallel.
+
 const cat1 = Task("Explore", `
   CCO Inventory & Sync check:
   1. Count files: commands/*.md, rules/core/cco-*.md, rules/languages/cco-*.md, rules/frameworks/cco-*.md, rules/operations/cco-*.md
@@ -163,7 +161,7 @@ const cat1 = Task("Explore", `
   3. Check for orphan refs: .cco/, principles.md, projects.json, context.md
   4. Verify terminology consistency: CRITICAL/HIGH/MEDIUM/LOW, OK/WARN/FAIL
   Return: { category: 1, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat2 = Task("Explore", `
   CCO Command Quality check:
@@ -172,7 +170,7 @@ const cat2 = Task("Explore", `
   3. Verify fix workflow: Analyze → Report → Approve → Apply
   4. Check --auto and --preview mode consistency
   Return: { category: 2, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat3 = Task("Explore", `
   CCO Agent Quality check:
@@ -180,7 +178,7 @@ const cat3 = Task("Explore", `
   2. Check parallel execution patterns (single message for multiple Task calls)
   3. Verify output schemas (JSON with findings, metrics, status)
   Return: { category: 3, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat4 = Task("Explore", `
   CCO Rules System check:
@@ -188,7 +186,7 @@ const cat4 = Task("Explore", `
   2. Check rule quality: actionable, unique names, placeholder format
   3. Verify /cco:tune produces cco-profile.md with required fields
   Return: { category: 4, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat5 = Task("Explore", `
   CCO Token Efficiency check:
@@ -197,7 +195,7 @@ const cat5 = Task("Explore", `
   3. Profile auto-loaded from .claude/rules/
   4. Specification clarity: WHAT over HOW, Standards over Teaching
   Return: { category: 5, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 // BATCH 2: Standards & Readiness (5 categories)
 const cat6 = Task("Explore", `
@@ -207,7 +205,7 @@ const cat6 = Task("Explore", `
   3. Output formatting standards
   4. Pre-announce actions before execution
   Return: { category: 6, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat7 = Task("Explore", `
   CCO Documentation check:
@@ -216,7 +214,7 @@ const cat7 = Task("Explore", `
   3. docs/agents.md completeness
   4. docs/rules.md category coverage
   Return: { category: 7, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat8 = Task("Explore", `
   CCO Safety check:
@@ -224,7 +222,7 @@ const cat8 = Task("Explore", `
   2. OWASP compliance rules present
   3. Rollback capability (dirty warning, stash options)
   Return: { category: 8, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat9 = Task("Explore", `
   CCO Release Readiness check:
@@ -232,7 +230,7 @@ const cat9 = Task("Explore", `
   2. Plugin structure (.claude-plugin/, hooks/)
   3. Cross-platform (forward slashes, no hardcoded paths, LF line endings)
   Return: { category: 9, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
 const cat10 = Task("Explore", `
   CCO Best Practices check:
@@ -241,21 +239,14 @@ const cat10 = Task("Explore", `
   3. Anti-overengineering (no BC hacks, no TODOs)
   4. Agent delegation patterns
   Return: { category: 10, passed: n, failed: n, findings: [...] }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })
 
-// ALL 10 agents launched in parallel - wait for results
-const results = await Promise.all([
-  TaskOutput(cat1.id), TaskOutput(cat2.id), TaskOutput(cat3.id),
-  TaskOutput(cat4.id), TaskOutput(cat5.id), TaskOutput(cat6.id),
-  TaskOutput(cat7.id), TaskOutput(cat8.id), TaskOutput(cat9.id),
-  TaskOutput(cat10.id)
-])
-
-allFindings = results.flatMap(r => r.findings)
-categoryResults = results.map(r => ({ category: r.category, passed: r.passed, failed: r.failed }))
+// Results are returned directly from each Task call above
+allFindings = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, cat10].flatMap(r => r.findings)
+categoryResults = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, cat10].map(r => ({ category: r.category, passed: r.passed, failed: r.failed }))
 ```
 
-**Key Optimization:** Single message with 10 Task calls = true parallel execution. Explore agents use Haiku model for fast, efficient searches.
+**Key Optimization:** Single message with 10 Task calls = true parallel execution. Do NOT use `run_in_background` for Task (agent) calls — results are returned directly. Explore agents use Haiku model for fast, efficient searches.
 
 ---
 
@@ -313,7 +304,7 @@ Cross-file terminology must match exactly:
 | Architecture table | Correct `\| Step \| Name \| Action \|` format | HIGH |
 | Validation blocks | Clear pass/fail criteria | MEDIUM |
 | Context check | Commands needing context verify it exists | HIGH |
-| Accounting | Fix commands report done/fail | HIGH |
+| Accounting | Fix commands report applied/failed/deferred | HIGH |
 
 **NOT findings:** Simple commands, short commands without architecture tables.
 
@@ -339,7 +330,7 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 | Severity order | CRITICAL → HIGH → MEDIUM → LOW | MEDIUM |
 | Granular selection | User can select individual fixes | HIGH |
 | Before/after | Changes shown post-apply | MEDIUM |
-| Accounting invariant | applied + failed = total | HIGH |
+| Accounting invariant | applied + failed + deferred = total | HIGH |
 | Quality Gates | Only in /cco:commit and /cco:preflight (not /cco:optimize) | HIGH |
 
 ### 2.4 Mode Consistency
@@ -459,7 +450,7 @@ Auto-setup (via /cco:tune) must produce:
 | Profile auto-loaded | Profile from .claude/rules/ via Claude auto-context | HIGH |
 | Batch reads | Multiple Read() in single message | MEDIUM |
 | Parallel agents | Independent analyses parallel | HIGH |
-| Background tasks | Long operations use run_in_background: true | HIGH |
+| Parallel agents | Multiple Task calls in single message (no run_in_background) | HIGH |
 | Quick mode | Minimal output, haiku model | MEDIUM |
 
 ### 5.4 Specification Clarity [CRITICAL]
@@ -505,15 +496,15 @@ Auto-setup (via /cco:tune) must produce:
 
 **Bad patterns:**
 ```markdown
-// ❌ Teaching HOW (40 lines of pseudocode)
+// BAD: Teaching HOW (40 lines of pseudocode)
 for (const file of files) {
   if (shouldAnalyze(file)) { ... }
 }
 
-// ❌ Academic justification
+// BAD: Academic justification
 "Studies show >50% coupling leads to 2x bug rates (Fowler 1999)"
 
-// ❌ Policy duplication
+// BAD: Policy duplication
 "AI never decides to skip..." (repeated in 4 files)
 ```
 
@@ -845,7 +836,7 @@ if (toApply.length > 0) {
     ${isFixAll ? `
     FIX-ALL MODE [MANDATORY]:
     Fix ALL items. Zero skips allowed.
-    Every item = FIXED or TECHNICAL FAILURE (with reason).
+    Every item = `applied`, `failed` (with "Technical: [reason]"), or `deferred` (with "Deferred: [reason]").
 
     FORBIDDEN RESPONSES (never use these as skip reasons):
     - "This is too complex" → Fix it
@@ -861,17 +852,17 @@ if (toApply.length > 0) {
     - Each fix = 1 item
 
     Return:
-    { applied: n, failed: n, total: n, details: [...] }
+    { applied: n, failed: n, deferred: n, total: n, details: [...] }
   `, { model: "opus" })
 
   // Verify accounting invariant
-  assert(applyResults.applied + applyResults.failed === applyResults.total,
-    "Count mismatch: applied + failed must equal total")
+  assert(applyResults.applied + applyResults.failed + applyResults.deferred === applyResults.total,
+    "Count mismatch: applied + failed + deferred must equal total")
 }
 ```
 
 ### Accounting Invariant
-`applied + failed = total`
+`applied + failed + deferred = total`
 
 ---
 

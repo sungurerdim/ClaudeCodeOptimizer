@@ -62,6 +62,9 @@ model: haiku
 
 ## Step-1: Profile Validation + Before State
 
+<!-- NOTE: tune uses direct Read() for profile because it is the profile creator/updater,
+     not a consumer. Other commands delegate validation to tune via Skill("tune", "--preview"). -->
+
 ```javascript
 const profilePath = ".claude/rules/cco-profile.md"
 let profile = null
@@ -172,10 +175,17 @@ if (!isUnattended && !validationResult.valid) {
 console.log("Analyzing project...")
 
 // ALWAYS run detection first (for both auto and interactive modes)
-const detected = await Task("cco-agent-analyze", `
-  scope: tune
-  mode: auto
-`, { model: "haiku" })
+let detected
+try {
+  detected = await Task("cco-agent-analyze", `
+    scope: tune
+    mode: auto
+  `, { model: "haiku" })
+} catch (detectionError) {
+  console.error("Detection failed:", detectionError.message)
+  console.log("Rolling back - no profile changes made.")
+  return { status: "error", reason: "Detection failed: " + detectionError.message }
+}
 
 // UNATTENDED MODE: Skip questions, use detected.inferred directly
 if (isUnattended || config.mode === "auto") {
@@ -348,6 +358,23 @@ const finalProfile = {
   patterns: configData.detected.patterns,
   documentation: configData.detected.documentation
 }
+
+// Validate profile data types before writing
+function validateProfile(profile) {
+  if (!profile.project?.name || typeof profile.project.name !== "string") {
+    throw new Error("profile.project.name must be a non-empty string")
+  }
+  if (!profile.project?.purpose || typeof profile.project.purpose !== "string") {
+    throw new Error("profile.project.purpose must be a non-empty string")
+  }
+  if (!Array.isArray(profile.stack?.languages) || profile.stack.languages.length === 0) {
+    throw new Error("profile.stack.languages must be a non-empty array")
+  }
+  if (!profile.maturity || typeof profile.maturity !== "string") {
+    throw new Error("profile.maturity must be a non-empty string")
+  }
+}
+validateProfile(finalProfile)
 
 // Determine which rules to install based on detected stack
 const rulesNeeded = determineRules(configData.detected)

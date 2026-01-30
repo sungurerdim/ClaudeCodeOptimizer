@@ -89,6 +89,8 @@ AskUserQuestion([
 | Mode | Troubleshoot, changelog, security | Specialized sources |
 
 ```javascript
+// userQuery comes from $ARGS (the text after /cco:research)
+userQuery = "$ARGS".replace(/--\w+/g, "").trim()
 parsedQuery = parseQuery(userQuery)
 // Returns: { concepts, date, tech, comparison, mode }
 ```

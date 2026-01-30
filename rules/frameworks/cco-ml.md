@@ -1,6 +1,8 @@
 # ML/AI Rules
 *Specific parameters and patterns*
 
+**Trigger:** {ml_deps}, {model_files}, {notebook_files}
+
 ## LLM Best Practices [CRITICAL]
 
 ### API Usage

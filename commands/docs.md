@@ -50,7 +50,7 @@ model: opus
 
 ## Context
 
-- Git status: !`git status --short`
+- Git status: !`git status --short 2>/dev/null || echo ""`
 - Args: $ARGS
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
@@ -66,15 +66,19 @@ CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's
 
 This data is reused by docs command - no duplicate detection needed.
 
+<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
+
 **Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
-// Delegate profile check to tune command
+// Standard profile validation: delegate to tune, handle skip/error/success
 const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
-  // User declined setup - exit gracefully
   console.log("CCO setup skipped. Run /cco:tune when ready.")
+  return
+} else if (tuneResult.status === "error") {
+  console.error("Profile validation failed:", tuneResult.reason)
   return
 }
 
@@ -87,6 +91,8 @@ if (tuneResult.status === "skipped") {
 ---
 
 ## Mode Detection
+
+<!-- Config shape: { scopes: string[], mode: string, planReview: boolean } -->
 
 ```javascript
 const args = "$ARGS"
@@ -360,7 +366,7 @@ Project Type: {projectType} | Mode: {config.mode}
 ### Trigger Conditions
 
 ```javascript
-const planMode = (findings.length > 0) ||
+const planMode = (gapCount > 0) ||
   (gapCount > 3) ||
   (config.scopes.includes("api"))
 
@@ -505,7 +511,7 @@ generateResults = Task("cco-agent-apply", `
   Return: {
     generated: [{ scope, file, linesWritten }],
     failed: [{ scope, file, reason }],
-    accounting: { done, fail, total }
+    accounting: { applied, failed, deferred, total }
   }
 `, { model: "opus" })
 ```
@@ -517,10 +523,10 @@ generateResults = Task("cco-agent-apply", `
 ### Calculate Results
 
 ```javascript
-// Agent returns done/fail, translate to user-friendly applied/failed
-const results = generateResults || { accounting: { done: 0, fail: 0, total: 0 } }
-const applied = results.accounting.done
-const failed = results.accounting.fail
+const results = generateResults || { accounting: { applied: 0, failed: 0, deferred: 0, total: 0 } }
+const applied = results.accounting.applied
+const failed = results.accounting.failed
+const deferred = results.accounting.deferred
 ```
 
 ### Interactive Mode Output
@@ -545,8 +551,9 @@ const failed = results.accounting.fail
 ### Accounting
 | Metric | Value |
 |--------|-------|
-| Generated | {applied} |
+| Applied | {applied} |
 | Failed | {failed} |
+| Deferred | {deferred} |
 | Total | {toGenerate?.length || 0} |
 
 Status: {failed > 0 ? "WARN" : "OK"}
@@ -557,7 +564,7 @@ Run \`git diff\` to review generated documentation.
 ### Unattended Mode Output (--auto)
 
 ```
-cco-docs: {OK|WARN|FAIL} | Generated: {applied} | Failed: {failed} | Scopes: {config.scopes.length}
+cco-docs: {OK|WARN|FAIL} | Applied: {applied} | Failed: {failed} | Deferred: {deferred} | Total: {toGenerate?.length || 0}
 ```
 
 ---
@@ -587,6 +594,7 @@ cco-docs: {OK|WARN|FAIL} | Generated: {applied} | Failed: {failed} | Scopes: {co
   "accounting": {
     "applied": 3,
     "failed": 0,
+    "deferred": 0,
     "total": 3
   }
 }
@@ -708,14 +716,9 @@ When profile is minimal or empty (new project):
 
 ## Accounting
 
-**Invariant:** `applied + failed = total` (count documents, not sections)
+**Invariant:** `applied + failed + deferred = total` (count documents, not sections)
 
-**No "declined" category:** AI has no option to decline. Generate or fail with technical reason.
-
-| Status | Meaning |
-|--------|---------|
-| `applied` | Document successfully generated |
-| `failed` | Technical impossibility (must include reason) |
+**See Core Rules:** `Accounting` for status definitions and no-declined policy.
 
 **Valid fail reasons:**
 - `Technical: No source files found for extraction`
@@ -734,4 +737,4 @@ When profile is minimal or empty (new project):
 6. **Copy-pasteable** - Commands should work when pasted
 7. **No filler** - Skip "This document explains..."
 8. **Examples > prose** - Show, don't tell
-9. **Accounting invariant** - applied + failed = total always holds
+9. **Accounting invariant** - applied + failed + deferred = total always holds

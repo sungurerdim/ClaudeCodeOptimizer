@@ -1,6 +1,8 @@
 # Database Rules
 *Security and performance essentials*
 
+**Trigger:** {db_deps}, {orm_config}, {migration_dirs}
+
 ## SQL [CRITICAL]
 
 | Requirement | Implementation |

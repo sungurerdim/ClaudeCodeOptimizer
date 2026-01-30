@@ -1,6 +1,8 @@
 # Testing Rules
 *Coverage targets and test patterns*
 
+**Trigger:** {test_framework}, {coverage_config}, {test_dirs}
+
 ## Coverage Targets [CRITICAL]
 
 | Code Type | Line | Branch | Examples |

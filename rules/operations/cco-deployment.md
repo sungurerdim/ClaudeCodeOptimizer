@@ -1,6 +1,8 @@
 # Deployment
 *Common patterns across all platforms*
 
+**Trigger:** {dockerfile}, {k8s_manifests}, {deploy_configs}
+
 ## Universal Requirements
 
 | Requirement | Implementation |

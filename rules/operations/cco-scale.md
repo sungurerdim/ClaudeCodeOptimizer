@@ -1,6 +1,8 @@
 # Scale Rules
 *Performance thresholds and resilience configurations*
 
+**Trigger:** {scale_indicators}, {cache_deps}, {queue_deps}
+
 ## Scale Tiers
 
 | Tier | Threshold | Key Patterns |

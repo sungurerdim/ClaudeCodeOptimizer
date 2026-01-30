@@ -1,6 +1,8 @@
 # Observability
 *Metrics, logging, and alerting standards*
 
+**Trigger:** {monitoring_deps}, {logging_config}, {metrics_endpoint}
+
 ## Core Metrics [CRITICAL]
 
 ### RED Metrics (Services)

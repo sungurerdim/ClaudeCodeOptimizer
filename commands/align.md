@@ -23,12 +23,13 @@ model: opus
 
 ## Skip Patterns [CONSTRAINT]
 
-Do NOT flag:
-- Simple CRUD appropriate for project scale
-- Single-implementation interfaces during prototyping
-- Framework-mandated patterns
-- Trade-offs documented in ADRs or comments
-- Legacy code in maintenance mode (mention, don't prioritize)
+| Pattern | Reason |
+|---------|--------|
+| Simple CRUD for project scale | Appropriate complexity |
+| Single-implementation interfaces | Prototyping phase |
+| Framework-mandated patterns | Required by framework |
+| ADR/comment-documented trade-offs | Intentional decisions |
+| Legacy code in maintenance mode | Mention, don't prioritize |
 
 ## Scopes
 
@@ -45,23 +46,27 @@ Do NOT flag:
 
 ## Context
 
-- Git status: !`git status --short`
+- Git status: !`git status --short 2>/dev/null || echo ""`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
 ## Profile Requirement [CRITICAL]
+
+<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
 
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
 **Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
-// Delegate profile check to tune command
+// Standard profile validation: delegate to tune, handle skip/error/success
 const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
-  // User declined setup - exit gracefully
   console.log("CCO setup skipped. Run /cco:tune when ready.")
+  return
+} else if (tuneResult.status === "error") {
+  console.error("Profile validation failed:", tuneResult.reason)
   return
 }
 
@@ -73,6 +78,8 @@ if (tuneResult.status === "skipped") {
 ---
 
 ## Mode Detection [CRITICAL]
+
+<!-- Config shape: { fixMode: string, scopes: string[], applyMode: string, unattended: boolean } -->
 
 ```javascript
 // --auto mode: unattended, full scope, no questions, minimal output
@@ -103,41 +110,19 @@ if (args.includes("--auto")) {
 | **PLAN** | 3.5 | Review | Architectural plan (mandatory when findings >0) | User approval |
 | **GATE-3** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 4 | Fix | Apply recommendations | Changes verified |
-| **GATE-4** | - | Checkpoint | applied + failed = total | → Summary |
+| **GATE-4** | - | Checkpoint | applied + failed + deferred = total | → Summary |
 | **SUMMARY** | 5 | Report | Show gap changes | Done |
 
 **Execution Flow:** SETUP → ANALYZE → GATE-1 → ASSESS → GATE-2 → [PLAN if triggered] → GATE-3 → APPLY → GATE-4 → SUMMARY
 
 ### Phase Gates
 
-```javascript
-// GATE-1: Post-Analysis
-function gate1_postAnalysis(results) {
-  if (results.error) throw new Error("Analysis failed: " + results.error)
-  if (!results.metrics) throw new Error("Missing metrics")
-  return { pass: true, findingCount: results.findings.length }
-}
-
-// GATE-2: Post-Assessment
-function gate2_postAssessment(gaps, recommendations) {
-  if (!gaps.coupling || !gaps.cohesion) throw new Error("Incomplete gap analysis")
-  return { pass: true, gapCount: Object.keys(gaps).length, recCount: recommendations.length }
-}
-
-// GATE-3: Post-Plan (or skip)
-function gate3_postPlan(planResult, skipPlan) {
-  if (skipPlan) return { pass: true, reason: "Plan skipped" }
-  if (planResult === "Abort") return { pass: false, reason: "User aborted" }
-  return { pass: true, mode: planResult }
-}
-
-// GATE-4: Post-Apply
-function gate4_postApply(results) {
-  const valid = results.applied + results.failed === results.total
-  if (!valid) throw new Error("Accounting mismatch: applied + failed != total")
-  return { pass: true, applied: results.applied, failed: results.failed }
-}
-```
+| Gate | Pass | Fail |
+|------|------|------|
+| GATE-1 (Post-Analysis) | Findings + metrics valid | Analysis error or missing metrics |
+| GATE-2 (Post-Assessment) | coupling + cohesion gaps present | Incomplete gap analysis |
+| GATE-3 (Post-Plan) | Approval received or plan skipped | User aborted |
+| GATE-4 (Post-Apply) | `applied + failed + deferred = total` | Accounting mismatch |
 
 **Plan Review is MANDATORY when findings > 0.**
 
@@ -147,15 +132,7 @@ function gate4_postApply(results) {
 
 ## Policies
 
-**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
-
-### No Deferrals in Auto [CRITICAL]
-
-When `--auto` is active:
-- **Zero commentary** - No "this is complex", "needs refactor", "architectural decision"
-- **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
-- **Zero skips** - Every recommendation = APPLIED or TECHNICAL FAILURE
-- **Only technical failures** - File not found, parse error, circular dependency
+**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, Quality Thresholds, and Accounting invariant.
 
 ---
 
@@ -261,115 +238,7 @@ analysisTask = {
   techAssessment: structureResults.techAssessment
 }
 
-// Legacy single-call format (for reference):
-// analysisTask = Task("cco-agent-analyze", `
-  scopes: ${JSON.stringify(selectedScopes)}
-  mode: review  // Strategic, architecture-level
-
-  For each scope, analyze and return findings with check IDs:
-
-  ## architecture (ARC-01 to ARC-15)
-  - ARC-01: Coupling score (target: <50%)
-  - ARC-02: Cohesion score (target: >70%)
-  - ARC-03: Circular dependencies
-  - ARC-04: Layer violations (UI → DB direct)
-  - ARC-05: God classes (>500 lines, >20 methods)
-  - ARC-06: Feature envy
-  - ARC-07: Shotgun surgery indicators
-  - ARC-08: Divergent change indicators
-  - ARC-09: Missing abstraction layers
-  - ARC-10: Inconsistent module size (wildly varying granularity)
-  - ARC-11: Package/module organization
-  - ARC-12: Dependency direction violations
-  - ARC-13: Missing dependency injection
-  - ARC-14: Hardcoded dependencies
-  - ARC-15: Monolith coupling hotspots
-
-  ## patterns (PAT-01 to PAT-12)
-  - PAT-01: Inconsistent error handling
-  - PAT-02: Inconsistent logging
-  - PAT-03: Inconsistent async/await
-  - PAT-04: SOLID principle violations
-  - PAT-05: DRY violations at codebase level
-  - PAT-06: Framework pattern violations
-  - PAT-07: Missing factory patterns
-  - PAT-08: Missing strategy patterns
-  - PAT-09: Primitive obsession
-  - PAT-10: Data clumps
-  - PAT-11: Switch statement smell
-  - PAT-12: Parallel inheritance hierarchies
-
-  ## testing (TST-01 to TST-10)
-  - TST-01: Test coverage by module (target: 80%+)
-  - TST-02: Critical path coverage
-  - TST-03: Test-to-code ratio
-  - TST-04: Missing edge case tests
-  - TST-05: Flaky test detection
-  - TST-06: Test isolation issues
-  - TST-07: Mock overuse indicators
-  - TST-08: Integration test gaps
-  - TST-09: E2E test coverage
-  - TST-10: Test naming convention violations
-
-  ## maintainability (MNT-01 to MNT-12)
-  - MNT-01: Cyclomatic complexity hotspots (>15)
-  - MNT-02: Cognitive complexity issues
-  - MNT-03: Long methods (>50 lines)
-  - MNT-04: Long parameter lists (>5 params)
-  - MNT-05: Deeply nested code (>4 levels)
-  - MNT-06: Magic numbers in business logic
-  - MNT-07: Missing inline documentation
-  - MNT-08: Inconsistent naming
-  - MNT-09: Missing error context
-  - MNT-10: Resource cleanup patterns missing
-  - MNT-11: Hardcoded configuration
-  - MNT-12: Missing validation at boundaries
-
-  ## ai-architecture (AIA-01 to AIA-10)
-  - AIA-01: Over-engineering (unnecessary layers)
-  - AIA-02: Local solution warning (breaks global pattern)
-  - AIA-03: Architectural drift (from original design)
-  - AIA-04: Pattern inconsistency across modules
-  - AIA-05: Premature abstraction (single-use generics)
-  - AIA-06: Framework anti-patterns
-  - AIA-07: Coupling hotspots (AI-generated tight coupling)
-  - AIA-08: Interface bloat (too many methods)
-  - AIA-09: God module detection (too many responsibilities)
-  - AIA-10: Missing abstraction (should exist but doesn't)
-
-  ## functional-completeness (FUN-01 to FUN-18)
-  - FUN-01: Missing CRUD operations (entity without create/read/update/delete)
-  - FUN-02: Missing list pagination (collection endpoints without limit/offset)
-  - FUN-03: Missing filter support (list endpoints without query params)
-  - FUN-04: Missing edge case handling (empty input, null, boundary values)
-  - FUN-05: Incomplete error handling (generic errors, missing specific types)
-  - FUN-06: Missing schema validation (public APIs without Pydantic/Zod/JSON Schema)
-  - FUN-07: State transition gaps (undocumented or unvalidated state changes)
-  - FUN-08: Missing soft delete (hard delete without audit trail)
-  - FUN-09: Concurrent data access (shared data without optimistic locking/versioning)
-  - FUN-10: Missing timeout config (external calls without configurable timeout)
-  - FUN-11: Missing retry strategy (no retry policy for transient failures)
-  - FUN-12: Incomplete API surface (missing endpoints for common operations)
-  - FUN-13: Missing data validation layer (no schema validation at data layer)
-  - FUN-14: Missing caching strategy (frequently accessed data without cache)
-  - FUN-15: Inefficient data retrieval (SELECT * or N+1 without eager loading)
-  - FUN-16: Missing data consistency (no transaction or eventual consistency mechanism)
-  - FUN-17: Missing data indexing (frequently queried fields without index definitions)
-  - FUN-18: Missing bulk operations (no bulk data processing endpoint/function)
-
-  Return: {
-    findings: [{ id, scope, severity, title, location, description, recommendation, effort, impact, confidence }],
-    metrics: { coupling, cohesion, complexity, testCoverage },
-    techAssessment: { stack, alternatives, recommendation }
-  }
-
-    Confidence calculation (0-100):
-  - Evidence strength (40%): How strong is architectural evidence?
-  - Pattern recognition (30%): Does it match known anti-patterns?
-  - Impact clarity (20%): Is improvement benefit clear?
-  - Migration safety (10%): Can change be made safely?
-// `, { model: "haiku" })
-// NOTE: Parallel execution above replaces single-call pattern
+// Check IDs defined in cco-agent-analyze.md (ARC-01-15, PAT-01-12, TST-01-10, MNT-01-12, AIA-01-10, FUN-01-18)
 ```
 
 ---
@@ -756,23 +625,8 @@ if (toApply.length > 0) {
     Handle dependencies between fixes.
 
     ${isFixAll ? `
-    FIX-ALL MODE [MANDATORY]:
-    Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
-
-    Rules:
-    - Zero agent-initiated skips
-    - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
-    - If unsure → fix it anyway, user reviews with git diff
-
-    FORBIDDEN RESPONSES (never use these as skip reasons):
-    - "This is too complex" → Fix it
-    - "This requires refactoring" → Do the refactor
-    - "This is architectural" → Apply the change
-    - "Consider doing this later" → Do it NOW
-    - "This might break something" → Fix it, user reviews
-    - "Recommend manual review" → Apply the fix
-
-    ONLY VALID FAILURES: File not found, parse error, circular dependency
+    FIX-ALL MODE: Fix ALL items. No Deferrals Policy applies (see Core Rules).
+    Every item = applied, failed (Technical: reason), or deferred (Deferred: reason).
     ` : ""}
 
     CRITICAL - Counting:
@@ -780,7 +634,7 @@ if (toApply.length > 0) {
     - Each recommendation = 1 finding
 
     Return accounting at FINDING level:
-    { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
+    { applied: <findings_fixed>, failed: <findings_failed>, deferred: <findings_deferred>, total: <findings_attempted> }
   `, { model: "opus" })
 }
 ```
@@ -804,15 +658,16 @@ if (toApply.length > 0) {
 // - applied: successfully fixed
 // - failed: couldn't fix (technical reason required)
 //
-// Invariant: applied + failed = total
-// NOTE: No "declined" category - AI has no option to decline. Fix or fail with reason.
+// Invariant: applied + failed + deferred = total
+// NOTE: No "declined" category - AI has no option to decline. Fix, defer (architectural), or fail with reason.
 
 applied = applyResults?.accounting?.applied || 0
 failed = applyResults?.accounting?.failed || 0
+deferred = applyResults?.accounting?.deferred || 0
 
 // Verify invariant
-assert(applied + failed === toApply.length,
-  "Count mismatch: applied + failed must equal toApply.length")
+assert(applied + failed + deferred === toApply.length,
+  "Count mismatch: applied + failed + deferred must equal toApply.length")
 ```
 
 ### Interactive Mode Output
@@ -836,16 +691,16 @@ assert(applied + failed === toApply.length,
 | Files modified | {n} |
 | **Total findings** | **{totalFindings}** |
 
-Status: {OK|WARN} | Applied: {applied} | Failed: {failed} | Total: {toApply.length}
+Status: {OK|WARN} | Applied: {applied} | Failed: {failed} | Deferred: {deferred} | Total: {toApply.length}
 
-| Effort Category | Count | Applied | Failed |
-|-----------------|-------|---------|--------|
-| Quick Win | {quickWin.length} | {appliedQuickWin} | {failedQuickWin} |
-| Moderate | {moderate.length} | {appliedModerate} | {failedModerate} |
-| Complex | {complex.length} | {appliedComplex} | {failedComplex} |
-| Major | {major.length} | {appliedMajor} | {failedMajor} |
+| Effort Category | Count | Applied | Failed | Deferred |
+|-----------------|-------|---------|--------|----------|
+| Quick Win | {quickWin.length} | {appliedQuickWin} | {failedQuickWin} | {deferredQuickWin} |
+| Moderate | {moderate.length} | {appliedModerate} | {failedModerate} | {deferredModerate} |
+| Complex | {complex.length} | {appliedComplex} | {failedComplex} | {deferredComplex} |
+| Major | {major.length} | {appliedMajor} | {failedMajor} | {deferredMajor} |
 
-**Invariant:** applied + failed = total (effort categories are for reporting only)
+**Invariant:** applied + failed + deferred = total (effort categories are for reporting only)
 
 Run \`git diff\` to review changes.
 ```
@@ -853,7 +708,7 @@ Run \`git diff\` to review changes.
 ### Unattended Mode Output (--auto)
 
 ```
-cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {failed} | Total: {totalFindings}
+cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {failed} | Deferred: {deferred} | Total: {totalFindings}
 ```
 
 ### Validation
@@ -881,9 +736,9 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 ```json
 {
   "status": "OK|WARN|FAIL",
-  "summary": "Applied 3, Failed 0, Gaps: coupling 22%, cohesion 15%",
+  "summary": "Applied 3, Failed 0, Deferred 0, Gaps: coupling 22%, cohesion 15%",
   "data": {
-    "accounting": { "applied": 3, "failed": 0, "total": 3 },
+    "accounting": { "applied": 3, "failed": 0, "deferred": 0, "total": 3 },
     "gaps": {
       "coupling": { "current": 72, "ideal": 50, "gap": 22 },
       "cohesion": { "current": 55, "ideal": 70, "gap": 15 },
@@ -930,12 +785,7 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 
 ### Model Strategy
 
-**Policy:** Opus + Haiku only (no Sonnet)
-
-| Task | Model | Reason |
-|------|-------|--------|
-| Analysis (parallel scopes) | Haiku | Fast, cost-effective scanning |
-| Apply fixes | Opus | 50-75% fewer tool errors |
+**See Core Rules:** `Model Strategy` for Opus/Haiku policy.
 
 ### Ideal Metrics by Project Type
 
@@ -946,57 +796,29 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 | API | <50% | >70% | <12 | 80%+ |
 | Web | <60% | >65% | <15 | 70%+ |
 
-### Metric Rationale [CRITICAL]
+### Metric Rationale
 
-**NEVER recommend changes without evidence and rationale.**
+**See Core Rules:** `cco-thresholds.md` for detailed metric rationale, sources, and override protocol.
 
-| Metric | Target | Why | Source |
-|--------|--------|-----|--------|
-| Coupling <50% | Industry standard | Martin Fowler's "Refactoring", studies show >50% correlation leads to 2x bug rates | Fowler (1999), IEEE SE studies |
-| Cohesion >70% | High cohesion = easier testing | LCOM (Lack of Cohesion) metric, classes <70% harder to unit test | Chidamber & Kemerer metrics |
-| God Class <500 lines | Maintenance nightmare | Studies show classes >500 LOC have 3x defect density | NASA/JPL coding standards |
-| Complexity <15 | Human working memory | Cognitive complexity limit ~7±2 items, 15 CC maps to ~7 decision points | Miller's Law, McCabe (1976) |
-| Coverage 80% | Diminishing returns | 80% catches 90% of bugs, beyond 80% has 3x effort/bug ratio | Google Testing Blog |
+**NEVER recommend changes without evidence (file:line) and rationale.**
 
 ### Technology Assessment Rules [CRITICAL]
 
 **NEVER recommend technology changes without:**
-
-1. **Evidence from current codebase** - Specific pain points with file:line references
-2. **Migration cost estimate** - File count, breaking changes, estimated effort
-3. **Team familiarity consideration** - Don't recommend if team doesn't know it
-
-**Example of BAD recommendation:**
-> "Consider switching from Flask to FastAPI for better async support."
-
-**Example of GOOD recommendation:**
-> "Flask limitation found in `src/api/users.py:45` - sync endpoint blocking event loop.
-> FastAPI alternative: 15 files affected, 2-3 day migration, team has FastAPI experience.
-> Evidence: 3 endpoints doing sync DB calls in async context."
+1. **Evidence from codebase** - Specific pain points with file:line references
+2. **Migration cost** - File count, breaking changes
+3. **Team familiarity** - Don't recommend unknown tech
 
 ### Gap Severity Calculation
 
-```javascript
-// Gap severity is calculated, not arbitrary
-function getGapSeverity(current, ideal, threshold) {
-  const gap = Math.abs(current - ideal)
-  const percentGap = gap / ideal * 100
+| Gap vs Threshold | Severity |
+|------------------|----------|
+| >2x threshold | HIGH |
+| >1x threshold | MEDIUM |
+| >0 | LOW |
+| At/better | OK |
 
-  // Severity based on % deviation from ideal
-  if (percentGap > threshold * 2) return "HIGH"      // >2x threshold = HIGH
-  if (percentGap > threshold) return "MEDIUM"        // >1x threshold = MEDIUM
-  if (percentGap > 0) return "LOW"                   // Any gap = LOW
-  return "OK"                                        // At or better than ideal
-}
-
-// Default thresholds (can be overridden by project type)
-const thresholds = {
-  coupling: 10,     // 10% deviation
-  cohesion: 10,     // 10% deviation
-  complexity: 20,   // 20% deviation (more tolerance)
-  coverage: 10      // 10% deviation
-}
-```
+Default thresholds: coupling 10%, cohesion 10%, complexity 20%, coverage 10%.
 
 ---
 
@@ -1024,10 +846,13 @@ const thresholds = {
 
 ---
 
-## Reasoning Strategies
+## Reasoning & Guards
 
-### Step-Back (Before Analysis)
-Ask broader questions before diving into specifics:
+**See Core Rules:** `Reasoning`, `Anti-Overengineering Guard`, `Severity Levels` for shared patterns.
+
+**See Core Rules:** `Confidence Scoring` in `cco-thresholds.md` for score calculation, interpretation, and ≥80 threshold.
+
+**Align-specific Step-Back questions:**
 
 | Scope | Step-Back Question |
 |-------|-------------------|
@@ -1037,91 +862,10 @@ Ask broader questions before diving into specifics:
 | Maintainability | "How easy is this code to change?" |
 | AI-Architecture | "Has AI introduced inconsistent patterns?" |
 
-### Chain of Thought (Each Finding)
-```
-1. Identify: What exactly is the issue?
-2. Impact: Who/what is affected?
-3. Evidence: What confirms this assessment?
-4. Severity: Based on evidence, what level?
-```
-
-### Self-Consistency (CRITICAL Only)
-For CRITICAL severity findings, validate with multiple reasoning paths:
-```
-Path A: Analyze from "this is a real problem" perspective
-Path B: Analyze from "this might be intentional" perspective
-Consensus: Both agree → confirm CRITICAL. Disagree → downgrade to HIGH
-```
-
----
-
-## Anti-Overengineering Guard
-
-Before flagging ANY finding:
-1. Does this actually break something?
-2. Does this confuse users or developers?
-3. Is fixing it worth the complexity cost?
-
-**All NO → not a finding.**
-
-NON-findings:
-- Small module without full test coverage (if not critical path)
-- Missing abstraction that only has one implementation
-- Unconventional but working patterns
-
----
-
-## Severity Definitions
-
-| Severity | Criteria |
-|----------|----------|
-| CRITICAL | Security risk, data loss, broken core functionality |
-| HIGH | Significant architectural violation, blocking refactoring |
-| MEDIUM | Suboptimal but functional, minor maintainability issue |
-| LOW | Style, minor improvement, nice-to-have |
-
-**When uncertain → choose lower severity.**
-
----
-
-## Confidence Scoring
-
-Each recommendation includes a confidence score (0-100) indicating reliability.
-
-### Score Calculation
-
-| Factor | Weight | Criteria |
-|--------|--------|----------|
-| Evidence Strength | 40% | How strong is the architectural evidence? |
-| Pattern Recognition | 30% | Does it match known anti-patterns? |
-| Impact Clarity | 20% | Is the improvement benefit clear? |
-| Migration Safety | 10% | Can the change be made safely? |
-
-```javascript
-confidence = (evidenceStrength * 0.4) + (patternRecognition * 0.3) +
-             (impactClarity * 0.2) + (migrationSafety * 0.1)
-```
-
-### Score Interpretation
-
-| Score | Level | Action |
-|-------|-------|--------|
-| 90-100 | Very High | Apply without review |
-| 80-89 | High | Apply, visible in diff |
-| 70-79 | Medium | Show in plan, recommend |
-| 60-69 | Low | Show in plan, ask approval |
-| <60 | Very Low | Report only, no auto-apply |
-
-### Threshold: ≥80
-
-- **"Apply Non-Breaking Only"** filters to confidence ≥80
-- Findings below 80 require explicit approval
-- CRITICAL gaps bypass confidence (always shown)
-
 ---
 
 ## Accounting
 
-**Invariant:** `applied + failed = total` (count findings, not locations)
+**Invariant:** `applied + failed + deferred = total` (count findings, not locations)
 
-**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason is acceptable.
+**See Core Rules:** `Accounting` for status definitions and no-declined policy.
