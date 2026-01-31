@@ -11,6 +11,9 @@ model: opus
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
 
+> **Standard Flow:** This command follows the standard CCO execution pattern:
+> Setup → Pre-check → (Verify ‖ Optimize ‖ Align) → Changelog → Plan → Execute (see docs/philosophy.md for rationale)
+
 Meta command orchestrating /cco:optimize and /cco:align with maximum parallelism.
 
 **Orchestration:**
@@ -168,16 +171,6 @@ if (!isUnattended) {
     multiSelect: true
   },
   {
-    question: "How thorough?",
-    header: "Intensity",
-    options: [
-      { label: "Quick", description: "Fast - high impact only" },
-      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM" },
-      { label: "Full", description: "All severities" }
-    ],
-    multiSelect: false
-  },
-  {
     question: "After checks pass?",
     header: "Release",
     options: [
@@ -194,7 +187,6 @@ if (!isUnattended) {
 
 | Selection | Effect |
 |-----------|--------|
-| **Intensity** | Passed to /cco:optimize and /cco:align |
 | **Fix Only** | Apply fixes only, no commit, no tag |
 | **Fix + Commit + Tag** | Apply fixes, create commit, create git tag |
 | **CHANGELOG** | Generate changelog entry |
@@ -283,7 +275,7 @@ depResults = Task("cco-agent-research", `
     security: [{ package, advisory, severity, cve }],
     summary: { total, outdated, security }
   }
-`, { model: "haiku" })  // Synchronous - result needed before GATE-1
+`, { model: "haiku", timeout: 120000 })  // Synchronous - result needed before GATE-1
 ```
 
 **Security advisories are BLOCKERS.** Outdated packages are warnings.
@@ -408,7 +400,9 @@ if (planMode && !skipPlan) {
 }
 ```
 
-### Release Plan Display
+### Release Plan Display [MANDATORY - DISPLAY BEFORE ASKING]
+
+**[CRITICAL] You MUST display the following release plan to the user BEFORE asking for approval. NEVER skip this display. NEVER ask "How to proceed?" without first showing the full plan.**
 
 ```markdown
 ## Release Plan Review
@@ -457,7 +451,7 @@ This will require a MAJOR version bump.
 
 {hasBlockers ? `
 **[BLOCKED] Blockers must be resolved:**
-${allBlockers.map((b, i) => `${i+1}. [${b.type}] ${b.message}`).join('\n')}
+${allBlockers.map((b, i) => `${i+1}. [CRITICAL] ${b.id}: ${b.message} (${b.type})`).join('\n')}
 ` : "No blockers - ready to proceed."}
 
 ### Changelog Preview
@@ -490,30 +484,61 @@ if (hasBlockers) {
     multiSelect: false
   }])
 } else {
-  AskUserQuestion([{
-    question: "Release plan review complete. Proceed with release?",
-    header: "Decision",
-    options: [
-      { label: "Proceed (Recommended)", description: `Create tag v${suggestedVersion}` },
-      { label: "Review Changes", description: "Show git diff before proceeding" },
-      { label: "Abort", description: "Cancel - no tag created" }
-    ],
-    multiSelect: false
-  }])
+  // Standard Post-Analysis Q2: Action + Severity (same pattern in optimize, align, preflight)
+  AskUserQuestion([
+    {
+      question: `${totalFindings} finding across optimize + align. How to proceed?`,
+      header: "Action",
+      options: [
+        { label: "Fix All (Recommended)", description: `Apply all ${totalFindings} fixes and proceed` },
+        { label: "By Severity", description: "Choose which severity levels to fix" },
+        { label: "Review Each", description: "Approve each fix individually" },
+        { label: "Report Only", description: "No changes, just report" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Which severity levels to include?",
+      header: "Severity",
+      options: [
+        { label: `CRITICAL (${criticalCount})`, description: "Security, data loss, crash" },
+        { label: `HIGH (${highCount})`, description: "Broken functionality" },
+        { label: `MEDIUM (${mediumCount})`, description: "Suboptimal but works" },
+        { label: `LOW (${lowCount})`, description: "Style, minor improvements" }
+      ],
+      multiSelect: true
+    }
+  ])
 }
 
-switch (planDecision) {
-  case "Proceed":
-    config.releaseMode = "tag"
-    break
-  case "Review Changes":
-    Bash("git diff --stat")
-    // Re-prompt after review
-    break
-  case "Fix and Retry":
-  case "Abort":
-    console.log("Release aborted. Fix issues and re-run /cco:preflight.")
-    return
+// Handle blocker path responses
+if (hasBlockers) {
+  switch (planDecision) {
+    case "Fix and Retry":
+    case "Abort":
+      console.log("Release aborted. Fix issues and re-run /cco:preflight.")
+      return
+    case "View Details":
+      // Show details, re-prompt
+      break
+  }
+} else {
+  // Handle standard Q2 responses
+  switch (actionDecision) {
+    case "Fix All":
+      config.reviewMode = "apply-all"
+      break
+    case "By Severity":
+      config.reviewMode = "apply-all"
+      // Filter findings by selected severities
+      break
+    case "Review Each":
+      config.reviewMode = "interactive"
+      break
+    case "Report Only":
+      config.reviewMode = "report-only"
+      break
+  }
 }
 ```
 
@@ -600,10 +625,10 @@ totalFindings = totalApplied + totalFailed + totalNeedsApproval
 | Dependencies | {depResults.summary.security > 0 ? "FAIL" : "PASS"} | {depResults.summary.security} security, {depResults.summary.outdated} outdated |
 
 ### Blockers
-{allBlockers.length === 0 ? "None - ready to release!" : allBlockers.map((b, i) => `${i+1}. [${b.type}] ${b.message}`).join('\n')}
+{allBlockers.length === 0 ? "None - ready to release!" : allBlockers.map((b, i) => `${i+1}. [CRITICAL] ${b.id}: ${b.message} (${b.type})`).join('\n')}
 
 ### Warnings
-{allWarnings.length === 0 ? "None" : allWarnings.map((w, i) => `${i+1}. [${w.type}] ${w.message}`).join('\n')}
+{allWarnings.length === 0 ? "None" : allWarnings.map((w, i) => `${i+1}. [WARN] ${w.id}: ${w.message} (${w.type})`).join('\n')}
 
 **Release Ready:** {hasBlockers ? "NO - blockers must be fixed" : "YES"}
 ```
@@ -621,7 +646,7 @@ totalFindings = totalApplied + totalFailed + totalNeedsApproval
     "optimize": { "applied": 5, "failed": 0, "needs_approval": 0 },
     "align": { "applied": 3, "failed": 0, "needs_approval": 0 },
     "blockers": [],
-    "warnings": ["PRE-04: TODO markers found"],
+    "warnings": ["[WARN] PRE-04: TODO markers found"],
     "version": { "current": "1.1.0", "suggested": "1.2.0", "bump": "MINOR" }
   },
   "error": null
@@ -706,9 +731,10 @@ Mode: {config.releaseMode}
 | Scenario | Questions | Total |
 |----------|-----------|-------|
 | --auto mode | - | **0** |
-| Interactive | Q1 (Intensity + Release Mode + Docs) | **1** |
+| Interactive, no findings | Q1 (Checks + Release) | **1** |
+| Interactive, findings | Q1 (Checks + Release) + Q2 (Action/Severity) | **2** |
 
-**Single question at start** - All settings collected upfront, then uninterrupted parallel execution.
+**Settings upfront, action after analysis** - Q1 collects scope/release config, Q2 post-analysis collects fix action + severity filter.
 
 ### Flags
 
@@ -776,7 +802,7 @@ Mode: {config.releaseMode}
 
 ## Rules
 
-1. **All settings upfront** - Intensity, release mode, and docs selected in single Q1
+1. **Scope + release upfront** - Checks and release mode in Q1, fix action post-analysis in Q2
 2. **All parallel execution** - Bash verification in background, Skill calls for sub-commands
 3. **Full scope** - Run ALL scopes for both optimize (10) and align (6)
 4. **No mid-flow questions** - All decisions made at start, uninterrupted execution
