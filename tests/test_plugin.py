@@ -39,7 +39,7 @@ class TestMarketplaceJson:
     """Validate marketplace.json schema - catches broken marketplace listing."""
 
     @pytest.fixture
-    def marketplace_json(self) -> dict:
+    def marketplace_json(self) -> dict[str, Any]:
         path = ROOT / ".claude-plugin" / "marketplace.json"
         return json.loads(path.read_text(encoding="utf-8"))
 

@@ -11,6 +11,7 @@ Tests ensure commands are properly wired without executing them.
 
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -159,8 +160,7 @@ class TestAgentReferences:
             content = cmd_file.read_text(encoding="utf-8")
             for agent_name in re.findall(TASK_PATTERN, content):
                 assert agent_name in valid_agents, (
-                    f"{cmd_file.name} references non-existent agent:"
-                    f" {agent_name}"
+                    f"{cmd_file.name} references non-existent agent: {agent_name}"
                 )
 
     def test_agents_declared_in_plugin_json(self, existing_agents: list[str]) -> None:
@@ -208,7 +208,7 @@ class TestCommandConsistency:
     """Validate consistency across all commands."""
 
     @pytest.fixture
-    def all_commands(self) -> dict[str, dict]:
+    def all_commands(self) -> dict[str, dict[str, Any]]:
         """Load all command frontmatters."""
         commands = {}
         for cmd_file in COMMANDS_DIR.glob("*.md"):
@@ -370,16 +370,14 @@ class TestCommandModelPolicy:
     def test_no_sonnet_references_in_commands(self, command_files: list[Path]) -> None:
         """Commands should not reference sonnet model."""
         for cmd_file in command_files:
-            content = cmd_file.read_text(encoding="utf-8")
-            lines = content.split("\n")
-            for i, line in enumerate(lines, 1):
-                lower_line = line.lower()
-                if "sonnet" not in lower_line:
-                    continue
-                # Allow "no sonnet" negations and policy/only statements
-                if "no sonnet" in lower_line:
-                    continue
-                if "policy" in lower_line or "only" in lower_line:
+            content = cmd_file.read_text(encoding="utf-8").lower()
+            for i, line in enumerate(content.split("\n"), 1):
+                if (
+                    "sonnet" not in line
+                    or "no sonnet" in line
+                    or "policy" in line
+                    or "only" in line
+                ):
                     continue
                 pytest.fail(f"{cmd_file.name}:{i} references sonnet model: {line.strip()}")
 

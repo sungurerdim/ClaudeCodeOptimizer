@@ -15,13 +15,13 @@ def command_files() -> list[Path]:
     return list(COMMANDS_DIR.glob("*.md"))
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def optimize_content() -> str:
     """Load optimize command content."""
     return (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def hooks_json() -> dict[str, Any]:
     """Load hooks.json configuration."""
     return json.loads((HOOKS_DIR / "hooks.json").read_text(encoding="utf-8"))
