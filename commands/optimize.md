@@ -11,6 +11,9 @@ model: opus
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
 
+> **Standard Flow:** This command follows the standard CCO execution pattern:
+> Setup → Analyze → Gate → Plan → Apply → Summary (see docs/philosophy.md for rationale)
+
 **Philosophy:** "This code works. How can it work better?"
 
 **Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco:align`.
@@ -153,23 +156,16 @@ if (isUnattended) {
 }
 ```
 
-**Severity Thresholds by Fix Mode:**
-
-| Fix Mode | Severities Included | Use Case |
-|-----------|---------------------|----------|
-| quick-wins | High impact + low effort only | 80/20 fast improvement |
-| standard | CRITICAL + HIGH + MEDIUM | Normal operation (default) |
-| full-fix | ALL severities, ALL effort levels | Comprehensive cleanup |
-| report-only | ALL (analysis only) | Review without changes |
+**Analysis always scans ALL severities.** Severity filtering happens post-analysis via Q2.
 
 ## Architecture
 
 | Phase | Step | Name | Action | Gate |
 |-------|------|------|--------|------|
-| **SETUP** | 1 | Config | Q1: Combined settings | Config validated |
+| **SETUP** | 1 | Config | Q1: Scopes (+ git state) | Config validated |
 | **ANALYZE** | 2 | Scan | Parallel scope analysis | Findings collected |
 | **GATE-1** | - | Checkpoint | Validate findings ≥0, no errors | → Plan or Apply |
-| **PLAN** | 2.5 | Review | Show fix plan (mandatory when findings >0) | User approval |
+| **PLAN** | 2.5 | Review | Show fix plan + Q2 (Action/Severity) | User approval |
 | **GATE-2** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 3 | Fix | Apply fixes based on fix mode | Fixes verified |
 | **GATE-3** | - | Checkpoint | applied + failed + needs_approval = total | → Summary |
@@ -192,15 +188,15 @@ if (isUnattended) {
 
 **Skipped when:** `--auto` mode or 0 findings
 
-**Intensity determines what gets fixed:**
-- Quick Wins → High impact, low effort only
-- Standard → CRITICAL + HIGH + MEDIUM
-- Full Fix → Everything
+**Post-analysis Q2 determines what gets fixed:**
+- Fix All → Everything
+- By Severity → User-selected severity levels
+- Review Each → Individual approval per fix
 - Report Only → No changes
 
 ---
 
-## Step-1: Setup [Q1: Intensity + Q2: Scopes] [SKIP IF --auto]
+## Step-1: Setup [Q1: Scopes] [SKIP IF --auto]
 
 **Execution Pattern:** Questions first, then synchronous analysis. This ensures reliable result handling.
 
@@ -235,25 +231,10 @@ if (isUnattended) {
   }
 ```
 
-**Q2: Fix Intensity:**
+**Q2: Git State (conditional, only if dirty):**
 
 ```javascript
-  fixModeQuestion = {
-    question: "How much to fix?",
-    header: "Intensity",
-    options: [
-      { label: "Quick Wins", description: "High impact, low effort only" },
-      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM" },
-      { label: "Full", description: "All severities including LOW" }
-    ],
-    multiSelect: false
-  }
-```
-
-**Q3: Git State (conditional, only if dirty):**
-
-```javascript
-  questions = [scopeQuestion, fixModeQuestion]
+  questions = [scopeQuestion]
 
   if (gitDirty) {
     questions.push({
@@ -300,28 +281,28 @@ securityResults = Task("cco-agent-analyze", `
   scopes: ["security", "robustness", "privacy"]
   Find all issues with severity, fix info, effort/impact scores, and confidence.
   Return: { findings: [...], summary: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // Code Quality group (HYG + TYP + LNT + SIM)
 qualityResults = Task("cco-agent-analyze", `
   scopes: ["hygiene", "types", "lint", "simplify"]
   Find all issues with severity, fix info, effort/impact scores, and confidence.
   Return: { findings: [...], summary: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // Performance group (PRF)
 perfResults = Task("cco-agent-analyze", `
   scopes: ["performance"]
   Find all issues with severity, fix info, effort/impact scores, and confidence.
   Return: { findings: [...], summary: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // AI Cleanup group (AIH + DOC)
 aiResults = Task("cco-agent-analyze", `
   scopes: ["ai-hygiene", "doc-sync"]
   Find all issues with severity, fix info, effort/impact scores, and confidence.
   Return: { findings: [...], summary: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // Merge all parallel results
 allFindings = {
@@ -341,44 +322,19 @@ allFindings = {
 // - Test coverage (10%): Are there validating tests?
 ```
 
-// Map fixMode to severity thresholds
-const fixModeThresholds = {
-  "quick-wins": null,  // Special: filter by effort/impact, not severity
-  "standard": ["CRITICAL", "HIGH", "MEDIUM"],
-  "full-fix": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
-  "report-only": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]  // Show all, apply none
-}
-
 // Filter by user-selected scopes
 selectedScopes = config.scopes.map(s => s.toLowerCase().replace(" ", "-"))
 let findings = allFindings.findings.filter(f => selectedScopes.includes(f.scope))
 
-// Filter by fixMode
-const allowedSeverities = fixModeThresholds[config.fixMode]
-if (config.fixMode === "quick-wins") {
-  // 80/20 mode: high impact, low effort only
-  findings = findings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
-} else if (allowedSeverities) {
-  findings = findings.filter(f => allowedSeverities.includes(f.severity))
-}
-
+// No pre-filtering by severity — all findings kept for post-analysis Q2
 // Categorize for fix flow
-if (isUnattended || config.fixMode === "full-fix") {
-  // FULL-FIX / AUTO MODE: ALL findings attempted, none skipped
-  // The fixable flag is a HINT for interactive mode only.
-  // In auto/full-fix, every finding is sent to the apply agent.
-  // Truly unfixable items will be reported as "failed" with a technical reason.
+if (isUnattended) {
+  // AUTO MODE: ALL findings attempted, none skipped
   autoFixable = [...findings]
   approvalRequired = []
 } else {
   autoFixable = findings.filter(f => f.fixable && !f.approvalRequired)
   approvalRequired = findings.filter(f => f.approvalRequired || !f.fixable)
-}
-
-// Report-only mode: nothing to fix
-if (config.fixMode === "report-only") {
-  autoFixable = []
-  approvalRequired = []
 }
 
 // Track counts at FINDING level (not location level)
@@ -408,7 +364,7 @@ if (!isUnattended) {
 ```
 ## Analysis Results
 
-**Intensity:** {config.fixMode} | **Scopes:** {selectedScopes.length}/6
+**Scopes:** {selectedScopes.length}/6
 
 | Scope | ID Range | Critical | High | Medium | Low | Auto-fix |
 |-------|----------|----------|------|--------|-----|----------|
@@ -425,15 +381,15 @@ if (!isUnattended) {
 | **Total** | **105 checks** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
 
 **Severity Distribution:**
-- CRITICAL: {counts.bySeverity.critical}
-- HIGH: {counts.bySeverity.high}
-- MEDIUM: {counts.bySeverity.medium}
-- LOW: {counts.bySeverity.low}
+- [CRITICAL] {counts.bySeverity.critical} items
+- [HIGH] {counts.bySeverity.high} items
+- [MEDIUM] {counts.bySeverity.medium} items
+- [LOW] {counts.bySeverity.low} items
 
 **Fix Plan:**
 - Auto-fixable (safe): {autoFixable.length} items
 - Approval required (risky): {approvalRequired.length} items
-- Excluded by fix mode: {allFindings.findings.length - findings.length} items
+- Excluded by scope: {allFindings.findings.length - findings.length} items
 ```
 
 ```javascript
@@ -502,7 +458,9 @@ const fixPlans = findings.map(finding => ({
 }))
 ```
 
-### Plan Display
+### Plan Display [MANDATORY - DISPLAY BEFORE ASKING]
+
+**[CRITICAL] You MUST display the following table to the user BEFORE asking for approval. NEVER skip this display. NEVER ask "How to proceed?" without first showing the full plan.**
 
 ```markdown
 ## Fix Plan Review
@@ -548,33 +506,57 @@ const fixPlans = findings.map(finding => ({
 ### User Decision
 
 ```javascript
-AskUserQuestion([{
-  question: "Review complete. How to proceed?",
-  header: "Plan",
-  options: [
-    { label: "Apply All (Recommended)", description: `Apply all ${findings.length} fixes as planned` },
-    { label: "Apply Safe Only", description: `Apply only ${highConfidenceCount} high-confidence fixes (>80%)` },
-    { label: "Review Each", description: "Ask before each fix (slower but more control)" },
-    { label: "Abort", description: "Cancel and make no changes" }
-  ],
-  multiSelect: false
-}])
+// Standard Post-Analysis Q2: Action + Severity (same pattern in optimize, align, preflight)
+AskUserQuestion([
+  {
+    question: `${findings.length} finding across ${uniqueFiles.length} files. How to proceed?`,
+    header: "Action",
+    options: [
+      { label: "Fix All (Recommended)", description: `Apply all ${findings.length} fixes` },
+      { label: "By Severity", description: "Choose which severity levels to fix" },
+      { label: "Review Each", description: "Approve each fix individually" },
+      { label: "Report Only", description: "No changes, just report" }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "Which severity levels to include?",
+    header: "Severity",
+    options: [
+      { label: `CRITICAL (${counts.bySeverity.critical})`, description: "Security, data loss, crash" },
+      { label: `HIGH (${counts.bySeverity.high})`, description: "Broken functionality" },
+      { label: `MEDIUM (${counts.bySeverity.medium})`, description: "Suboptimal but works" },
+      { label: `LOW (${counts.bySeverity.low})`, description: "Style, minor improvements" }
+    ],
+    multiSelect: true
+  }
+])
 
 // Handle response
-switch (planDecision) {
-  case "Apply All":
+// Q2 (Severity) only used when Action = "By Severity"
+switch (actionDecision) {
+  case "Fix All":
     config.reviewMode = "apply-all"
+    // All findings, ignore severity selection
     break
-  case "Apply Safe Only":
-    config.reviewMode = "safe-only"
-    findings = findings.filter(f => f.plan.confidence >= 80)
+  case "By Severity":
+    config.reviewMode = "apply-all"
+    const selectedSeverities = severityDecision  // Array of selected severity labels
+    findings = findings.filter(f => selectedSeverities.some(s => s.startsWith(f.severity)))
     break
   case "Review Each":
     config.reviewMode = "interactive"
+    // If severity selected, filter first
+    if (severityDecision?.length > 0) {
+      findings = findings.filter(f => severityDecision.some(s => s.startsWith(f.severity)))
+    }
     break
-  case "Abort":
-    console.log("Aborted. No changes made.")
-    return
+  case "Report Only":
+    config.reviewMode = "report-only"
+    autoFixable = []
+    approvalRequired = []
+    // Skip to summary
+    break
 }
 ```
 
@@ -622,7 +604,19 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
     Return accounting at FINDING level:
     { applied: <findings_fixed>, failed: <findings_failed>, needs_approval: <findings_needs_approval>, total: <findings_attempted> }
-  `, { model: "opus" })  // No run_in_background - synchronous execution
+  `, { model: "opus", timeout: 120000 })  // No run_in_background - synchronous execution
+
+  // Retry guidance: On failure, retry with alternative fix approach
+  if (fixResults.error) {
+    console.log(`Fix agent failed: ${fixResults.error}. Retrying with alternative approach...`)
+    fixResults = Task("cco-agent-apply", `
+      fixes: ${JSON.stringify(autoFixable)}
+      fixAll: ${isUnattendedMode}
+      retryMode: true
+      Use alternative fix approaches for items that failed in previous attempt.
+      Return accounting at FINDING level.
+    `, { model: "opus", timeout: 180000 })
+  }
 }
 ```
 
@@ -642,8 +636,17 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 if (fixResults.needs_approval > 0 && !isUnattended) {
   const needsApprovalItems = fixResults.details.filter(d => d.status === "needs_approval")
 
+  // [MANDATORY] Display needs-approval items BEFORE asking. NEVER skip this display.
+  // Output the following table to the user:
+  //
+  // ## Items Needing Approval
+  //
+  // | # | ID | Severity | Issue | Location | Reason |
+  // |---|-----|----------|-------|----------|--------|
+  // {needsApprovalItems.map((item, i) => `| ${i+1} | ${item.id} | ${item.severity} | ${item.title} | ${item.location} | ${item.reason} |`)}
+
   AskUserQuestion([{
-    question: `${needsApprovalItems.length} items need approval (architectural changes).`,
+    question: `${needsApprovalItems.length} items need approval (architectural changes). See list above.`,
     header: "Approval",
     options: [
       { label: "Fix All (Recommended)", description: "Apply all architectural changes" },
@@ -746,6 +749,15 @@ Status: ${finalCounts.failed > 0 ? "WARN" : "OK"}
 
 Run \`git diff\` to review changes.`
 
+// Failed items list
+if (finalCounts.failed > 0) {
+  summary += `\n### Failed Items\n`
+  summary += fixResults.details
+    .filter(d => d.status === "failed")
+    .map(d => `[${d.severity}] ${d.id}: ${d.title} in ${d.location}`)
+    .join('\n')
+}
+
 // Stash reminder if user chose "Stash first"
 if (config.gitState === "Stash first") {
   summary += `
@@ -772,10 +784,11 @@ console.log(summary)
 | Scenario | Questions | Total |
 |----------|-----------|-------|
 | **--auto mode** | - | **0** |
-| Clean git | Intensity + Scopes (2-3 tabs) | **1** |
-| Dirty git | Intensity + Scopes + Git State (3-4 tabs) | **1** |
+| Clean git, 0 findings | Scopes (Q1) | **1** |
+| Clean git, findings | Scopes (Q1) + Action/Severity (Q2) | **2** |
+| Dirty git, findings | Scopes + Git (Q1) + Action/Severity (Q2) | **2** |
 
-**No approval questions** - Intensity selection determines what gets fixed automatically.
+**Post-analysis Q2** - User sees real finding counts before deciding action and severity filter.
 
 ### Output Schema [STANDARD ENVELOPE]
 
@@ -808,16 +821,16 @@ console.log(summary)
 
 | Scope | ID Range | Checks |
 |-------|----------|--------|
-| `security` | SEC-01-12 | Hardcoded secrets, SQL/command injection, path traversal, unsafe deserialization, input validation, cleartext logging, insecure temp files, missing HTTPS, eval/exec, debug endpoints, weak crypto |
-| `hygiene` | HYG-01-20 | Unused imports/vars/functions, dead code, orphan files, duplicate blocks, stale TODOs, empty files, commented code, line endings, whitespace, indentation, missing __init__.py, circular imports, bare except, comment accuracy, comment staleness, obvious comments, missing rationale, misleading examples |
-| `types` | TYP-01-10 | Type errors (mypy/pyright), missing return types, untyped args, type:ignore without reason, Any in APIs, missing generics, union vs literal, optional handling, narrowing opportunities, override signatures |
-| `lint` | LNT-01-08 | Format violations, import order, line length, naming conventions, docstring format, magic numbers, string literals, quote style |
-| `performance` | PRF-01-10 | N+1 patterns, list on iterator, missing cache, blocking in async, large file reads, missing pagination, string concat loops, unnecessary copies, missing pooling, sync in hot paths |
-| `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, over-documented trivial functions, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
-| `robustness` | ROB-01-10 | Code-level defensive patterns: missing timeouts, retries, endpoint guards, unbounded collections, implicit coercion, null checks, graceful degradation, circuit breakers, resource cleanup, concurrent safety |
-| `privacy` | PRV-01-08 | PII exposure in logs/responses, missing data masking, excessive data collection, missing consent checks, missing data retention policy, cross-border data transfer, missing audit trails, insecure PII storage |
-| `doc-sync` | DOC-01-08 | README outdated, API signature mismatch, deprecated references in docs, missing new feature docs, outdated examples, broken internal links, changelog not updated, comment-code drift |
-| `simplify` | SIM-01-11 | Deeply nested conditionals (>3 levels), duplicate/similar code blocks, unnecessary abstractions, single-use wrappers, over-engineered patterns, complex boolean expressions, long parameter lists, god functions (>50 lines), premature optimization, redundant null checks, test bloat cleanup |
+| `security` | SEC-01-12 | Secrets, injection, path traversal, deserialization, input validation, logging, temp files, HTTPS, eval, debug endpoints, crypto |
+| `hygiene` | HYG-01-20 | Unused imports/vars/functions, dead code, orphan files, duplicates, stale TODOs, empty files, commented code, formatting, circular imports, bare except, comment quality |
+| `types` | TYP-01-10 | Type errors, missing return types, untyped args, type:ignore without reason, Any in APIs, generics, union vs literal, optional handling, narrowing, override signatures |
+| `lint` | LNT-01-08 | Format violations, import order, line length, naming, docstrings, magic numbers, string literals, quote style |
+| `performance` | PRF-01-10 | N+1 patterns, list on iterator, missing cache, blocking in async, large file reads, pagination, string concat loops, copies, pooling, sync in hot paths |
+| `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, over-documented functions, dead flags, stale mocks, incomplete impls, copy-paste artifacts, dangling refs |
+| `robustness` | ROB-01-10 | Missing timeouts, retries, endpoint guards, unbounded collections, implicit coercion, null checks, graceful degradation, circuit breakers, cleanup, concurrency |
+| `privacy` | PRV-01-08 | PII in logs/responses, missing masking, excessive collection, consent checks, retention policy, cross-border transfer, audit trails, insecure PII storage |
+| `doc-sync` | DOC-01-08 | README outdated, API mismatch, deprecated refs in docs, missing feature docs, outdated examples, broken links, changelog not updated, comment-code drift |
+| `simplify` | SIM-01-11 | Deep nesting (>3), duplicate blocks, unnecessary abstractions, single-use wrappers, over-engineering, complex booleans, long param lists, god functions (>50 lines), premature optimization, redundant null checks |
 
 ### Context Application
 
@@ -842,6 +855,9 @@ console.log(summary)
 
 ### Scope Groups
 
+**Note:** These groupings align with `/cco:align` groups to provide consistent mental model.
+Both commands use similar grouping strategy: security/privacy together, quality/testing together, etc.
+
 | Group | Scopes Included | Checks |
 |-------|-----------------|--------|
 | **Security & Privacy** | security + robustness + privacy | SEC-01-12, ROB-01-10, PRV-01-08 (30 checks) |
@@ -864,11 +880,11 @@ console.log(summary)
 
 ## Rules
 
-1. **Single question** - All settings in Q1, no approval questions
-2. **Parallel analysis** - Start analysis while asking Q1
-3. **Dynamic tabs** - Git State tab only if dirty
-4. **Severity-driven** - User selection determines what gets fixed automatically
-5. **Single Recommended** - Each tab has one recommended option
+1. **Scope question first** - Q1 collects scopes (+ git state if dirty)
+2. **Post-analysis decision** - Q2 shows real counts, user picks action + severity
+3. **Parallel analysis** - Start analysis after Q1
+4. **Dynamic tabs** - Git State tab only if dirty
+5. **Single Recommended** - Each question has one recommended option
 6. **Counting consistency** - Count findings, not locations
 
 ---

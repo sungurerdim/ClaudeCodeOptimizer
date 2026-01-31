@@ -11,6 +11,9 @@ model: opus
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
 
+> **Standard Flow:** This command follows the standard CCO execution pattern:
+> Setup → Analyze → Gate → Assess → Plan → Apply → Summary (see docs/philosophy.md for rationale)
+
 **Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Then compare current state to that ideal.
 
 **Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco:optimize`.
@@ -40,7 +43,7 @@ model: opus
 | `testing` | TST-01 to TST-10 | Coverage strategy, test quality, gaps | 10 |
 | `maintainability` | MNT-01 to MNT-12 | Complexity, readability, documentation | 12 |
 | `ai-architecture` | AIA-01 to AIA-10 | Over-engineering, local solutions, drift | 10 |
-| `functional-completeness` | FUN-01 to FUN-18 | API design completeness: CRUD coverage, pagination, filtering, edge cases, schema validation, state transitions, soft delete, data locking, timeout/retry config, API surface, data validation, caching, retrieval efficiency, consistency, indexing, bulk operations | 18 |
+| `functional-completeness` | FUN-01 to FUN-18 | API completeness: CRUD, pagination, filtering, edge cases, schema validation, state transitions, soft delete, locking, timeout/retry, caching, consistency, indexing, bulk ops | 18 |
 
 **Total: 77 checks**
 
@@ -102,12 +105,12 @@ if (args.includes("--auto")) {
 
 | Phase | Step | Name | Action | Gate |
 |-------|------|------|--------|------|
-| **SETUP** | 0-1a | Config | Mode + Q1: Intensity/Scopes | Config validated |
+| **SETUP** | 0-1a | Config | Mode + Q1: Areas | Config validated |
 | **ANALYZE** | 1b | Scan | Parallel scope analysis | Findings collected |
 | **GATE-1** | - | Checkpoint | Validate findings, metrics | → Gap Analysis |
 | **ASSESS** | 2-3 | Gap | Current vs Ideal + Prioritize | Gaps quantified |
 | **GATE-2** | - | Checkpoint | Recommendations ready | → Plan or Apply |
-| **PLAN** | 3.5 | Review | Architectural plan (mandatory when findings >0) | User approval |
+| **PLAN** | 3.5 | Review | Architectural plan + Q2 (Action/Severity) | User approval |
 | **GATE-3** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 4 | Fix | Apply recommendations | Changes verified |
 | **GATE-4** | - | Checkpoint | applied + failed + needs_approval = total | → Summary |
@@ -136,7 +139,7 @@ if (args.includes("--auto")) {
 
 ---
 
-## Step-1a: Scope + Intensity Selection [Q1]
+## Step-1a: Scope Selection [Q1]
 
 **Skip if --auto mode (config already set)**
 
@@ -151,34 +154,15 @@ AskUserQuestion([
       { label: "Completeness & Data", description: "API gaps, data management, AI over-engineering (FUN + AIA)" }
     ],
     multiSelect: true
-  },
-  {
-    question: "How much to fix?",
-    header: "Intensity",
-    options: [
-      { label: "Quick Wins", description: "High impact, low effort only" },
-      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM" },
-      { label: "Full", description: "All severities including LOW" }
-    ],
-    multiSelect: false
   }
 ])
 ```
 
-### Intensity Mapping
-
-| Selection | Severity Filter | Apply Mode |
-|-----------|-----------------|------------|
-| Quick Wins (80/20) | High impact + low effort only | Apply quick wins |
-| Standard | CRITICAL + HIGH + MEDIUM | Apply filtered |
-| Full Fix | ALL severities, ALL effort levels | Apply ALL |
-| Report Only | ALL (for analysis) | No apply |
-
 ### Validation
 ```
-[x] User completed Q1
-→ Store as: config = { fixMode, scopes, applyMode }
-→ Proceed to Step-1b
+[x] User completed Q1 (Areas)
+→ Store as: config = { scopes }
+→ Proceed to Step-1b (analysis runs all severities)
 ```
 
 ---
@@ -224,7 +208,7 @@ structureResults = Task("cco-agent-analyze", `
   Also include techAssessment if technology alternatives found.
 
   Return: { findings: [...], metrics: {...}, techAssessment: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // Quality group (TST + MNT)
 qualityResults = Task("cco-agent-analyze", `
@@ -247,7 +231,7 @@ qualityResults = Task("cco-agent-analyze", `
   Also calculate metrics: testCoverage %, complexity avg.
 
   Return: { findings: [...], metrics: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // Completeness group (FUN + AIA)
 completenessResults = Task("cco-agent-analyze", `
@@ -272,7 +256,7 @@ completenessResults = Task("cco-agent-analyze", `
   impact (LOW/MEDIUM/HIGH), confidence (0-100).
 
   Return: { findings: [...], metrics: {...} }
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // Merge all parallel results
 analysisTask = {
@@ -392,22 +376,10 @@ ${techAssessment.alternatives.map(a =>
 **Apply 80/20 prioritization:**
 
 ```javascript
-// Filter by fixMode FIRST
-function matchesIntensity(finding) {
-  switch(config.fixMode) {
-    case "critical-only": return finding.severity === "CRITICAL"
-    case "high-priority": return ["CRITICAL", "HIGH"].includes(finding.severity)
-    case "quick-wins": return finding.effort === "LOW" && finding.impact === "HIGH"
-    case "standard": return ["CRITICAL", "HIGH", "MEDIUM"].includes(finding.severity)
-    case "full-fix": return true  // ALL findings, no filtering
-    case "report-only": return true  // Show all but don't apply
-  }
-}
-
-filteredFindings = findings.filter(matchesIntensity)
+// No pre-filtering by severity — all findings kept for post-analysis Q2
+filteredFindings = [...findings]
 
 // Categorize by effort level (for REPORTING only, not for filtering what to fix)
-// In Full Fix mode, ALL categories are applied
 filteredFindings.forEach(f => {
   f.effortCategory = calculateEffortCategory(f.effort, f.impact)
 })
@@ -436,19 +408,19 @@ Intensity: {config.fixMode} | Scopes: {config.scopes.join(", ")}
 
 ### Quick Win (High Impact, Low Effort) - {quickWin.length} items
 
-| # | ID | Issue | Location | Recommendation |
-|---|-----|-------|----------|----------------|
-{quickWin.map((f, i) => `| ${i+1} | ${f.id} | ${f.title} | ${f.location} | ${f.recommendation} |`)}
+| # | Severity | ID | Issue | Location | Recommendation |
+|---|----------|-----|-------|----------|----------------|
+{quickWin.map((f, i) => `| ${i+1} | ${f.severity} | ${f.id} | ${f.title} | ${f.location} | ${f.recommendation} |`)}
 
 ### Moderate Effort (High Impact, Medium Effort) - {moderate.length} items
 
-{moderate.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
+{moderate.map((f, i) => `${i+1}. [${f.severity}] ${f.id}: ${f.title} in ${f.location}`)}
 
 ### Complex (Medium Impact) - {complex.length} items
-{complex.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
+{complex.map((f, i) => `${i+1}. [${f.severity}] ${f.id}: ${f.title} in ${f.location}`)}
 
 ### Major (Low Impact or High Effort) - {major.length} items
-{major.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
+{major.map((f, i) => `${i+1}. [${f.severity}] ${f.id}: ${f.title} in ${f.location}`)}
 ```
 
 ### Validation
@@ -511,7 +483,9 @@ const architecturalPlans = filteredFindings.map(finding => ({
 }))
 ```
 
-### Architectural Plan Display
+### Architectural Plan Display [MANDATORY - DISPLAY BEFORE ASKING]
+
+**[CRITICAL] You MUST display the following table to the user BEFORE asking for approval. NEVER skip this display. NEVER ask "How to proceed?" without first showing the full plan.**
 
 ```markdown
 ## Architectural Plan Review
@@ -569,32 +543,58 @@ For each major change, why this approach:
 ### User Decision
 
 ```javascript
-AskUserQuestion([{
-  question: "Architectural plan review complete. How to proceed?",
-  header: "Plan",
-  options: [
-    { label: "Apply All (Recommended)", description: `Apply all ${filteredFindings.length} architectural changes` },
-    { label: "Apply Non-Breaking Only", description: `Skip ${breakingCount} breaking changes` },
-    { label: "Review Each", description: "Approve each change individually" },
-    { label: "Abort", description: "Cancel - no changes made" }
-  ],
-  multiSelect: false
-}])
+// Standard Post-Analysis Q2: Action + Severity (same pattern in optimize, align, preflight)
+const counts = {
+  critical: filteredFindings.filter(f => f.severity === "CRITICAL").length,
+  high: filteredFindings.filter(f => f.severity === "HIGH").length,
+  medium: filteredFindings.filter(f => f.severity === "MEDIUM").length,
+  low: filteredFindings.filter(f => f.severity === "LOW").length
+}
 
-switch (planDecision) {
-  case "Apply All":
+AskUserQuestion([
+  {
+    question: `${filteredFindings.length} finding across ${uniqueModules.length} modules. How to proceed?`,
+    header: "Action",
+    options: [
+      { label: "Fix All (Recommended)", description: `Apply all ${filteredFindings.length} fixes` },
+      { label: "By Severity", description: "Choose which severity levels to fix" },
+      { label: "Review Each", description: "Approve each fix individually" },
+      { label: "Report Only", description: "No changes, just report" }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "Which severity levels to include?",
+    header: "Severity",
+    options: [
+      { label: `CRITICAL (${counts.critical})`, description: "Security, data loss, crash" },
+      { label: `HIGH (${counts.high})`, description: "Broken functionality" },
+      { label: `MEDIUM (${counts.medium})`, description: "Suboptimal but works" },
+      { label: `LOW (${counts.low})`, description: "Style, minor improvements" }
+    ],
+    multiSelect: true
+  }
+])
+
+switch (actionDecision) {
+  case "Fix All":
     config.reviewMode = "apply-all"
     break
-  case "Apply Non-Breaking Only":
-    config.reviewMode = "non-breaking"
-    toApply = toApply.filter(f => !f.plan.breakingChanges)
+  case "By Severity":
+    config.reviewMode = "apply-all"
+    const selectedSeverities = severityDecision
+    filteredFindings = filteredFindings.filter(f => selectedSeverities.some(s => s.startsWith(f.severity)))
     break
   case "Review Each":
     config.reviewMode = "interactive"
+    if (severityDecision?.length > 0) {
+      filteredFindings = filteredFindings.filter(f => severityDecision.some(s => s.startsWith(f.severity)))
+    }
     break
-  case "Abort":
-    console.log("Aborted. No architectural changes made.")
-    return
+  case "Report Only":
+    config.reviewMode = "report-only"
+    // Skip to summary
+    break
 }
 ```
 
@@ -614,37 +614,20 @@ switch (planDecision) {
 **Determine what to apply:**
 
 ```javascript
+// filteredFindings already filtered by Q2 severity selection (or all if "Fix All")
 let toApply = []
-let skipped = []  // Items excluded by fixMode filter (not AI declining)
+let skipped = []
 
-// NOTE: Effort categories (quickWin/moderate/complex/major) are for REPORTING only
-// In full-fix mode, ALL items are applied regardless of effort category
-switch(config.fixMode) {
-  case "critical-only":
-    toApply = quickWin.filter(f => f.severity === "CRITICAL")
-    skipped = [...quickWin.filter(f => f.severity !== "CRITICAL"), ...moderate, ...complex, ...major]
-    break
-  case "high-priority":
-    toApply = [...quickWin, ...moderate].filter(f => ["CRITICAL", "HIGH"].includes(f.severity))
-    skipped = [...complex, ...major]
-    break
-  case "quick-wins":
-    toApply = quickWin
-    skipped = [...moderate, ...complex, ...major]
-    break
-  case "standard":
-    toApply = [...quickWin, ...moderate, ...complex]
-    skipped = major
-    break
-  case "full-fix":
-    // ALL findings applied - effort category is irrelevant
-    toApply = [...quickWin, ...moderate, ...complex, ...major]
-    skipped = []  // Nothing excluded
-    break
-  case "report-only":
-    toApply = []
-    skipped = [...quickWin, ...moderate, ...complex, ...major]
-    break
+if (config.reviewMode === "report-only") {
+  toApply = []
+  skipped = [...quickWin, ...moderate, ...complex, ...major]
+} else if (isUnattended) {
+  toApply = [...quickWin, ...moderate, ...complex, ...major]
+  skipped = []
+} else {
+  // Q2 already filtered filteredFindings by severity — recategorize
+  toApply = [...quickWin, ...moderate, ...complex, ...major]
+  skipped = []
 }
 ```
 
@@ -685,7 +668,7 @@ if (toApply.length > 0) {
 
     Return accounting at FINDING level:
     { applied: <findings_fixed>, failed: <findings_failed>, needs_approval: <findings_needs_approval>, total: <findings_attempted> }
-  `, { model: "opus" })
+  `, { model: "opus", timeout: 120000 })
 }
 ```
 
@@ -706,8 +689,17 @@ if (toApply.length > 0) {
 if (applyResults.needs_approval > 0 && !isUnattended) {
   const needsApprovalItems = applyResults.details.filter(d => d.status === "needs_approval")
 
+  // [MANDATORY] Display needs-approval items BEFORE asking. NEVER skip this display.
+  // Output the following table to the user:
+  //
+  // ## Items Needing Approval
+  //
+  // | # | ID | Severity | Issue | Location | Reason |
+  // |---|-----|----------|-------|----------|--------|
+  // {needsApprovalItems.map((item, i) => `| ${i+1} | ${item.id} | ${item.severity} | ${item.title} | ${item.location} | ${item.reason} |`)}
+
   AskUserQuestion([{
-    question: `${needsApprovalItems.length} items need approval (architectural changes).`,
+    question: `${needsApprovalItems.length} items need approval (architectural changes). See list above.`,
     header: "Approval",
     options: [
       { label: "Fix All (Recommended)", description: "Apply all architectural changes" },
@@ -795,6 +787,8 @@ assert(applied + failed + needs_approval === toApply.length,
 
 Status: {OK|WARN} | Applied: {applied} | Failed: {failed} | Needs Approval: {needs_approval} | Total: {toApply.length}
 
+${failed > 0 ? `### Failed Items\n${applyResults.details.filter(d => d.status === "failed").map(d => `[${d.severity}] ${d.id}: ${d.title} in ${d.location}`).join('\n')}` : ''}
+
 | Effort Category | Count | Applied | Failed | Needs Approval |
 |-----------------|-------|---------|--------|----------|
 | Quick Win | {quickWin.length} | {appliedQuickWin} | {failedQuickWin} | {needsApprovalQuickWin} |
@@ -829,7 +823,8 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 | Scenario | Questions | Total |
 |----------|-----------|-------|
 | --auto mode | 0 | 0 |
-| Interactive | Q1 (Intensity + Scopes) | 1 |
+| Interactive, 0 findings | Q1 (Areas) | 1 |
+| Interactive, findings | Q1 (Areas) + Q2 (Action/Severity) | 2 |
 
 ### Output Schema [STANDARD ENVELOPE]
 
@@ -878,6 +873,9 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 | `--preview` | Analyze only, show gaps and findings, don't apply changes |
 
 ### Scope Groups
+
+**Note:** These groupings align with `/cco:optimize` groups to provide consistent mental model.
+Both commands group related concerns together: structure (architecture+patterns), quality (testing+maintainability), etc.
 
 | Group | Scopes Included | Checks |
 |-------|-----------------|--------|
@@ -941,7 +939,7 @@ Default thresholds: coupling 10%, cohesion 10%, complexity 20%, coverage 10%.
 2. **Gap analysis** - Quantify current vs ideal differences
 3. **Technology assessment** - Question stack/framework choices
 4. **Parallel analysis** - Start analysis immediately
-5. **Single question** - Intensity + Scopes combined in Q1
+5. **Scope question first** - Q1 collects areas, Q2 post-analysis collects action + severity
 6. **80/20 filter** - Prioritize high-impact, low-effort items
 7. **Evidence required** - Every recommendation needs file:line reference
 8. **Counting consistency** - Count findings, not locations
