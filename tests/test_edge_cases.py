@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from _paths import ROOT
+from _paths import PROFILE_PATH, ROOT, RULES_DIR, SCHEMAS_DIR
 
 
 class TestInvalidArgumentCombinations:
@@ -51,14 +51,12 @@ class TestMissingProfileHandling:
 
     def test_actual_profile_exists_at_conventional_path(self) -> None:
         """Actual project profile should exist at .claude/rules/cco-profile.md."""
-        profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
-        assert profile_path.exists(), f"Profile not found at {profile_path}"
+        assert PROFILE_PATH.exists(), f"Profile not found at {PROFILE_PATH}"
 
     def test_actual_profile_is_valid_markdown(self) -> None:
         """Actual project profile should be readable and non-empty."""
-        profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
-        if profile_path.exists():
-            content = profile_path.read_text(encoding="utf-8")
+        if PROFILE_PATH.exists():
+            content = PROFILE_PATH.read_text(encoding="utf-8")
             assert len(content) > 50, "Profile content is too short"
             assert "## Stack" in content or "## stack" in content.lower(), (
                 "Profile should contain Stack section"
@@ -95,10 +93,9 @@ class TestActualProfileValidation:
     @pytest.fixture
     def profile_content(self) -> str:
         """Load actual profile content."""
-        profile_path = ROOT / ".claude" / "rules" / "cco-profile.md"
-        if not profile_path.exists():
+        if not PROFILE_PATH.exists():
             pytest.skip("Profile not found")
-        return profile_path.read_text(encoding="utf-8")
+        return PROFILE_PATH.read_text(encoding="utf-8")
 
     def test_profile_has_stack_section(self, profile_content: str) -> None:
         """Profile must document the project stack."""
@@ -116,14 +113,98 @@ class TestSchemaExistence:
 
     def test_optimize_schema_exists(self) -> None:
         """optimize.schema.json must exist."""
-        schema_path = ROOT / "commands" / "schemas" / "optimize.schema.json"
+        schema_path = SCHEMAS_DIR / "optimize.schema.json"
         assert schema_path.exists(), f"Schema not found: {schema_path}"
 
     def test_optimize_schema_is_valid_json(self) -> None:
         """optimize.schema.json must be valid JSON."""
-        schema_path = ROOT / "commands" / "schemas" / "optimize.schema.json"
+        schema_path = SCHEMAS_DIR / "optimize.schema.json"
         if schema_path.exists():
             content = schema_path.read_text(encoding="utf-8")
             schema = json.loads(content)
             assert "$schema" in schema, "JSON Schema must have $schema field"
             assert "properties" in schema, "Schema must define properties"
+
+
+class TestPluginManifestValidation:
+    """Validate plugin manifest references existing files."""
+
+    def test_plugin_manifest_all_files_exist(self) -> None:
+        """All file paths in plugin.json must exist on disk."""
+        plugin_path = ROOT / ".claude-plugin" / "plugin.json"
+        plugin_json = json.loads(plugin_path.read_text(encoding="utf-8"))
+
+        missing_files = []
+
+        # Check command files
+        for cmd_path in plugin_json.get("commands", []):
+            full_path = ROOT / cmd_path.lstrip("./")
+            if not full_path.exists():
+                missing_files.append(f"Command: {cmd_path}")
+
+        # Check agent files
+        for agent_path in plugin_json.get("agents", []):
+            full_path = ROOT / agent_path.lstrip("./")
+            if not full_path.exists():
+                missing_files.append(f"Agent: {agent_path}")
+
+        assert not missing_files, f"Plugin manifest references missing files: {missing_files}"
+
+
+class TestSchemaSync:
+    """Validate schema files exist for commands."""
+
+    def test_commands_have_corresponding_schemas(self) -> None:
+        """Each command file should have a corresponding schema in commands/schemas/."""
+        from _paths import COMMANDS_DIR
+
+        command_files = list(COMMANDS_DIR.glob("*.md"))
+        missing_schemas = []
+
+        for cmd_file in command_files:
+            schema_file = SCHEMAS_DIR / f"{cmd_file.stem}.schema.json"
+            if not schema_file.exists():
+                missing_schemas.append(f"{cmd_file.name} -> {schema_file.name}")
+
+        # Not all commands have schemas yet, so this is informational
+        if missing_schemas:
+            print(f"\nCommands without schemas: {missing_schemas}")
+
+
+class TestWorkflowIntegration:
+    """Validate command output expectations match agent input expectations."""
+
+    def test_optimize_references_correct_agent_names(self) -> None:
+        """Optimize command references must use actual agent names."""
+        from _paths import AGENTS_DIR, COMMANDS_DIR
+
+        optimize_content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
+        agent_files = {f.stem for f in AGENTS_DIR.glob("*.md")}
+
+        # Extract Task() calls
+        import re
+
+        task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
+        referenced_agents = set(re.findall(task_pattern, optimize_content))
+
+        # Validate all referenced agents exist
+        builtin_agents = {"general-purpose", "Explore", "Plan"}
+        for agent_name in referenced_agents:
+            assert agent_name in agent_files or agent_name in builtin_agents, (
+                f"optimize.md references non-existent agent: {agent_name}"
+            )
+
+    def test_scope_ids_match_between_command_and_agent(self) -> None:
+        """Scope IDs referenced in commands must match agent definitions."""
+        from _paths import AGENTS_DIR, COMMANDS_DIR
+
+        # This is validated by test_commands.py TestScopeConsistency
+        # but we add an integration check here
+        optimize_content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
+        agent_content = (AGENTS_DIR / "cco-agent-analyze.md").read_text(encoding="utf-8")
+
+        # Key scope IDs that must exist in both
+        key_scopes = ["SEC-01", "HYG-01", "TYP-01", "PRF-01"]
+        for scope_id in key_scopes:
+            assert scope_id in optimize_content, f"Scope {scope_id} missing from optimize.md"
+            assert scope_id in agent_content, f"Scope {scope_id} missing from agent-analyze.md"

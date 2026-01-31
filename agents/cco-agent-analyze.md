@@ -50,7 +50,11 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 | Skip patterns | Manual | Auto-skip: node_modules, dist, .git, __pycache__ |
 | False positive handling | None | `excluded[]` with reasons for filtered items |
 
-## Input Contract
+## Input/Output Contract
+
+**This section defines the interface contract between commands and this agent.**
+
+### Input Schema
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -58,7 +62,29 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 | `mode` | `string` | Yes | `"review"` (optimize/align) or `"auto"` (tune detection) |
 | `scope` | `string` | For tune | Must be `"tune"` for project detection mode |
 
-## Output Contract
+**Example inputs:**
+
+```javascript
+// Optimize mode - tactical fixes
+{
+  scopes: ["security", "hygiene", "types"],
+  mode: "review"
+}
+
+// Align mode - strategic assessment
+{
+  scopes: ["architecture", "patterns"],
+  mode: "review"
+}
+
+// Tune mode - project detection
+{
+  scope: "tune",
+  mode: "auto"
+}
+```
+
+### Output Contract
 
 **Output Schema [MANDATORY]:**
 
@@ -99,6 +125,8 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 }
 ```
 
+**Display Format:** Commands render findings as: `[{severity}] {id}: {title} in {location.file}:{location.line}`
+
 **Error handling:** If analysis fails, return:
 ```json
 {
@@ -114,6 +142,43 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 - `findings` is always an array (empty if none)
 - `error` is null on success, string on failure
 - All fields present in every response
+
+## Output Validation
+
+**Commands should validate agent output against this schema:**
+
+**Required fields in every response:**
+- `findings` (array) - Never undefined, minimum empty array
+- `scores` (object) - Contains overall score and per-scope scores
+- `metrics` (object) - Contains filesScanned, issuesFound, criticalCount, highCount
+- `excluded` (object) - Contains count and reasons array
+- `error` (null or string) - Null on success
+
+**Field types:**
+- `findings[].id` (string) - Format: SCOPE-NN (e.g., "SEC-01")
+- `findings[].severity` (string) - One of: CRITICAL, HIGH, MEDIUM, LOW
+- `findings[].confidence` (number) - Range: 0-100
+- `findings[].fixable` (boolean) - Required for apply agent routing
+- `scores` (object with number values) - Range: 0-100
+- `metrics` (object with number values) - Non-negative integers
+
+**Validation example:**
+```javascript
+function validateAnalysisOutput(output) {
+  assert(Array.isArray(output.findings), "findings must be array")
+  assert(output.error === null || typeof output.error === "string", "error must be null or string")
+  assert(typeof output.scores === "object", "scores must be object")
+  assert(typeof output.metrics === "object", "metrics must be object")
+
+  for (const finding of output.findings) {
+    assert(finding.id.match(/^[A-Z]{3}-\d{2}$/), `Invalid finding ID: ${finding.id}`)
+    assert(["CRITICAL", "HIGH", "MEDIUM", "LOW"].includes(finding.severity),
+      `Invalid severity: ${finding.severity}`)
+    assert(finding.confidence >= 0 && finding.confidence <= 100,
+      `Invalid confidence: ${finding.confidence}`)
+  }
+}
+```
 
 ## Execution [CRITICAL]
 

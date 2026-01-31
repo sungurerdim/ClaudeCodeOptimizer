@@ -7,6 +7,12 @@ These tests validate:
 - Command flow documentation is complete
 
 Tests ensure commands are properly wired without executing them.
+
+Test Organization Rationale:
+    Classes are grouped by validation concern (frontmatter, consistency, flow, etc.)
+    in a single file because they all operate on command files as their primary fixture.
+    This keeps related command validation logic together and avoids fragmentation across
+    multiple test files. Each test class validates a specific aspect of command structure.
 """
 
 import re
@@ -38,7 +44,15 @@ BUILTIN_AGENTS = {
     "statusline-setup",
 }
 
-# Optimize scope ID to name mapping
+# ============================================
+# CANONICAL SCOPE DEFINITIONS
+# ============================================
+# These mappings are the single source of truth for scope IDs and names.
+# When adding/removing scopes, update these dictionaries and the corresponding
+# definitions in cco-agent-analyze.md. Commands reference these scopes via
+# the analyze agent, and tests validate consistency between command docs and agent definitions.
+
+# Optimize scope ID to name mapping (10 scopes, 105 checks)
 OPTIMIZE_SCOPES = {
     "SEC": "security",
     "HYG": "hygiene",
@@ -52,7 +66,7 @@ OPTIMIZE_SCOPES = {
     "SIM": "simplify",
 }
 
-# Align scope ID to name mapping
+# Align scope ID to name mapping (6 scopes, 77 checks)
 ALIGN_SCOPES = {
     "ARC": "architecture",
     "PAT": "patterns",
@@ -372,14 +386,18 @@ class TestCommandModelPolicy:
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8").lower()
             for i, line in enumerate(content.split("\n"), 1):
-                if (
-                    "sonnet" not in line
-                    or "no sonnet" in line
-                    or "policy" in line
-                    or "only" in line
-                ):
-                    continue
-                pytest.fail(f"{cmd_file.name}:{i} references sonnet model: {line.strip()}")
+                if not self._is_valid_sonnet_reference(line):
+                    pytest.fail(f"{cmd_file.name}:{i} references sonnet model: {line.strip()}")
+
+    @staticmethod
+    def _is_valid_sonnet_reference(line: str) -> bool:
+        """Check if sonnet reference is valid (policy discussion, not actual usage)."""
+        return (
+            "sonnet" not in line
+            or "no sonnet" in line
+            or "policy" in line
+            or "only" in line
+        )
 
 
 class TestAllCommandsHaveAccountingInvariant:
@@ -406,3 +424,42 @@ class TestAllCommandsDocumentRecovery:
             content = cmd_path.read_text(encoding="utf-8")
             assert "## Recovery" in content, f"{cmd_name} should have Recovery section"
             assert "git" in content.lower(), f"{cmd_name} recovery should mention git"
+
+
+class TestResearchCommandPatterns:
+    """Validate research-specific patterns."""
+
+    def test_research_has_depth_levels(self) -> None:
+        """Research command should document depth levels."""
+        content = (COMMANDS_DIR / "research.md").read_text(encoding="utf-8")
+        assert "Quick" in content, "research.md should document Quick depth"
+        assert "Standard" in content, "research.md should document Standard depth"
+        assert "Deep" in content, "research.md should document Deep depth"
+
+    def test_research_documents_source_tiers(self) -> None:
+        """Research command should document source tier system."""
+        content = (COMMANDS_DIR / "research.md").read_text(encoding="utf-8")
+        # Should mention tiered sources
+        assert "T1" in content or "tier" in content.lower(), (
+            "research.md should document source tiers"
+        )
+
+
+class TestTuneCommandPatterns:
+    """Validate tune-specific patterns."""
+
+    def test_tune_documents_modes(self) -> None:
+        """Tune command should document auto and interactive modes."""
+        content = (COMMANDS_DIR / "tune.md").read_text(encoding="utf-8")
+        assert "--auto" in content, "tune.md should document --auto mode"
+        assert "interactive" in content.lower(), "tune.md should document interactive mode"
+
+    def test_tune_has_agent_orchestration(self) -> None:
+        """Tune command should orchestrate analyze and apply agents."""
+        content = (COMMANDS_DIR / "tune.md").read_text(encoding="utf-8")
+        assert "cco-agent-analyze" in content or "analyze" in content, (
+            "tune.md should reference analyze agent"
+        )
+        assert "cco-agent-apply" in content or "apply" in content, (
+            "tune.md should reference apply agent"
+        )

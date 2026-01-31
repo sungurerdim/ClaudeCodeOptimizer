@@ -171,6 +171,10 @@ if (!isUnattended && !validationResult.valid) {
 
 **Detection runs BEFORE questions to enable dynamic labeling.**
 
+**Caching note:** If profile exists and is valid, detection can be skipped in `--preview` mode
+to avoid re-scanning the project. However, for setup/update operations, always run fresh detection
+to catch project changes (new languages, frameworks, documentation additions).
+
 ```javascript
 console.log("Analyzing project...")
 
@@ -180,7 +184,7 @@ try {
   detected = await Task("cco-agent-analyze", `
     scope: tune
     mode: auto
-  `, { model: "haiku" })
+  `, { model: "haiku", timeout: 120000 })
 } catch (detectionError) {
   console.error("Detection failed:", detectionError.message)
   console.log("Rolling back - no profile changes made.")

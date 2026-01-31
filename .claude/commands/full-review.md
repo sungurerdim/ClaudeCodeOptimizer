@@ -928,9 +928,20 @@ if (config.action !== "Report only" && findings.length > 0) {
     // Apply ALL findings - effort categories are for reporting only
     toApply = [...quickWin, ...moderate, ...complex, ...major]
   } else {
+    // [MANDATORY] Display the findings summary BEFORE asking. NEVER skip this display.
+    // Output the following table to the user:
+    //
+    // ## Findings Summary
+    //
+    // | # | Category | ID | Severity | Issue | Location | Auto-fixable |
+    // |---|----------|----|----------|-------|----------|-------------|
+    // {findings.map((f, i) => `| ${i+1} | ${f.category} | ${f.id} | ${f.severity} | ${f.title} | ${f.location} | ${f.autoFixable ? "Yes" : "No"} |`)}
+    //
+    // **Totals:** Quick Win: {quickWin.length} | Moderate: {moderate.length} | Complex: {complex.length} | Major: {major.length}
+
     // Interactive: ask user
     AskUserQuestion([{
-      question: "Which findings should be fixed?",
+      question: "Which findings should be fixed? See list above.",
       header: "Fix scope",
       options: [
         { label: `All (${findings.length})`, description: "Fix everything now" },
