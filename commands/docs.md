@@ -11,6 +11,9 @@ model: opus
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
 
+> **Standard Flow:** This command follows the standard CCO execution pattern:
+> Mode Detection → Analysis → Gap Analysis → Plan → Generate → Summary (see docs/philosophy.md for rationale)
+
 **Philosophy:** "What documentation does this project need?" → "What exists?" → "Fill the gap."
 
 **Purpose:** Strategic documentation management. Not encyclopedic - focused, actionable, human-readable.
@@ -255,7 +258,7 @@ analysisTask = Task("cco-agent-analyze", `
       buildTool: null
     }
   }
-`, { model: "haiku" })  // Synchronous - results needed immediately for gap analysis
+`, { model: "haiku", timeout: 120000 })  // Synchronous - results needed immediately for gap analysis
 ```
 
 ---
@@ -364,7 +367,7 @@ Project Type: {projectType} | Mode: {config.mode}
 |-------|--------|----------|---------|
 {config.scopes.map(s => {
   const g = gaps[s]
-  const status = g.needed ? "MISSING" : (g.reason === "Complete" ? "OK" : "SKIP")
+  const status = g.needed ? "WARN" : (g.reason === "Complete" ? "OK" : "SKIP")
   return `| ${s} | ${status} | ${g.priority || "-"} | ${g.sections?.join(", ") || g.reason} |`
 })}
 
@@ -411,7 +414,7 @@ if (config.scopes.includes("refine")) {
     - specific improvement suggestions
 
     Return: { findings: [...], metrics: { avgScannability, avgClarity, redundancyCount } }
-  `, { model: "haiku" })
+  `, { model: "haiku", timeout: 120000 })
 
   // Convert refine findings to generation tasks
   toGenerate = refineResults.findings
@@ -458,7 +461,7 @@ if (config.scopes.includes("verify")) {
     - detail: specific mismatch if found
 
     Return: { findings: [...], metrics: { verified, mismatched, unverifiable, total } }
-  `, { model: "haiku" })
+  `, { model: "haiku", timeout: 120000 })
 
   // Show verification report
   // Mismatches become fix tasks for Step-4
@@ -628,7 +631,7 @@ generateResults = Task("cco-agent-apply", `
     failed: [{ scope, file, reason }],
     accounting: { applied, failed, needs_approval, total }
   }
-`, { model: "opus" })
+`, { model: "opus", timeout: 120000 })
 ```
 
 ---

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cco.dev/schemas/research.schema.json",
+  "title": "CCO Research Command Arguments",
+  "description": "JSON Schema for /cco:research command argument validation",
+  "type": "object",
+  "properties": {
+    "quick": {
+      "type": "boolean",
+      "description": "Fast research - official docs only (T1-T2)"
+    },
+    "deep": {
+      "type": "boolean",
+      "description": "Exhaustive research - all sources, resumable"
+    }
+  },
+  "allOf": [
+    {
+      "description": "Mutual exclusivity: --quick and --deep are mutually exclusive",
+      "not": {
+        "required": ["quick", "deep"],
+        "properties": {
+          "quick": { "const": true },
+          "deep": { "const": true }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "description": "Quick research on a topic",
+      "args": { "quick": true }
+    },
+    {
+      "description": "Deep exhaustive research",
+      "args": { "deep": true }
+    }
+  ]
+}

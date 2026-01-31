@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cco.dev/schemas/align.schema.json",
+  "title": "CCO Align Command Arguments",
+  "description": "JSON Schema for /cco:align command argument validation",
+  "type": "object",
+  "properties": {
+    "auto": {
+      "type": "boolean",
+      "description": "Fully unattended mode for CI/CD. No questions, all 6 scopes, all severities."
+    },
+    "preview": {
+      "type": "boolean",
+      "description": "Analyze only, show gaps and findings, don't apply changes"
+    }
+  },
+  "allOf": [
+    {
+      "description": "Mutual exclusivity: --preview and --auto are mutually exclusive",
+      "not": {
+        "required": ["preview", "auto"],
+        "properties": {
+          "preview": { "const": true },
+          "auto": { "const": true }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "description": "Full architecture alignment, unattended",
+      "args": { "auto": true }
+    },
+    {
+      "description": "Preview gaps without fixing",
+      "args": { "preview": true }
+    }
+  ]
+}

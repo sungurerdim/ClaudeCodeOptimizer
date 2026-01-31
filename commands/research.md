@@ -35,6 +35,8 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model 
 
 ## Step-1: Research Settings [Q1]
 
+> Zero plain text prompts - all user input via AskUserQuestion only.
+
 ```javascript
 AskUserQuestion([
   {
@@ -136,14 +138,14 @@ docsResults = Task("cco-agent-research", `
   scope: search
   query: "${parsedQuery.concepts} official documentation ${parsedQuery.date}"
   allowed_domains: [docs.*, official.*, *.io/docs, *.dev/docs]
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // T2: GitHub & Changelogs
 githubResults = Task("cco-agent-research", `
   scope: search
   query: "${parsedQuery.concepts} github changelog release notes"
   allowed_domains: [github.com, gitlab.com, bitbucket.org]
-`, { model: "haiku" })
+`, { model: "haiku", timeout: 120000 })
 
 // T3: Technical Blogs (Standard+)
 let blogResults = null
@@ -151,7 +153,7 @@ if (depth !== "quick") {
   blogResults = Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.concepts} tutorial guide best practices"
-  `, { model: "haiku" })
+  `, { model: "haiku", timeout: 120000 })
 }
 
 // T4: Community (Standard+)
@@ -161,7 +163,7 @@ if (depth !== "quick") {
     scope: search
     query: "${parsedQuery.concepts} stackoverflow discussion"
     allowed_domains: [stackoverflow.com, reddit.com, dev.to, hashnode.com]
-  `, { model: "haiku" })
+  `, { model: "haiku", timeout: 120000 })
 }
 
 // Security Track (if security-related query detected)
@@ -171,7 +173,7 @@ if (parsedQuery.mode === "security") {
     scope: search
     query: "${parsedQuery.concepts} CVE vulnerability advisory"
     allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io, github.com/advisories]
-  `, { model: "haiku" })
+  `, { model: "haiku", timeout: 120000 })
 }
 ```
 
@@ -233,7 +235,7 @@ t3PlusSources = allSources.filter(s => ["T3", "T4", "T5"].includes(s.tier))
 synthesis = Task("cco-agent-research", `
   scope: synthesize
   sources: ${JSON.stringify(t1t2Sources)}
-`, { model: "opus" })
+`, { model: "opus", timeout: 120000 })
 
 // Supporting evidence (T3+) → aggregate locally
 supportingEvidence = aggregateByTier(t3PlusSources)

@@ -160,6 +160,25 @@ Built on:
 
 See [Rules](rules.md) for complete rule definitions.
 
+### Architectural Principles Cross-Reference
+
+These principles are applied consistently across all CCO commands:
+
+- **Standard Execution Flow** (Setup → Analyze → Gate → Plan → Apply → Summary)
+  - Used in: `/cco:optimize`, `/cco:align`, `/cco:preflight`, `/cco:docs`
+  - Ensures consistent user experience and reliable checkpoint validation
+
+- **No Deferrals Policy** (Fix everything that can be fixed)
+  - Applied in: All commands with `--auto` mode
+  - See: `CCO Operation Standards` in core rules for full policy details
+
+- **Model Strategy** (Opus + Haiku only, no Sonnet)
+  - Haiku for analysis, reads, web fetches (fast, cost-effective)
+  - Opus for code changes, synthesis, complex reasoning (state-of-the-art accuracy)
+  - Rationale documented in this file under "Model Strategy" section
+
+For command-specific architectural decisions, see the Architecture section in each command file.
+
 ---
 
 *Back to [README](../README.md)*

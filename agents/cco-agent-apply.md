@@ -727,7 +727,7 @@ All generated documentation MUST follow these rules:
     { "scope": "readme", "file": "README.md", "linesWritten": 45 }
   ],
   "failed": [
-    { "scope": "api", "file": "docs/api.md", "reason": "Technical: No public APIs found" }
+    { "scope": "api", "severity": "HIGH", "id": "TYP-03", "file": "docs/api.md", "reason": "Technical: No public APIs found" }
   ],
   "accounting": { "applied": 1, "failed": 1, "needs_approval": 0, "total": 2 }
 }
