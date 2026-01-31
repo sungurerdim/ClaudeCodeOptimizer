@@ -1,7 +1,7 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
 argument-hint: "[--auto] [--preview]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
 model: opus
 ---
 
@@ -207,15 +207,45 @@ const selectedScopes = config.scopes.map(s => scopeMapping[s] || s.toLowerCase()
 structureResults = Task("cco-agent-analyze", `
   scopes: ["architecture", "patterns"]
   mode: review
-  Analyze coupling, cohesion, layers, dependencies, design patterns.
-  Return: { findings: [...], metrics: {...} }
+
+  Analyze architecture and design patterns:
+  - ARC-01-15: Coupling score, cohesion score, circular deps, layer violations,
+    god classes, feature envy, shotgun surgery, module size, dependency direction,
+    missing DI, hardcoded deps, monolith hotspots
+  - PAT-01-12: Error handling consistency, logging patterns, async consistency,
+    SOLID violations, DRY violations, framework idioms, missing factory/strategy,
+    primitive obsession, data clumps, switch smell
+
+  For each finding report: id, scope, severity, title, location (file:line),
+  description, recommendation, fixable, effort (LOW/MEDIUM/HIGH),
+  impact (LOW/MEDIUM/HIGH), confidence (0-100).
+
+  Also calculate metrics: coupling %, cohesion %, complexity avg.
+  Also include techAssessment if technology alternatives found.
+
+  Return: { findings: [...], metrics: {...}, techAssessment: {...} }
 `, { model: "haiku" })
 
 // Quality group (TST + MNT)
 qualityResults = Task("cco-agent-analyze", `
   scopes: ["testing", "maintainability"]
   mode: review
-  Analyze test coverage, complexity, readability.
+
+  Analyze testing strategy and maintainability:
+  - TST-01-10: Coverage by module, critical path coverage, test-to-code ratio,
+    missing edge cases, flaky tests, isolation issues, mock overuse,
+    integration gaps, e2e coverage, naming violations
+  - MNT-01-12: Complexity hotspots (>15), cognitive complexity, long methods (>50),
+    long params (>5), deep nesting (>4), magic numbers in logic,
+    missing docs on complex logic, naming inconsistency, missing error context,
+    missing cleanup, hardcoded config, missing boundary validation
+
+  For each finding report: id, scope, severity, title, location (file:line),
+  description, recommendation, fixable, effort (LOW/MEDIUM/HIGH),
+  impact (LOW/MEDIUM/HIGH), confidence (0-100).
+
+  Also calculate metrics: testCoverage %, complexity avg.
+
   Return: { findings: [...], metrics: {...} }
 `, { model: "haiku" })
 
@@ -223,11 +253,28 @@ qualityResults = Task("cco-agent-analyze", `
 completenessResults = Task("cco-agent-analyze", `
   scopes: ["functional-completeness", "ai-architecture"]
   mode: review
-  Analyze API gaps, over-engineering, architectural drift.
+
+  Analyze functional completeness and AI architecture drift:
+  - FUN-01-18: Missing CRUD, missing pagination, missing filters,
+    missing edge cases, incomplete error handling, missing schema validation,
+    state transition gaps, missing soft delete, concurrent data access,
+    missing timeout config, missing retry strategy, incomplete API surface,
+    missing data validation layer, missing caching strategy,
+    inefficient data retrieval, missing data consistency,
+    missing data indexing, missing bulk operations
+  - AIA-01-10: Over-engineering (interface with 1 impl), local solutions,
+    architectural drift, pattern inconsistency, premature abstraction,
+    framework antipatterns, coupling hotspots, interface bloat,
+    god modules, missing abstractions
+
+  For each finding report: id, scope, severity, title, location (file:line),
+  description, recommendation, fixable, effort (LOW/MEDIUM/HIGH),
+  impact (LOW/MEDIUM/HIGH), confidence (0-100).
+
   Return: { findings: [...], metrics: {...} }
 `, { model: "haiku" })
 
-// Merge parallel results
+// Merge all parallel results
 analysisTask = {
   findings: [
     ...structureResults.findings,
@@ -238,7 +285,10 @@ analysisTask = {
   techAssessment: structureResults.techAssessment
 }
 
-// Check IDs defined in cco-agent-analyze.md (ARC-01-15, PAT-01-12, TST-01-10, MNT-01-12, AIA-01-10, FUN-01-18)
+// Filter by user-selected scopes
+analysisTask.findings = analysisTask.findings.filter(f => selectedScopes.includes(f.scope))
+
+// IDs: ARC-01-15, PAT-01-12, TST-01-10, MNT-01-12, AIA-01-10, FUN-01-18 (77 checks total)
 ```
 
 ---

@@ -75,13 +75,22 @@ if (isReportOnly) {
 |------|------|--------|--------------|
 | 1 | Setup | Q1: Review mode selection | Single question |
 | 2 | Inventory | Detect counts via Bash | Parallel Bash |
-| 3 | Analyze | 10 Explore agents (parallel) | 10 agents in single message |
+| 3 | Analyze | 4 Explore agent groups (parallel) | 4 agents in single message |
 | 4 | Prioritize | 80/20 findings | Instant |
 | 5 | Approval | Q2: Select fixes (conditional) | Only if needed |
 | 6 | Apply | Delegate to cco-agent-apply | Agent handles batching |
 | 7 | Summary | Show report | Instant |
 
-**Key Optimization:** Step-3 launches ALL 10 category analyses as Explore agents in a single message = true parallel execution. Step-6 delegates to cco-agent-apply for efficient, verified fix application.
+**Key Optimization:** Step-3 launches 4 parallel Explore agent groups (Structure, Commands, Standards, Docs) in a single message = true parallel execution. Step-6 delegates to cco-agent-apply for efficient, verified fix application.
+
+**Scope Groups:**
+
+| Group | Categories | Checks |
+|-------|-----------|--------|
+| **Structure & Inventory** | 1 (Inventory) + 4 (Rules) + 9 (Release) | ~40 checks |
+| **Commands & Agents** | 2 (Commands) + 3 (Agents) | ~29 checks |
+| **Standards & Practices** | 5 (Token) + 6 (UX/DX) + 10 (Best Practices) | ~48 checks |
+| **Documentation & Safety** | 7 (Docs) + 8 (Safety) | ~23 checks |
 
 ---
 
@@ -140,113 +149,245 @@ inventory = {
 
 ## Step-3: 10-Category Analysis [PARALLEL AGENTS]
 
-**Use Explore agents for parallel category analysis:**
+**Run analysis with 4 parallel scope groups - multiple Task calls in same message execute concurrently:**
 
 ```javascript
-// Create tasks for progress tracking
-TaskCreate({ subject: "CCO Full Review", description: "10-category system health check" })
+// PARALLEL EXECUTION: Launch 4 scope groups in single message
+// Each Task returns results directly (synchronous)
+// Multiple Task calls in same message run in parallel automatically
 
-// Launch ALL category analyses in SINGLE message for true parallelism
-// Explore agent: fast codebase search, pattern matching, keyword search
+// Group A: Structure & Inventory (Cat 1 + Cat 4 + Cat 9)
+structureResults = Task("Explore", `
+  CCO Structure & Inventory analysis - Categories 1, 4, 9 (~40 checks)
 
-// BATCH 1: Structure & Quality (5 categories)
-// PARALLEL EXECUTION: All 10 Task calls in single message run in parallel automatically
-// NOTE: Do NOT use run_in_background for Task (agent) calls.
-// Results are returned directly (synchronous). Multiple Task calls in same message = true parallel.
+  CATEGORY 1 - Inventory & Sync (15 checks):
+  1.1 Count files dynamically:
+      - commands/*.md (expected: 7 - optimize, align, preflight, commit, tune, research, docs)
+      - agents/cco-agent-*.md (expected: 3 - analyze, apply, research)
+      - rules/core/cco-*.md, rules/languages/cco-*.md, rules/frameworks/cco-*.md, rules/operations/cco-*.md
+  1.2 Compare detected counts against:
+      - README.md: check command count, agent count, rule count claims
+      - docs/commands.md: count ## /cco:* headers, compare to actual commands
+      - docs/agents.md: count ## cco-agent-* headers, compare to actual agents
+      - docs/rules.md: check category breakdown matches actual rule files
+  1.3 SSOT Compliance:
+      - Grep for orphan refs: .cco/, principles.md, projects.json, context.md (should be 0)
+      - Grep for deprecated refs: cco-tune, cco-setup without /cco: prefix (should be 0)
+      - Grep for legacy refs: cco-tools, cco-guide, cco-principles (should be 0)
+      - Check all command refs use /cco:* format
+  1.4 Dependency chain:
+      - Verify Task() calls in commands/*.md reference valid agent types (cco-agent-analyze, cco-agent-apply, cco-agent-research, Explore)
+      - Verify scope parameters match agent capabilities in agents/*.md
+  1.5 Terminology consistency:
+      - Severity: CRITICAL/HIGH/MEDIUM/LOW used consistently (not P0/P1/P2/P3)
+      - Status: OK/WARN/FAIL used consistently
+      - Scope names: identical between commands/*.md and agents/*.md
 
-const cat1 = Task("Explore", `
-  CCO Inventory & Sync check:
-  1. Count files: commands/*.md, rules/core/cco-*.md, rules/languages/cco-*.md, rules/frameworks/cco-*.md, rules/operations/cco-*.md
-  2. Compare counts to README.md, docs/commands.md, docs/agents.md, docs/rules.md
-  3. Check for orphan refs: .cco/, principles.md, projects.json, context.md
-  4. Verify terminology consistency: CRITICAL/HIGH/MEDIUM/LOW, OK/WARN/FAIL
-  Return: { category: 1, passed: n, failed: n, findings: [...] }
+  CATEGORY 4 - Rules System (15 checks):
+  4.1 Detection accuracy:
+      - Each rule file in rules/ has clear trigger conditions
+      - No orphan rules (rules without triggers)
+      - Multi-language coverage: Python, JS/TS, Go, Rust rules exist
+  4.2 Rule quality:
+      - Each rule contains specific action verb
+      - Rule names unique across all files (grep rule identifiers)
+      - Examples use {placeholder} format
+      - Positive framing: "Do X" preferred over "Don't do Y"
+  4.3 Profile generation:
+      - .claude/rules/cco-profile.md exists with required sections (Stack, Documentation, Rules Loaded)
+      - /cco:tune references in commands validate profile exists
+
+  CATEGORY 9 - Release Readiness (10 checks):
+  9.1 Version consistency:
+      - Compare pyproject.toml version with CHANGELOG.md latest version
+      - Check SemVer format (digits.digits.digits)
+  9.2 Plugin structure:
+      - Verify .claude-plugin/plugin.json is valid JSON with required fields
+      - Verify hooks/ directory contains SessionStart hook
+      - Check core rules injection via hook additionalContext
+  9.3 Cross-platform:
+      - Grep for backslash paths (C:\\, D:\\) in non-.local files
+      - Grep for hardcoded /home/ or /Users/ paths
+      - Check for CRLF line endings in .md and .py files
+
+  For each finding: { category: N, id: "N.N", severity: "CRITICAL|HIGH|MEDIUM|LOW",
+    title: string, location: "file:line", description: string, autoFixable: bool }
+  Return: { categories: [1, 4, 9], passed: n, failed: n, findings: [...] }
 `, { model: "haiku" })
 
-const cat2 = Task("Explore", `
-  CCO Command Quality check:
-  1. Verify Architecture tables in commands/*.md
-  2. Check AskUserQuestion usage (no plain text questions)
-  3. Verify fix workflow: Analyze → Report → Approve → Apply
-  4. Check --auto and --preview mode consistency
-  Return: { category: 2, passed: n, failed: n, findings: [...] }
+// Group B: Commands & Agents (Cat 2 + Cat 3)
+commandsResults = Task("Explore", `
+  CCO Commands & Agents analysis - Categories 2, 3 (~29 checks)
+
+  CATEGORY 2 - Command Quality (18 checks):
+  2.1 Template compliance in commands/*.md:
+      - Each command has Architecture table (| Step | Name | Action |)
+      - Each command has Validation blocks with pass/fail criteria
+      - Fix commands report applied/failed/deferred accounting
+  2.2 AskUserQuestion standards:
+      - Zero plain text questions - all user interaction via AskUserQuestion tool
+      - multiSelect: true used for batch selections
+      - Max 4 questions × 4 options per AskUserQuestion call
+      - Questions appear in early steps, not mid-execution
+  2.3 Fix workflow:
+      - Commands follow: Analyze → Report → Approve → Apply → Verify
+      - Severity order: CRITICAL → HIGH → MEDIUM → LOW
+      - Accounting invariant: applied + failed + deferred = total
+      - Quality Gates only in /cco:commit and /cco:preflight (NOT in /cco:optimize)
+  2.4 Mode consistency:
+      - --auto mode: zero AskUserQuestion calls, smart defaults
+      - --preview mode: zero Edit/Write calls, read-only
+      - Check all 7 commands for --auto and --preview support
+
+  CATEGORY 3 - Agent Quality (11 checks):
+  3.1 Scope accuracy in agents/cco-agent-*.md:
+      - cco-agent-analyze: verify OPTIMIZE scopes (security, hygiene, types, lint, performance,
+        ai-hygiene, robustness, privacy, doc-sync, simplify) + REVIEW scopes (architecture,
+        patterns, testing, maintainability, ai-architecture, functional-completeness)
+      - cco-agent-apply: verify fix scope + config scope
+      - cco-agent-research: verify 6 scopes (local, search, analyze, synthesize, full, dependency)
+      - Compare scope lists to docs/agents.md
+  3.2 Parallel execution patterns:
+      - Commands use multiple Task() calls in single message for parallelism
+      - Model selection: analyze/research = haiku, apply = opus
+      - No run_in_background for Task (agent) calls
+  3.3 Output standards:
+      - JSON with findings[], metrics, status fields
+      - Every finding has severity and location fields
+
+  For each finding: { category: N, id: "N.N", severity: "CRITICAL|HIGH|MEDIUM|LOW",
+    title: string, location: "file:line", description: string, autoFixable: bool }
+  Return: { categories: [2, 3], passed: n, failed: n, findings: [...] }
 `, { model: "haiku" })
 
-const cat3 = Task("Explore", `
-  CCO Agent Quality check:
-  1. Verify agent scopes in agents/cco-agent-*.md match docs/agents.md
-  2. Check parallel execution patterns (single message for multiple Task calls)
-  3. Verify output schemas (JSON with findings, metrics, status)
-  Return: { category: 3, passed: n, failed: n, findings: [...] }
+// Group C: Standards & Practices (Cat 5 + Cat 6 + Cat 10)
+standardsResults = Task("Explore", `
+  CCO Standards & Best Practices analysis - Categories 5, 6, 10 (~48 checks)
+
+  CATEGORY 5 - Token Efficiency & Specification Clarity (22 checks):
+  5.1 Content density in commands/*.md and agents/*.md:
+      - Tables used for tabular data (not prose paragraphs)
+      - Lists for multi-item content
+      - No redundant content across files (grep for identical paragraphs)
+      - Files >500 lines: check if can be split or referenced
+  5.2 Rule format in rules/**/*.md:
+      - Rules fit < 120 chars per line
+      - Grouped under ### headers
+      - No duplication across core/languages/frameworks/operations
+  5.3 Command efficiency:
+      - Profile auto-loaded from .claude/rules/ (not manually loaded)
+      - Batch reads: multiple Read() in single message where possible
+      - Parallel agents: independent analyses use parallel Task() calls
+  5.4 Specification clarity:
+      - WHAT over HOW: check for excessive if/else pseudocode that teaches obvious logic
+      - Standards over Teaching: thresholds/constraints, not rationale paragraphs
+      - DRY for Policies: common patterns reference Core Rules (not duplicated)
+      - No algorithm walkthroughs for obvious logic
+  5.5 AskUserQuestion limits:
+      - Max 4 questions per call, max 4 options per question
+      - 5+ scopes split into logical groups
+  5.6 Rule optimization:
+      - No teaching of basics Opus 4.5 already knows
+      - Each rule provides unique CCO-specific value
+      - Threshold focus: numeric limits > prose descriptions
+
+  CATEGORY 6 - UX/DX Standards (13 checks):
+  6.1 Progress visibility:
+      - Multi-step operations show step progress
+      - Long operations (>30s) show percentage or status
+  6.2 Error reporting format:
+      - [{SEVERITY}] {description} in {file}:{line}
+      - Actionable recommendations included
+  6.3 Output formatting:
+      - Status indicators: OK/WARN/FAIL/PASS/SKIP
+      - No emojis in tables
+  6.4 Transparency:
+      - Actions pre-announced before execution
+      - File lists shown before confirmation
+      - Non-trivial changes explained
+
+  CATEGORY 10 - Best Practices (13 checks):
+  10.1 Claude best practices in all .md files:
+      - Positive framing: "Do X" not "Don't do Y"
+      - JSON schemas specified for complex outputs
+      - Read-First: commands read files before editing
+      - No-Hallucination: APIs/methods verified before use
+      - Plan-Before-Act: Plan Review phase for complex changes
+      - Agent delegation: CCO agents used over default tools
+  10.2 Model selection:
+      - Commands (optimize, align, commit, preflight): model: opus in frontmatter
+      - Agents (analyze, research): model: haiku in frontmatter
+      - Agent (apply): model: opus in frontmatter
+  10.3 Anti-overengineering:
+      - Grep for backward, compat, legacy (should be 0 in production code)
+      - Grep for fallback, deprecated (should be 0)
+      - Grep for TODO, FIXME, XXX in commands/*.md and agents/*.md
+      - No duplicate analysis: optimize LNT/TYP scopes vs Quality Gates
+
+  For each finding: { category: N, id: "N.N", severity: "CRITICAL|HIGH|MEDIUM|LOW",
+    title: string, location: "file:line", description: string, autoFixable: bool }
+  Return: { categories: [5, 6, 10], passed: n, failed: n, findings: [...] }
 `, { model: "haiku" })
 
-const cat4 = Task("Explore", `
-  CCO Rules System check:
-  1. Verify detection triggers map to rules
-  2. Check rule quality: actionable, unique names, placeholder format
-  3. Verify /cco:tune produces cco-profile.md with required fields
-  Return: { category: 4, passed: n, failed: n, findings: [...] }
+// Group D: Documentation & Safety (Cat 7 + Cat 8)
+docsResults = Task("Explore", `
+  CCO Documentation & Safety analysis - Categories 7, 8 (~23 checks)
+
+  CATEGORY 7 - Documentation (12 checks):
+  7.1 README.md accuracy:
+      - Command count matches actual commands/*.md file count
+      - Agent count matches actual agents/cco-agent-*.md file count
+      - Rule count matches actual rules/**/*.md file count
+      - Each feature claim has corresponding implementation
+      - No references to deprecated/removed features
+  7.2 docs/commands.md:
+      - Has entry for each command in commands/*.md
+      - Each entry has step table and usage example
+      - Model info shown for each command
+  7.3 docs/agents.md:
+      - Has entry for each agent in agents/cco-agent-*.md
+      - Every scope documented per agent
+      - TRIGGERS section per agent
+  7.4 docs/rules.md:
+      - Core, Languages, Frameworks, Operations sections present
+      - Detection → Rule mapping documented
+      - All rules listed with categories
+
+  CATEGORY 8 - Safety (11 checks):
+  8.1 Security practices:
+      - Zero API keys, passwords, secrets in any file (grep for api_key, password, secret, token patterns)
+      - Edit/Write commands check git status first
+      - Auth/DB/API changes require user confirmation
+  8.2 OWASP compliance:
+      - Input validation rules present in rules/
+      - SQL injection, XSS prevention rules present
+  8.3 Rollback capability:
+      - Commands warn about uncommitted changes
+      - Commit/Stash/Continue options presented
+      - No --force or destructive git operations without explicit request
+
+  For each finding: { category: N, id: "N.N", severity: "CRITICAL|HIGH|MEDIUM|LOW",
+    title: string, location: "file:line", description: string, autoFixable: bool }
+  Return: { categories: [7, 8], passed: n, failed: n, findings: [...] }
 `, { model: "haiku" })
 
-const cat5 = Task("Explore", `
-  CCO Token Efficiency check:
-  1. Tables > prose, lists > paragraphs
-  2. No redundancy across files
-  3. Profile auto-loaded from .claude/rules/
-  4. Specification clarity: WHAT over HOW, Standards over Teaching
-  Return: { category: 5, passed: n, failed: n, findings: [...] }
-`, { model: "haiku" })
+// Merge all parallel results
+allFindings = [
+  ...structureResults.findings,
+  ...commandsResults.findings,
+  ...standardsResults.findings,
+  ...docsResults.findings
+]
 
-// BATCH 2: Standards & Readiness (5 categories)
-const cat6 = Task("Explore", `
-  CCO UX/DX Standards check:
-  1. Progress visibility for multi-step operations
-  2. Error format: [SEVERITY] description in file:line
-  3. Output formatting standards
-  4. Pre-announce actions before execution
-  Return: { category: 6, passed: n, failed: n, findings: [...] }
-`, { model: "haiku" })
-
-const cat7 = Task("Explore", `
-  CCO Documentation check:
-  1. README accuracy vs detected counts
-  2. docs/commands.md completeness
-  3. docs/agents.md completeness
-  4. docs/rules.md category coverage
-  Return: { category: 7, passed: n, failed: n, findings: [...] }
-`, { model: "haiku" })
-
-const cat8 = Task("Explore", `
-  CCO Safety check:
-  1. No secrets in code (API keys, passwords)
-  2. OWASP compliance rules present
-  3. Rollback capability (dirty warning, stash options)
-  Return: { category: 8, passed: n, failed: n, findings: [...] }
-`, { model: "haiku" })
-
-const cat9 = Task("Explore", `
-  CCO Release Readiness check:
-  1. Version consistency (plugin.json, CHANGELOG)
-  2. Plugin structure (.claude-plugin/, hooks/)
-  3. Cross-platform (forward slashes, no hardcoded paths, LF line endings)
-  Return: { category: 9, passed: n, failed: n, findings: [...] }
-`, { model: "haiku" })
-
-const cat10 = Task("Explore", `
-  CCO Best Practices check:
-  1. Positive rules ("Do X" not "Don't do Y")
-  2. Model selection (opus for coding, haiku for analysis)
-  3. Anti-overengineering (no BC hacks, no TODOs)
-  4. Agent delegation patterns
-  Return: { category: 10, passed: n, failed: n, findings: [...] }
-`, { model: "haiku" })
-
-// Results are returned directly from each Task call above
-allFindings = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, cat10].flatMap(r => r.findings)
-categoryResults = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, cat10].map(r => ({ category: r.category, passed: r.passed, failed: r.failed }))
+// Build category results from merged data
+categoryResults = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(cat => ({
+  category: cat,
+  passed: allFindings.filter(f => f.category === cat && !f.failed).length,
+  failed: allFindings.filter(f => f.category === cat).length
+}))
 ```
 
-**Key Optimization:** Single message with 10 Task calls = true parallel execution. Do NOT use `run_in_background` for Task (agent) calls — results are returned directly. Explore agents use Haiku model for fast, efficient searches.
+**Key Optimization:** Single message with 4 Task calls = true parallel execution. Do NOT use `run_in_background` for Task (agent) calls — results are returned directly. Explore agents use Haiku model for fast, efficient codebase search.
 
 ---
 

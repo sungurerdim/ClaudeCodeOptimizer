@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).parent.parent
+from conftest import ROOT
+
 HOOKS_DIR = ROOT / "hooks"
 
 
@@ -55,9 +56,13 @@ class TestHookJsonStructure:
 
     def test_core_rules_json_structure(self, core_rules_json: dict) -> None:
         """core-rules.json must have hookSpecificOutput."""
-        assert "hookSpecificOutput" in core_rules_json, "core-rules.json missing hookSpecificOutput"
+        assert "hookSpecificOutput" in core_rules_json, (
+            "core-rules.json missing hookSpecificOutput"
+        )
         output = core_rules_json["hookSpecificOutput"]
-        assert output.get("hookEventName") == "SessionStart", "hookEventName should be SessionStart"
+        assert output.get("hookEventName") == "SessionStart", (
+            "hookEventName should be SessionStart"
+        )
         assert "additionalContext" in output, "Missing additionalContext"
 
 
@@ -175,9 +180,10 @@ class TestContentIntegrity:
         """Markdown tables should be well-formed."""
         # Find table-like patterns (| col | col |)
         table_lines = [
-            line
+            stripped
             for line in additional_context.split("\n")
-            if line.strip().startswith("|") and line.strip().endswith("|")
+            if (stripped := line.strip()).startswith("|")
+            and stripped.endswith("|")
         ]
         for line in table_lines:
             # Each table row should have balanced pipes

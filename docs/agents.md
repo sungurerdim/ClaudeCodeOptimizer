@@ -70,7 +70,7 @@ Need changes?
 
 ### Scopes
 
-**OPTIMIZE Scopes** (tactical, file-level fixes):
+**OPTIMIZE Scopes** (tactical, file-level fixes — 10 scopes, 105 checks):
 
 | Scope          | ID Range         | Checks | Focus                                    |
 |----------------|------------------|--------|------------------------------------------|
@@ -81,9 +81,11 @@ Need changes?
 | `performance`  | PRF-01 to PRF-10 | 10     | N+1, blocking I/O, missing caching       |
 | `ai-hygiene`   | AIH-01 to AIH-08 | 8      | Hallucinated APIs, orphan abstractions   |
 | `robustness`   | ROB-01 to ROB-10 | 10     | Timeouts, retries, validation            |
+| `privacy`      | PRV-01 to PRV-08 | 8      | PII exposure, data masking, consent      |
 | `doc-sync`     | DOC-01 to DOC-08 | 8      | Doc-code consistency, outdated docs      |
+| `simplify`     | SIM-01 to SIM-11 | 11     | Deep nesting, duplicates, god functions  |
 
-**ALIGN Scopes** (strategic, architecture-level):
+**ALIGN Scopes** (strategic, architecture-level — 6 scopes, 77 checks):
 
 | Scope              | ID Range         | Checks | Focus                                    |
 |--------------------|------------------|--------|------------------------------------------|
