@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from conftest import AGENTS_DIR, COMMANDS_DIR, ROOT
+from _paths import AGENTS_DIR, COMMANDS_DIR, ROOT
 
 # Regex pattern for extracting Task agent references from command files
 TASK_PATTERN = r'Task\s*\(\s*["\']([^"\']+)["\']'
@@ -388,7 +388,7 @@ class TestAllCommandsHaveAccountingInvariant:
     """Validate that all commands with apply phases document the accounting invariant."""
 
     def test_commands_with_apply_have_accounting(self) -> None:
-        """Commands that apply fixes must document applied + failed + deferred = total."""
+        """Commands that apply fixes must document applied + failed + needs_approval = total."""
         for cmd_name in APPLY_COMMANDS:
             cmd_path = COMMANDS_DIR / cmd_name
             content = cmd_path.read_text(encoding="utf-8")

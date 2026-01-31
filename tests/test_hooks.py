@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import ROOT
+from _paths import ROOT
 
 HOOKS_DIR = ROOT / "hooks"
 

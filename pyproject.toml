@@ -13,7 +13,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
-importmode = "prepend"
+pythonpath = ["tests"]
 norecursedirs = ["benchmark/output", "node_modules", ".git", "__pycache__", "*.egg-info"]
 
 [tool.ruff]

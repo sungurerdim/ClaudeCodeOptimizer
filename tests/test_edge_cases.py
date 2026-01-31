@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from conftest import ROOT
+from _paths import ROOT
 
 
 class TestInvalidArgumentCombinations:
