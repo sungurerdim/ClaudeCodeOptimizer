@@ -79,8 +79,8 @@ hasTestChanges = testFiles.length > 0
 
 ```javascript
 // Phase 1: Blocking checks (always, instant - scoped to changed files)
-Bash(`grep -rn 'api_key\\|password\\|secret\\|token\\|credential' ${changedFiles.join(' ')} 2>/dev/null | grep -v '.md:' || true`)
-Bash(`find ${changedFiles.join(' ')} -size +10M 2>/dev/null || true`)
+Bash(`grep -rn 'api_key\\|password\\|secret\\|token\\|credential' ${changedFiles.map(f => `"${f}"`).join(' ')} 2>/dev/null | grep -v '.md:' || true`)
+Bash(`find ${changedFiles.map(f => `"${f}"`).join(' ')} -size +10M 2>/dev/null || true`)
 
 // Phase 2: Code quality (full project - not just changed files)
 if (hasCodeChanges) {

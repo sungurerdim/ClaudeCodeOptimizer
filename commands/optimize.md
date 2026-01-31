@@ -1,7 +1,7 @@
 ---
 description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
 argument-hint: "[--auto] [--preview] [--scope=<name>]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
 model: opus
 ---
 

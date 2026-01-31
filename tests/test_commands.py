@@ -15,9 +15,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-ROOT = Path(__file__).parent.parent
-COMMANDS_DIR = ROOT / "commands"
-AGENTS_DIR = ROOT / "agents"
+from conftest import AGENTS_DIR, COMMANDS_DIR, ROOT
+
+# Regex pattern for extracting Task agent references from command files
+TASK_PATTERN = r'Task\s*\(\s*["\']([^"\']+)["\']'
 
 # Expected flags documented in optimize.md
 OPTIMIZE_EXPECTED_FLAGS = [
@@ -145,9 +146,7 @@ class TestAgentReferences:
     def test_optimize_references_valid_agents(self, existing_agents: list[str]) -> None:
         """optimize.md should reference existing agents."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
-        # Match Task("agent-name", ...) calls to extract referenced agent names
-        task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
-        matches = re.findall(task_pattern, content)
+        matches = re.findall(TASK_PATTERN, content)
         for agent_name in matches:
             assert agent_name in existing_agents, (
                 f"optimize.md references non-existent agent: {agent_name}"
@@ -158,11 +157,10 @@ class TestAgentReferences:
         valid_agents = set(existing_agents) | BUILTIN_AGENTS
         for cmd_file in COMMANDS_DIR.glob("*.md"):
             content = cmd_file.read_text(encoding="utf-8")
-            task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
-            matches = re.findall(task_pattern, content)
-            for agent_name in matches:
+            for agent_name in re.findall(TASK_PATTERN, content):
                 assert agent_name in valid_agents, (
-                    f"{cmd_file.name} references non-existent agent: {agent_name}"
+                    f"{cmd_file.name} references non-existent agent:"
+                    f" {agent_name}"
                 )
 
     def test_agents_declared_in_plugin_json(self, existing_agents: list[str]) -> None:
@@ -233,6 +231,7 @@ class TestCommandConsistency:
             "NotebookEdit",
             "WebSearch",
             "WebFetch",
+            "Skill",
         }
         for name, frontmatter in all_commands.items():
             tools_str = frontmatter.get("allowed-tools", "")

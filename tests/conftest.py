@@ -2,10 +2,11 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-ROOT = Path(__file__).parent.parent
+ROOT: Path = Path(__file__).parent.parent
 COMMANDS_DIR = ROOT / "commands"
 AGENTS_DIR = ROOT / "agents"
 HOOKS_DIR = ROOT / "hooks"
@@ -25,7 +26,7 @@ def optimize_content() -> str:
 
 
 @pytest.fixture
-def hooks_json() -> dict:
+def hooks_json() -> dict[str, Any]:
     """Load hooks.json configuration."""
     path = HOOKS_DIR / "hooks.json"
     return json.loads(path.read_text(encoding="utf-8"))

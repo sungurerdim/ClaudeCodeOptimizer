@@ -11,18 +11,18 @@ NOT tested (would break on every file change):
 """
 
 import json
-from pathlib import Path
+from typing import Any
 
 import pytest
 
-ROOT = Path(__file__).parent.parent
+from conftest import ROOT
 
 
 class TestPluginJson:
     """Validate plugin.json schema - catches malformed plugin config."""
 
     @pytest.fixture
-    def plugin_json(self) -> dict:
+    def plugin_json(self) -> dict[str, Any]:
         path = ROOT / ".claude-plugin" / "plugin.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
