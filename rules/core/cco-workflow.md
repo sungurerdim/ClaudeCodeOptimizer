@@ -67,8 +67,9 @@ Changes needed?
 ## Efficiency
 
 - **Parallel calls**: Independent tool calls in single message
-- **Background Bash**: Long Bash commands → `run_in_background: true`
-- **Parallel agents**: Multiple Task calls in single message (do NOT use `run_in_background` for Task/agent calls)
+- **Background Bash**: Long Bash commands → `run_in_background: true`, collect via `TaskOutput` before any output
+- **Parallel agents**: Multiple Task calls in single message (Task does NOT support `run_in_background`)
+- **Collection rule**: All background Bash results must be collected via TaskOutput before report/summary output
 
 ## No Deferrals [BLOCKER - Auto Mode]
 
@@ -90,10 +91,10 @@ When `--auto` active, AI MUST attempt every fix.
 ## Accounting [BLOCKER]
 
 ```
-applied + failed + deferred = total
+applied + failed + needs_approval = total
 ```
 
-No "declined" category. Every finding = `applied`, `failed` (technical reason), or `deferred` (architectural reason).
+No "declined" category. Every finding = `applied`, `failed` (technical reason), or `needs_approval` (architectural reason).
 
 ## Model Strategy
 

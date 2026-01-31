@@ -5,6 +5,15 @@
 
 **Enforceable constraints for Claude Code.** Stops over-engineering, scope creep, and silent assumptions.
 
+| Without CCO | With CCO |
+|-------------|----------|
+| Adds AbstractValidatorFactory for simple validation | Only requested changes — enforced |
+| Edits 5 files when asked for 1 fix | Must read before edit — enforced |
+| Guesses requirements silently | Stops and asks — enforced |
+| Method grows to 200 lines | ≤50 lines, ≤3 nesting — enforced |
+
+These are **BLOCKER** rules — execution stops, not suggestions to ignore.
+
 ---
 
 ## Install
@@ -44,47 +53,13 @@ claude plugin install cco@ClaudeCodeOptimizer
 
 ---
 
-## Why CCO?
-
-Claude Code is powerful but unconstrained:
-
-| Problem | CCO Solution |
-|---------|--------------|
-| Adds AbstractValidatorFactory for simple validation | [**Change Scope**](docs/rules.md#foundation-rules-blocker): Only requested changes |
-| Edits 5 files when asked for 1 fix | [**Read-Before-Edit**](docs/rules.md#workflow-rules-blocker): Must read first |
-| Guesses requirements silently | [**Uncertainty Protocol**](docs/rules.md#foundation-rules-blocker): Stop and ask |
-| Method grows to 200 lines | [**Complexity Limits**](docs/rules.md#foundation-rules-blocker): ≤50 lines, ≤3 nesting |
-
-These are **BLOCKER** rules — execution stops, not suggestions to ignore.
-
----
-
 ## How It Works
 
-```
-Install CCO → SessionStart hook injects core rules (every session, automatic)
-                                    ↓
-/cco:tune   → Creates .claude/rules/cco-*.md (once per project)
-                                    ↓
-            → Claude Code auto-loads .claude/rules/*.md (native behavior)
-                                    ↓
-            → Rules active. Zero manual activation.
-```
+1. **Install** → SessionStart hook injects core rules every session, automatically
+2. **`/cco:tune`** (once per project) → Creates `.claude/rules/cco-*.md`
+3. Claude Code natively loads `.claude/rules/*.md` → Rules active, zero manual activation
 
-### Why This Matters
-
-| Traditional Approach | CCO Approach |
-|---------------------|--------------|
-| Custom CLI wrapper (`mytool --with-rules`) | Native Claude Code |
-| Manual rule activation per session | Automatic on every session start |
-| Separate config files to maintain | Uses Claude Code's native `.claude/rules/` |
-| Breaks when Claude Code updates | Uses official plugin API |
-
-**Result:**
-- **Install once** → Core rules active in ALL projects immediately
-- **`/cco:tune` once per project** → Project rules auto-load every session
-- **No manual activation** → Open Claude Code, rules already working
-- **No performance cost** → Native mechanism, not a wrapper
+Your rules (without `cco-` prefix) are never touched. CCO writes to `.claude/` (rules and settings), never global.
 
 ---
 
@@ -100,41 +75,7 @@ Install CCO → SessionStart hook injects core rules (every session, automatic)
 | [`/cco:preflight`](docs/commands.md#ccopreflight) | Pre-release verification |
 | [`/cco:docs`](docs/commands.md#ccodocs) | Documentation gap analysis |
 
----
-
-## What's Included
-
-| Component | Count | Details |
-|-----------|-------|---------|
-| Commands | 7 | [Reference](docs/commands.md#command-overview) |
-| Agents | 3 | [analyze, apply, research](docs/agents.md) |
-| Rules | 45 | [4 core](docs/rules.md#core-rules-4-files) + [21 languages](docs/rules.md#language-rules-21-files) + [8 frameworks](docs/rules.md#framework-rules-8-files) + [12 operations](docs/rules.md#operations-rules-12-files) |
-
-### Core Rules: Hard Limits
-
-| Metric | Limit | Exceeds → |
-|--------|-------|-----------|
-| Cyclomatic Complexity | ≤ 15 | STOP, refactor |
-| Method Lines | ≤ 50 | STOP, split |
-| File Lines | ≤ 500 | STOP, extract |
-| Nesting Depth | ≤ 3 | STOP, flatten |
-| Parameters | ≤ 4 | STOP, use object |
-
-### Accounting (No Silent Skips)
-
-Every operation ends with: `Applied: 12 | Failed: 1 | Deferred: 2 | Total: 15`
-
-Formula: **`applied + failed + deferred = total`** — no "declined" category. AI cannot silently skip. "Deferred" = requires multi-file architectural changes.
-
----
-
-## Safety
-
-- Your rules (without `cco-` prefix) are never touched
-- CCO only writes to `.claude/rules/`, never global
-- All changes require clean git state for rollback
-
-See [Safety Model](docs/rules.md#safety-rules-blocker) for security patterns.
+7 commands · 3 [specialized agents](docs/agents.md) · 45 [rules](docs/rules.md) (4 core + 21 languages + 8 frameworks + 12 operations)
 
 ---
 
@@ -147,21 +88,62 @@ See [Safety Model](docs/rules.md#safety-rules-blocker) for security patterns.
 
 ---
 
-## Migrating from v1
+## Update
 
-If you used CCO v1, follow these steps to clean up old artifacts:
+```
+/plugin marketplace update ClaudeCodeOptimizer
+```
+
+```
+/plugin update cco@ClaudeCodeOptimizer
+```
+
+<details>
+<summary>Alternative: Terminal</summary>
+
+```bash
+claude plugin marketplace update ClaudeCodeOptimizer
+```
+
+```bash
+claude plugin update cco@ClaudeCodeOptimizer
+```
+</details>
+
+## Uninstall
+
+```
+/plugin uninstall cco@ClaudeCodeOptimizer
+```
+
+```
+/plugin marketplace remove ClaudeCodeOptimizer
+```
+
+<details>
+<summary>Alternative: Terminal</summary>
+
+```bash
+claude plugin uninstall cco@ClaudeCodeOptimizer
+```
+
+```bash
+claude plugin marketplace remove ClaudeCodeOptimizer
+```
+</details>
+
+---
+
+<details>
+<summary>Migrating from v1</summary>
 
 ### 1. Uninstall pip package
-
-v1 was distributed as a pip package. Remove it:
 
 ```bash
 pip uninstall claude-code-optimizer
 ```
 
 ### 2. Remove global rules
-
-v1 copied rules to your global config. Clean them up:
 
 ```bash
 # Linux / macOS
@@ -173,19 +155,16 @@ Remove-Item ~\.claude\rules\cco-*.md -ErrorAction SilentlyContinue
 
 ### 3. Remove old project files
 
-v1 created files in your project's `.claude/` directory with the old format:
-
 ```bash
-# Remove v1 project rules (re-generated by /cco:tune)
 rm -f .claude/rules/cco-*.md
 rm -f .claude/commands/cco-*.md
 ```
 
 ### 4. Clean up CLAUDE.md
 
-If your `CLAUDE.md` contains `@import` lines referencing CCO rules, remove them — v2 uses SessionStart hooks instead.
+Remove any `@import` lines referencing CCO rules — v2 uses SessionStart hooks instead.
 
-### 5. Install v2 and reconfigure
+### 5. Install v2
 
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
@@ -206,21 +185,7 @@ If your `CLAUDE.md` contains `@import` lines referencing CCO rules, remove them 
 | `/cco-review` | `/cco:align` |
 | `/cco-refactor` | `/cco:align` |
 
----
-
-## Update / Uninstall
-
-```
-/plugin marketplace update ClaudeCodeOptimizer
-```
-
-```
-/plugin uninstall cco@ClaudeCodeOptimizer
-```
-
-```
-/plugin marketplace remove ClaudeCodeOptimizer
-```
+</details>
 
 ---
 

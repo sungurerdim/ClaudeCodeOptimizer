@@ -95,7 +95,7 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 | Code fixes | Edit files with verification |
 | Config writes | Profile, rules, settings |
 | Cascade fixes | Fix errors caused by fixes |
-| Accounting | applied + failed + deferred = total |
+| Accounting | applied + failed + needs_approval = total |
 
 **Execution pattern:**
 
@@ -221,7 +221,7 @@ Injected via SessionStart hook. Cannot be overridden.
 | Change Scope | BLOCKER | Only requested changes |
 | Read-Before-Edit | BLOCKER | Must read before edit |
 | Security Violations | BLOCKER | Fix before continuing |
-| Accounting | BLOCKER | applied + failed + deferred = total |
+| Accounting | BLOCKER | applied + failed + needs_approval = total |
 
 ### Adaptive Rules (Per-Project)
 
@@ -250,23 +250,22 @@ Read("file3.py")
 
 ### Background Execution
 
-Long-running Bash commands use background mode:
+Long-running Bash commands use background mode. Collect results via `TaskOutput` before any output.
 
 ```javascript
-// Returns immediately, check later with TaskOutput
+// Launch in background
 testTask = Bash("pytest", { run_in_background: true })
+// ... other work ...
+// Collect before reporting
+testResult = await TaskOutput(testTask.id)
 ```
 
 ### Agent Calls
 
-Task (agent) calls are synchronous - results returned directly:
+Task (agent) calls are always synchronous. `run_in_background` is not supported for Task.
 
 ```javascript
-// CORRECT - synchronous
 results = Task("cco-agent-analyze", prompt)
-
-// WRONG - background doesn't work for agents
-// Task(..., { run_in_background: true })
 ```
 
 ---
@@ -320,7 +319,7 @@ commands:
 }
 ```
 
-Invariant: `applied + failed + deferred = total`
+Invariant: `applied + failed + needs_approval = total`
 
 ---
 

@@ -60,7 +60,7 @@ CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's
 
 ```javascript
 // Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("tune", "--preview")
+const tuneResult = await Skill("cco:tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   console.log("CCO setup skipped. Run /cco:tune when ready.")
@@ -110,7 +110,7 @@ if (args.includes("--auto")) {
 | **PLAN** | 3.5 | Review | Architectural plan (mandatory when findings >0) | User approval |
 | **GATE-3** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 4 | Fix | Apply recommendations | Changes verified |
-| **GATE-4** | - | Checkpoint | applied + failed + deferred = total | → Summary |
+| **GATE-4** | - | Checkpoint | applied + failed + needs_approval = total | → Summary |
 | **SUMMARY** | 5 | Report | Show gap changes | Done |
 
 **Execution Flow:** SETUP → ANALYZE → GATE-1 → ASSESS → GATE-2 → [PLAN if triggered] → GATE-3 → APPLY → GATE-4 → SUMMARY
@@ -122,7 +122,7 @@ if (args.includes("--auto")) {
 | GATE-1 (Post-Analysis) | Findings + metrics valid | Analysis error or missing metrics |
 | GATE-2 (Post-Assessment) | coupling + cohesion gaps present | Incomplete gap analysis |
 | GATE-3 (Post-Plan) | Approval received or plan skipped | User aborted |
-| GATE-4 (Post-Apply) | `applied + failed + deferred = total` | Accounting mismatch |
+| GATE-4 (Post-Apply) | `applied + failed + needs_approval = total` | Accounting mismatch |
 
 **Plan Review is MANDATORY when findings > 0.**
 
@@ -676,7 +676,7 @@ if (toApply.length > 0) {
 
     ${isFixAll ? `
     FIX-ALL MODE: Fix ALL items. No Deferrals Policy applies (see Core Rules).
-    Every item = applied, failed (Technical: reason), or deferred (Deferred: reason).
+    Every item = applied, failed (Technical: reason), or needs_approval (Needs-Approval: reason).
     ` : ""}
 
     CRITICAL - Counting:
@@ -684,7 +684,7 @@ if (toApply.length > 0) {
     - Each recommendation = 1 finding
 
     Return accounting at FINDING level:
-    { applied: <findings_fixed>, failed: <findings_failed>, deferred: <findings_deferred>, total: <findings_attempted> }
+    { applied: <findings_fixed>, failed: <findings_failed>, needs_approval: <findings_needs_approval>, total: <findings_attempted> }
   `, { model: "opus" })
 }
 ```
@@ -693,7 +693,59 @@ if (toApply.length > 0) {
 ```
 [x] Selected changes applied
 [x] No cascading errors
-→ Proceed to Step-5
+→ Proceed to Step-4.5 (Approval) or Step-5 (Summary)
+```
+
+---
+
+## Step-4.5: Needs-Approval Review [CONDITIONAL]
+
+**Presents needs_approval items to user for decision. Skipped in --auto mode (all items attempted).**
+
+```javascript
+if (applyResults.needs_approval > 0 && !isUnattended) {
+  const needsApprovalItems = applyResults.details.filter(d => d.status === "needs_approval")
+
+  AskUserQuestion([{
+    question: `${needsApprovalItems.length} items need approval (architectural changes).`,
+    header: "Approval",
+    options: [
+      { label: "Fix All (Recommended)", description: "Apply all architectural changes" },
+      { label: "Skip", description: "Leave as-is" },
+      { label: "Review Each", description: "Approve individually" }
+    ],
+    multiSelect: false
+  }])
+
+  if (approvalDecision === "Fix All") {
+    approvalResults = Task("cco-agent-apply", `
+      fixes: ${JSON.stringify(needsApprovalItems)}
+      fixAll: true
+      Apply approved architectural changes.
+    `, { model: "opus" })
+    applyResults.applied += approvalResults.applied
+    applyResults.failed += approvalResults.failed
+    applyResults.needs_approval = 0
+  } else if (approvalDecision === "Review Each") {
+    for (const item of needsApprovalItems) {
+      AskUserQuestion([{
+        question: `[${item.id}] ${item.title}\nReason: ${item.reason}`,
+        header: "Fix?",
+        options: [
+          { label: "Apply", description: "Fix this item" },
+          { label: "Skip", description: "Leave as-is" }
+        ],
+        multiSelect: false
+      }])
+    }
+  }
+}
+```
+
+### Validation
+```
+[x] Needs-approval items reviewed (or skipped in --auto)
+→ Proceed to Step-5 (Summary)
 ```
 
 ---
@@ -708,16 +760,16 @@ if (toApply.length > 0) {
 // - applied: successfully fixed
 // - failed: couldn't fix (technical reason required)
 //
-// Invariant: applied + failed + deferred = total
+// Invariant: applied + failed + needs_approval = total
 // NOTE: No "declined" category - AI has no option to decline. Fix, defer (architectural), or fail with reason.
 
 applied = applyResults?.accounting?.applied || 0
 failed = applyResults?.accounting?.failed || 0
-deferred = applyResults?.accounting?.deferred || 0
+needs_approval = applyResults?.accounting?.needs_approval || 0
 
 // Verify invariant
-assert(applied + failed + deferred === toApply.length,
-  "Count mismatch: applied + failed + deferred must equal toApply.length")
+assert(applied + failed + needs_approval === toApply.length,
+  "Count mismatch: applied + failed + needs_approval must equal toApply.length")
 ```
 
 ### Interactive Mode Output
@@ -741,16 +793,16 @@ assert(applied + failed + deferred === toApply.length,
 | Files modified | {n} |
 | **Total findings** | **{totalFindings}** |
 
-Status: {OK|WARN} | Applied: {applied} | Failed: {failed} | Deferred: {deferred} | Total: {toApply.length}
+Status: {OK|WARN} | Applied: {applied} | Failed: {failed} | Needs Approval: {needs_approval} | Total: {toApply.length}
 
-| Effort Category | Count | Applied | Failed | Deferred |
+| Effort Category | Count | Applied | Failed | Needs Approval |
 |-----------------|-------|---------|--------|----------|
-| Quick Win | {quickWin.length} | {appliedQuickWin} | {failedQuickWin} | {deferredQuickWin} |
-| Moderate | {moderate.length} | {appliedModerate} | {failedModerate} | {deferredModerate} |
-| Complex | {complex.length} | {appliedComplex} | {failedComplex} | {deferredComplex} |
-| Major | {major.length} | {appliedMajor} | {failedMajor} | {deferredMajor} |
+| Quick Win | {quickWin.length} | {appliedQuickWin} | {failedQuickWin} | {needsApprovalQuickWin} |
+| Moderate | {moderate.length} | {appliedModerate} | {failedModerate} | {needsApprovalModerate} |
+| Complex | {complex.length} | {appliedComplex} | {failedComplex} | {needsApprovalComplex} |
+| Major | {major.length} | {appliedMajor} | {failedMajor} | {needsApprovalMajor} |
 
-**Invariant:** applied + failed + deferred = total (effort categories are for reporting only)
+**Invariant:** applied + failed + needs_approval = total (effort categories are for reporting only)
 
 Run \`git diff\` to review changes.
 ```
@@ -758,7 +810,7 @@ Run \`git diff\` to review changes.
 ### Unattended Mode Output (--auto)
 
 ```
-cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {failed} | Deferred: {deferred} | Total: {totalFindings}
+cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {failed} | Needs Approval: {needs_approval} | Total: {totalFindings}
 ```
 
 ### Validation
@@ -786,9 +838,9 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 ```json
 {
   "status": "OK|WARN|FAIL",
-  "summary": "Applied 3, Failed 0, Deferred 0, Gaps: coupling 22%, cohesion 15%",
+  "summary": "Applied 3, Failed 0, Needs Approval 0, Gaps: coupling 22%, cohesion 15%",
   "data": {
-    "accounting": { "applied": 3, "failed": 0, "deferred": 0, "total": 3 },
+    "accounting": { "applied": 3, "failed": 0, "needs_approval": 0, "total": 3 },
     "gaps": {
       "coupling": { "current": 72, "ideal": 50, "gap": 22 },
       "cohesion": { "current": 55, "ideal": 70, "gap": 15 },
@@ -916,6 +968,6 @@ Default thresholds: coupling 10%, cohesion 10%, complexity 20%, coverage 10%.
 
 ## Accounting
 
-**Invariant:** `applied + failed + deferred = total` (count findings, not locations)
+**Invariant:** `applied + failed + needs_approval = total` (count findings, not locations)
 
 **See Core Rules:** `Accounting` for status definitions and no-declined policy.

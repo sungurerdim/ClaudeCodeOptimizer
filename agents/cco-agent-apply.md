@@ -46,7 +46,7 @@ results = Task("cco-agent-apply", prompt, { model: "opus" })
 | Dirty state warning | None | Pre-op `git status` check |
 | Post-change verification | None | Runs lint/type/test after |
 | Cascade fix | None | Detects and fixes new errors caused by fixes |
-| Accounting | None | Reports: applied + failed + deferred = total |
+| Accounting | None | Reports: applied + failed + needs_approval = total |
 | Fix-all mode | None | Zero agent-initiated skips |
 | Batch efficiency | Sequential | Groups by file, parallel where safe |
 
@@ -63,7 +63,7 @@ results = Task("cco-agent-apply", prompt, { model: "opus" })
 
 ## Output Contract
 
-See **Output Schema** section below for full JSON structure. Key invariant: `applied + failed + deferred = total`.
+See **Output Schema** section below for full JSON structure. Key invariant: `applied + failed + needs_approval = total`.
 
 ## Code Simplification Principles
 
@@ -149,7 +149,7 @@ Bash("{test_command} 2>&1")
 | Category | Rules |
 |----------|-------|
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
-| Tracking | TODO list with ALL items │ One in_progress at a time │ `applied + failed + deferred = total` |
+| Tracking | TODO list with ALL items │ One in_progress at a time │ `applied + failed + needs_approval = total` |
 | Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/` |
 | Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **Execute all writes unconditionally** |
 
@@ -462,8 +462,8 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 {
   "results": [{
     "item": "{id}: {desc} in {file}:{line}",
-    "status": "applied|failed|deferred",
-    "reason": "{only for failed/deferred}",
+    "status": "applied|failed|needs_approval",
+    "reason": "{only for failed/needs_approval}",
     "verification": "...",
     "education": {
       "why": "{brief impact explanation}",
@@ -471,7 +471,7 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
       "prefer": "{correct pattern}"
     }
   }],
-  "accounting": { "applied": "{n}", "failed": "{n}", "deferred": "{n}", "total": "{n}" },
+  "accounting": { "applied": "{n}", "failed": "{n}", "needs_approval": "{n}", "total": "{n}" },
   "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" }
 }
 ```
@@ -497,17 +497,17 @@ Every fixed item MUST include brief educational context to prevent recurrence:
 **Status:**
 - `applied` - Fixed successfully
 - `failed` - Technical impossibility (must include `reason` starting with "Technical:")
-- `deferred` - Requires architectural changes beyond single-file scope (must include `reason` starting with "Deferred:")
+- `needs_approval` - Requires architectural changes beyond single-file scope (must include `reason` starting with "Needs-Approval:")
 
-**No "declined" status:** AI has no option to decline. Fix, defer with architectural reason, or fail with technical reason.
+**No "declined" status:** AI has no option to decline. Fix, flag for approval, or fail with technical reason.
 
-**Deferred rules:**
+**Needs-Approval rules:**
 - Multi-file/module change required (not solvable in a single file)
 - Architectural design decision needed (e.g., agent split, abstraction layer)
 - Breaking change risk beyond current scope
 - NOT allowed: single-file fix is possible, or task is merely "hard"
 
-**Invariant:** `applied + failed + deferred = total`
+**Invariant:** `applied + failed + needs_approval = total`
 
 ## Bounded Retry [CRITICAL]
 
@@ -550,7 +550,7 @@ retryState[findingId].attempts++
 |--------|-----------------|--------|
 | `applied` | No | - |
 | `failed` | Yes | `"Technical: {specific impossibility}"` |
-| `deferred` | Yes | `"Deferred: {architectural reason}"` |
+| `needs_approval` | Yes | `"Needs-Approval: {architectural reason}"` |
 
 **Example Results:**
 
@@ -560,7 +560,7 @@ retryState[findingId].attempts++
     { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "applied", "verification": "{lint_tool} PASS" },
     { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "failed", "reason": "Technical: {impossibility_reason}" }
   ],
-  "accounting": { "applied": "{applied_count}", "failed": "{failed_count}", "deferred": "{deferred_count}", "total": "{total_count}" }
+  "accounting": { "applied": "{applied_count}", "failed": "{failed_count}", "needs_approval": "{needs_approval_count}", "total": "{total_count}" }
 }
 ```
 
@@ -729,7 +729,7 @@ All generated documentation MUST follow these rules:
   "failed": [
     { "scope": "api", "file": "docs/api.md", "reason": "Technical: No public APIs found" }
   ],
-  "accounting": { "applied": 1, "failed": 1, "deferred": 0, "total": 2 }
+  "accounting": { "applied": 1, "failed": 1, "needs_approval": 0, "total": 2 }
 }
 ```
 

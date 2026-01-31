@@ -34,7 +34,7 @@ model: opus
 
 - `--auto`: Fully unattended mode - detect, analyze, generate all missing docs
 - `--preview`: Analyze gaps only, no generation
-- `--scope=X`: Single scope: readme, api, dev, user, ops, changelog
+- `--scope=X`: Single scope: readme, api, dev, user, ops, changelog, refine, verify
 - `--update`: Regenerate even if docs exist (update mode)
 
 ## Scopes
@@ -47,6 +47,8 @@ model: opus
 | `user` | docs/user/*.md, USAGE.md | End-user guides |
 | `ops` | docs/ops/*.md, DEPLOY.md | Deployment, operations |
 | `changelog` | CHANGELOG.md | Version history |
+| `refine` | Existing docs | UX/DX quality improvement |
+| `verify` | Existing docs | Verify claims against source code |
 
 ## Context
 
@@ -72,7 +74,7 @@ This data is reused by docs command - no duplicate detection needed.
 
 ```javascript
 // Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("tune", "--preview")
+const tuneResult = await Skill("cco:tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   console.log("CCO setup skipped. Run /cco:tune when ready.")
@@ -102,14 +104,16 @@ const updateMode = args.includes("--update")
 
 // Parse scope filter
 const scopeArg = args.match(/--scope=(\w+)/)?.[1]
-const validScopes = ["readme", "api", "dev", "user", "ops", "changelog"]
+const validScopes = ["readme", "api", "dev", "user", "ops", "changelog", "refine", "verify"]
+const generationScopes = ["readme", "api", "dev", "user", "ops", "changelog"]  // --auto defaults
+const specialScopes = ["refine", "verify"]  // Only via --scope= explicit selection
 const scopeFilter = scopeArg && validScopes.includes(scopeArg) ? [scopeArg] : null
 
 if (isUnattended) {
   config = {
-    scopes: scopeFilter || validScopes,  // All scopes if not filtered
-    mode: "generate",                     // Generate missing docs
-    planReview: false                     // Skip plan in auto mode
+    scopes: scopeFilter || generationScopes,  // Generation scopes only (refine/verify require explicit --scope=)
+    mode: "generate",                          // Generate missing docs
+    planReview: false                          // Skip plan in auto mode
   }
   // → Skip Q1, proceed directly to Step-1b
 }
@@ -156,6 +160,16 @@ if (!isUnattended) {
       multiSelect: true
     },
     {
+      question: "Run special analysis on existing docs?",
+      header: "Analysis",
+      options: [
+        { label: "None (Recommended)", description: "Skip — focus on gap filling" },
+        { label: "Refine", description: "Improve UX/DX quality of existing docs" },
+        { label: "Verify", description: "Check doc claims against source code" }
+      ],
+      multiSelect: true
+    },
+    {
       question: "What to do with gaps?",
       header: "Mode",
       options: [
@@ -168,6 +182,12 @@ if (!isUnattended) {
 
   // Map selections to config
   config.scopes = mapScopeGroups(answers["Areas"])
+  // Add special scopes if selected (refine/verify)
+  const analysis = answers["Analysis"]
+  if (analysis && !analysis.includes("None")) {
+    if (analysis.includes("Refine")) config.scopes.push("refine")
+    if (analysis.includes("Verify")) config.scopes.push("verify")
+  }
   config.mode = answers["Mode"].includes("Update") ? "update" : "generate"
 }
 ```
@@ -354,9 +374,104 @@ Project Type: {projectType} | Mode: {config.mode}
 ### Validation
 ```
 [x] Gap analysis complete
+→ If scope=refine: Step-2-refine
+→ If scope=verify: Step-2-verify
 → If --preview: Skip to Step-5
 → If gapCount === 0: Skip to Step-5
 → Check Plan Review triggers → Step-3 or Step-4
+```
+
+---
+
+## Step-2-refine: Documentation Refinement [SCOPE=refine]
+
+**Purpose:** Analyze existing docs for UX/DX quality and improve them.
+
+```javascript
+if (config.scopes.includes("refine")) {
+  refineResults = Task("cco-agent-analyze", `
+    scope: docs
+    mode: refine
+
+    Analyze existing documentation for UX/DX quality:
+
+    **Criteria:**
+    - **Scannability**: Headers, bullets, tables used effectively
+    - **Clarity**: No ambiguity, 8th grade reading level
+    - **Redundancy**: No repeated content across files
+    - **Overengineering**: No unnecessary complexity in explanations
+    - **DX quality**: Commands copy-pasteable, examples runnable
+    - **Conciseness**: Every sentence earns its place
+
+    For each doc file found, report:
+    - scannability score (0-100)
+    - clarity score (0-100)
+    - redundancy instances
+    - overengineered sections
+    - specific improvement suggestions
+
+    Return: { findings: [...], metrics: { avgScannability, avgClarity, redundancyCount } }
+  `, { model: "haiku" })
+
+  // Convert refine findings to generation tasks
+  toGenerate = refineResults.findings
+    .filter(f => f.severity !== "LOW")
+    .map(f => ({
+      scope: "refine",
+      file: f.location.split(":")[0],
+      action: "refine",
+      improvements: f.recommendation
+    }))
+
+  // → Skip gap-based generation, proceed to Step-3 with refine tasks
+}
+```
+
+---
+
+## Step-2-verify: Documentation Verification [SCOPE=verify]
+
+**Purpose:** Verify every claim in documentation against source code.
+
+```javascript
+if (config.scopes.includes("verify")) {
+  verifyResults = Task("cco-agent-analyze", `
+    scope: docs
+    mode: verify
+
+    Cross-reference documentation claims against source code:
+
+    **Verification targets:**
+    - Command flags (--auto, --preview, etc.) match actual arg parsing
+    - Step counts in architecture tables match actual step sections
+    - Scope names match agent definitions
+    - Agent names match actual agent files
+    - File paths referenced in docs actually exist
+    - Config keys match actual configuration schema
+    - Example commands are syntactically valid
+    - Version numbers are consistent
+
+    For each claim, report:
+    - claim: what the doc says
+    - source: where in code to verify
+    - status: VERIFIED | MISMATCH | UNVERIFIABLE
+    - detail: specific mismatch if found
+
+    Return: { findings: [...], metrics: { verified, mismatched, unverifiable, total } }
+  `, { model: "haiku" })
+
+  // Show verification report
+  // Mismatches become fix tasks for Step-4
+  toGenerate = verifyResults.findings
+    .filter(f => f.status === "MISMATCH")
+    .map(f => ({
+      scope: "verify",
+      file: f.location.split(":")[0],
+      action: "fix-claim",
+      claim: f.claim,
+      correction: f.detail
+    }))
+}
 ```
 
 ---
@@ -511,7 +626,7 @@ generateResults = Task("cco-agent-apply", `
   Return: {
     generated: [{ scope, file, linesWritten }],
     failed: [{ scope, file, reason }],
-    accounting: { applied, failed, deferred, total }
+    accounting: { applied, failed, needs_approval, total }
   }
 `, { model: "opus" })
 ```
@@ -523,10 +638,10 @@ generateResults = Task("cco-agent-apply", `
 ### Calculate Results
 
 ```javascript
-const results = generateResults || { accounting: { applied: 0, failed: 0, deferred: 0, total: 0 } }
+const results = generateResults || { accounting: { applied: 0, failed: 0, needs_approval: 0, total: 0 } }
 const applied = results.accounting.applied
 const failed = results.accounting.failed
-const deferred = results.accounting.deferred
+const needs_approval = results.accounting.needs_approval
 ```
 
 ### Interactive Mode Output
@@ -553,7 +668,7 @@ const deferred = results.accounting.deferred
 |--------|-------|
 | Applied | {applied} |
 | Failed | {failed} |
-| Deferred | {deferred} |
+| Needs Approval | {needs_approval} |
 | Total | {toGenerate?.length || 0} |
 
 Status: {failed > 0 ? "WARN" : "OK"}
@@ -564,7 +679,7 @@ Run \`git diff\` to review generated documentation.
 ### Unattended Mode Output (--auto)
 
 ```
-cco-docs: {OK|WARN|FAIL} | Applied: {applied} | Failed: {failed} | Deferred: {deferred} | Total: {toGenerate?.length || 0}
+cco-docs: {OK|WARN|FAIL} | Applied: {applied} | Failed: {failed} | Needs Approval: {needs_approval} | Total: {toGenerate?.length || 0}
 ```
 
 ---
@@ -594,7 +709,7 @@ cco-docs: {OK|WARN|FAIL} | Applied: {applied} | Failed: {failed} | Deferred: {de
   "accounting": {
     "applied": 3,
     "failed": 0,
-    "deferred": 0,
+    "needs_approval": 0,
     "total": 3
   }
 }
@@ -716,7 +831,7 @@ When profile is minimal or empty (new project):
 
 ## Accounting
 
-**Invariant:** `applied + failed + deferred = total` (count documents, not sections)
+**Invariant:** `applied + failed + needs_approval = total` (count documents, not sections)
 
 **See Core Rules:** `Accounting` for status definitions and no-declined policy.
 
@@ -737,4 +852,4 @@ When profile is minimal or empty (new project):
 6. **Copy-pasteable** - Commands should work when pasted
 7. **No filler** - Skip "This document explains..."
 8. **Examples > prose** - Show, don't tell
-9. **Accounting invariant** - applied + failed + deferred = total always holds
+9. **Accounting invariant** - applied + failed + needs_approval = total always holds

@@ -160,6 +160,12 @@ test:   pytest|jest|go test|cargo test (check manifest test scripts)
 build:  docker|npm run build|go build (check Dockerfile, package.json scripts)
 ```
 
+**CRITICAL — Command Extraction Priority:**
+1. Read manifest `scripts` field FIRST (package.json → scripts.test, scripts.lint, etc.)
+2. Use the EXACT script runner from the manifest (npm/bun/yarn/pnpm — detect from lockfile)
+3. Only infer from devDependencies if no matching script exists
+4. NEVER substitute tools — if `scripts.test = "bun run tests/verify.mjs"`, emit that, not `npx tsx`
+
 Return detected commands in profile format.
 
 **Storage:** Profile `.claude/rules/cco-profile.md` → `commands:` section
@@ -216,7 +222,6 @@ Return detected commands in profile format.
 
 | Scope | Strategy | Use Case |
 |--------|----------|----------|
-| scan | Dashboard metrics from all scopes | Quick health check |
 | docs | Documentation gap analysis | Missing/outdated docs |
 
 **CRITICAL:** All scopes fully analyzed. Speed from parallelization, not skipping.
@@ -823,9 +828,6 @@ FUN-18: missing_bulk_operations: No bulk processing endpoint or batch function
 
 **Shared Scopes** (used by multiple commands):
 
-### scan
-Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
-
 ### docs (scope=docs)
 
 Documentation gap analysis. Detects missing/incomplete documentation based on project type.
@@ -981,7 +983,13 @@ const stack = {
 // Step 4: Score maturity
 const maturity = await scoreMaturity()  // 0-6 score → prototype/active/stable/legacy
 
-// Step 5: Extract commands
+// Step 5: Extract commands — ALWAYS prefer manifest scripts over inference
+// Priority: package.json "scripts" > pyproject.toml [tool.*] > Makefile targets > inference
+// For each command (format, lint, test, build, type):
+//   1. Read manifest scripts field (e.g., package.json → scripts.test, scripts.lint)
+//   2. Use the EXACT script runner from manifest (npm run, bun run, yarn, pnpm)
+//   3. Only infer from devDependencies if no script exists
+//   4. NEVER substitute tools — if scripts.test = "bun run tests/x.mjs", use that, not "npx tsx"
 const commands = extractCommands(manifests)  // format, lint, test, build, type
 
 // Step 6: Detect patterns

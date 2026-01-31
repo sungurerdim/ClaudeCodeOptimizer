@@ -100,7 +100,7 @@ Need changes?
 
 | Scope  | Purpose                              |
 |--------|--------------------------------------|
-| `scan` | Dashboard metrics (all categories)   |
+| `tune` | Project detection for `/cco:tune`    |
 
 ### Output
 
@@ -114,7 +114,7 @@ Returns structured JSON with:
 
 ## cco-agent-apply
 
-**Purpose:** Batch write operations with verification and accounting. **Also handles project configuration.**
+**Purpose:** Batch write operations with verification and accounting.
 
 **TRIGGERS:** `apply fixes`, `fix all`, `batch edit`, `generate config`, `export rules`
 
@@ -125,41 +125,17 @@ Returns structured JSON with:
 | Apply 3+ fixes at once | Single-file edit → Edit |
 | Need post-change verification | Simple file create → Write |
 | Fix cascading errors | Quick one-off edit → Edit |
-| Project tuning (scope=tune) | - |
 | Track applied/failed counts | - |
 
 **Advantages over Edit/Write:**
 - Dirty state check (pre-op `git status`)
 - Post-change verification (runs lint/type/test)
 - Cascade handling (fixes errors caused by fixes)
-- Accounting (applied + failed + deferred = total)
+- Accounting (applied + failed + needs_approval = total)
 - No deferrals mode (zero agent-initiated skips)
 - Batch efficiency (groups by file)
 
 **Note:** Rollback via git (`git checkout`). Agent warns about dirty state, doesn't create checkpoints.
-
-### Tune Scope
-
-Handles project detection and rule generation:
-
-**Execution Modes:**
-
-| Mode | When Used | Behavior |
-|------|-----------|----------|
-| Interactive | Default | Detects + asks questions + generates |
-| Auto | --auto flag or hook trigger | Detects + uses defaults + generates |
-
-**Interactive Mode Flow:**
-1. Auto-detect from manifest/code/config/docs (priority order)
-2. Ask user questions via AskUserQuestion (type, team, data, maturity)
-3. Generate cco-profile.md with YAML frontmatter
-4. Copy rule files from plugin to `.claude/rules/`
-
-**Output Files:**
-- `cco-profile.md` - Project metadata (YAML)
-- `cco-{language}.md` - Language-specific rules
-- `cco-{framework}.md` - Framework-specific rules
-- `cco-{operation}.md` - Operations rules
 
 ### Fix Operations
 
@@ -183,7 +159,7 @@ After each change:
 
 - Interactive Mode: Complex changes prompt user for approval
 - Unattended Mode (fixAll: true): ALL findings fixed, no questions
-- Accounting: `applied + failed + deferred = total` (no AI declines allowed)
+- Accounting: `applied + failed + needs_approval = total` (no AI declines allowed)
 
 ### Status Definitions
 
@@ -191,7 +167,7 @@ After each change:
 |------------|--------------------------|
 | `applied`  | Applied and verified     |
 | `failed`   | Technical impossibility (reason required) |
-| `deferred` | Architectural change beyond single-file scope (reason required) |
+| `needs_approval` | Architectural change beyond single-file scope (reason required) |
 
 ---
 
@@ -223,6 +199,7 @@ After each change:
 
 | Scope        | Returns                               | Use Case                |
 |--------------|---------------------------------------|-------------------------|
+| `local`      | Codebase search results               | Search code before web  |
 | `search`     | Ranked sources with T1-T6 scores      | Initial discovery       |
 | `analyze`    | Deep analysis, contradictions         | Follow-up on top sources |
 | `synthesize` | Consolidated recommendation           | Final answer            |
@@ -260,7 +237,7 @@ After each change:
 | `/cco:research`  | -                                                  | No             | full         |
 | `/cco:preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
 
-**Configuration:** `/cco:tune` uses cco-agent-apply with `scope=tune` to generate project rules.
+**Configuration:** `/cco:tune` uses cco-agent-analyze with `scope=tune` for detection, then cco-agent-apply for file writes.
 
 ---
 
