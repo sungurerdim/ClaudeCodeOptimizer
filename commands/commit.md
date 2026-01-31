@@ -64,11 +64,13 @@ changedFiles = Bash("git diff --name-only HEAD").split('\n').filter(f => f.trim(
 // Categorize files
 codeFiles = changedFiles.filter(f => f.match(/\.(py|js|ts|go|rs|java|rb|php|c|cpp|h)$/))
 testFiles = changedFiles.filter(f => f.match(/test[_.]|_test\.|\.test\.|spec\./i))
-docFiles = changedFiles.filter(f => f.match(/\.(md|txt|rst|adoc)$/))
-configFiles = changedFiles.filter(f => f.match(/\.(json|yaml|yml|toml|ini|cfg)$/))
+testedContentFiles = changedFiles.filter(f => f.match(/^(commands|agents|hooks|rules)\//))
+docFiles = changedFiles.filter(f => f.match(/\.(md|txt|rst|adoc)$/) && !testedContentFiles.includes(f))
+configFiles = changedFiles.filter(f => f.match(/\.(json|yaml|yml|toml|ini|cfg)$/) && !testedContentFiles.includes(f))
 
 hasCodeChanges = codeFiles.length > 0
 hasTestChanges = testFiles.length > 0
+hasTestedContent = testedContentFiles.length > 0
 ```
 
 ### 1.3: Quality Gates [PARALLEL + CONDITIONAL]
@@ -89,11 +91,11 @@ if (hasCodeChanges) {
   typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
 }
 
-// Phase 3: Tests (CONDITIONAL - skip if only docs/config changed)
-if (hasCodeChanges || hasTestChanges) {
+// Phase 3: Tests (CONDITIONAL - skip if only pure docs/config changed)
+if (hasCodeChanges || hasTestChanges || hasTestedContent) {
   testTask = Bash("{test_command} 2>&1", { run_in_background: true })
 } else {
-  // Skip tests for doc-only or config-only changes
+  // Skip tests for pure doc-only or config-only changes (e.g. README, .editorconfig)
   testTask = null
 }
 ```
@@ -105,8 +107,9 @@ if (hasCodeChanges || hasTestChanges) {
 |---------------|------------|
 | Code (.py, .js, etc.) | Yes |
 | Tests (test_*, *_test.*) | Yes |
-| Docs only (.md) | No |
-| Config only (.json, .yaml) | No |
+| Tested content (commands/, agents/, hooks/, rules/) | Yes |
+| Pure docs only (README.md, docs/*.md) | No |
+| Pure config only (.editorconfig, root .json/.yaml) | No |
 | Mixed | Yes |
 
 ### 1.4: Collect Gate Results
