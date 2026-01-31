@@ -33,10 +33,17 @@ claude plugin install cco@ClaudeCodeOptimizer
 /plugin marketplace update ClaudeCodeOptimizer
 ```
 
+```
+/plugin update cco@ClaudeCodeOptimizer
+```
+
 ### Uninstall
 
 ```
 /plugin uninstall cco@ClaudeCodeOptimizer
+```
+
+```
 /plugin marketplace remove ClaudeCodeOptimizer
 ```
 
@@ -75,7 +82,7 @@ Detected:
 └── Type: API Service
 
 Generated rules in .claude/rules/:
-├── cco-profile.md (YAML project metadata)
+├── cco-profile.md (project metadata)
 ├── cco-python.md (language best practices)
 ├── cco-backend.md (API patterns)
 └── cco-testing.md (test standards)
@@ -83,10 +90,10 @@ Generated rules in .claude/rules/:
 
 </details>
 
-### Step 2: Quick Wins (5 min)
+### Step 2: Quick Wins
 
 ```
-/cco:optimize --quick
+/cco:optimize
 ```
 
 Auto-fixes safe issues:
@@ -95,15 +102,15 @@ Auto-fixes safe issues:
 - Simple security fixes
 - Formatting issues
 
-**Risky changes** (auth, schema, API) will ask for approval.
+**Risky changes** (auth, schema, API) will ask for approval. Use `--auto` for unattended mode or `--scope=security` for a specific scope.
 
 ### Step 3: Architecture Check (Optional)
 
 ```
-/cco:align --quick
+/cco:align
 ```
 
-Shows gap analysis between current state and ideal architecture.
+Shows gap analysis between current state and ideal architecture. Use `--preview` for analysis without changes.
 
 ---
 
@@ -123,12 +130,14 @@ Injected automatically at session start via hook. These are **enforceable constr
 |----------|-----------|
 | **Foundation** | Uncertainty Protocol (stop & ask), Complexity Limits (method ≤50 lines), Change Scope (only requested changes) |
 | **Safety** | Security Violations (no secrets in source, no bare except, no eval), Validation Boundaries |
-| **Workflow** | Read-Before-Edit (must read before editing), Accounting (applied + failed + deferred = total) |
+| **Workflow** | Read-Before-Edit (must read before editing), Accounting (applied + failed + needs_approval = total) |
 
 **Hard Limits (exceeding = STOP):**
 - Cyclomatic complexity ≤ 15
 - Method lines ≤ 50
+- File lines ≤ 500
 - Nesting depth ≤ 3
+- Parameters ≤ 4
 
 These apply to **all projects** automatically and cannot be overridden.
 

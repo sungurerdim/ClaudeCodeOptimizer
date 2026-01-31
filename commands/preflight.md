@@ -28,8 +28,8 @@ PREFLIGHT
     |       (Bash background, started FIRST) │
     |                                        │
     +-- [Sub-commands] via Skill ────────────┤
-    |       +-- Skill("optimize", "--auto")  │
-    |       +-- Skill("align", "--auto")     │
+    |       +-- Skill("cco:optimize", "--auto")  │
+    |       +-- Skill("cco:align", "--auto")     │
     |                                        │
     +-- [Changelog] ─────────────────────────┘
             Commit classification, version
@@ -69,7 +69,7 @@ CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's
 
 ```javascript
 // Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("tune", "--preview")
+const tuneResult = await Skill("cco:tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   console.log("CCO setup skipped. Run /cco:tune when ready.")
@@ -143,7 +143,7 @@ When `--auto` or user selects "Full Fix":
 - **Zero deferrals** - No "future iteration", "lower priority", "recommend manual"
 - **Zero skips** - Every finding fixed NOW, no exceptions
 - **Only technical failures** - File not found, parse error, permission denied
-- Final accounting: `applied + failed + deferred = total` (no AI declines allowed)
+- Final accounting: `applied + failed + needs_approval = total` (no AI declines allowed)
 
 **See Core Rules:** `No Deferrals Policy` for forbidden responses and valid failure reasons.
 
@@ -303,41 +303,34 @@ depResults = Task("cco-agent-research", `
 > build command (unique to release). Unlike /cco:commit (conditional on changed files),
 > preflight runs comprehensive release verification on full project.
 
-**CRITICAL:** Launch Bash verification in background FIRST, then Skill calls.
-All run concurrently: Bash tasks in background while Skill calls execute.
+**Pattern:** Background Bash runs concurrently with Skill calls. Collect all results before any output.
 
 ```javascript
-// Step-2a: Launch verification in background FIRST
-// Commands from profile (detected by /cco:tune) - FULL PROJECT
+// Step-2a: Background verification (runs during Skill calls)
 formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
 lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
 typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
 testTask = Bash("{test_command} 2>&1", { run_in_background: true })
 buildTask = Bash("{build_command} 2>&1", { run_in_background: true })
 
-// Store task IDs for later collection via TaskOutput
-verificationTasks = {
-  format: formatTask.id,
-  lint: lintTask.id,
-  type: typeTask.id,
-  test: testTask.id,
-  build: buildTask.id
-}
+// Step-2b: Skill calls (synchronous — background Bash runs concurrently)
+optimizeResults = Skill("cco:optimize", "--auto")
+alignResults = Skill("cco:align", "--auto")
 
-// Step-2b: Delegate to sub-commands via Skill (--auto = unattended, full scope)
-optimizeResults = Skill("optimize", "--auto")
-alignResults = Skill("align", "--auto")
-
-// At this point:
-// - optimizeResults and alignResults are available (Skill calls completed)
-// - Background Bash tasks may still be running (collected in Step-4 via TaskOutput)
+// Step-2c: Collect ALL background results before proceeding
+formatResults = await TaskOutput(formatTask.id)
+lintResults = await TaskOutput(lintTask.id)
+typeResults = await TaskOutput(typeTask.id)
+testResults = await TaskOutput(testTask.id)
+buildResults = await TaskOutput(buildTask.id)
+markersResult = await TaskOutput(markersTask.id)
+commitsResult = await TaskOutput(commitsTask.id)
 ```
 
 ### Validation
 ```
-[x] Background Bash verification launched (Step-2a)
-[x] Both Skill calls completed (Step-2b)
-→ Background Bash results collected in Step-4 via TaskOutput
+[x] Skill calls completed
+[x] All background results collected via TaskOutput
 → Proceed to Step-3
 ```
 
@@ -350,7 +343,7 @@ alignResults = Skill("align", "--auto")
 ### 4.1: Classify Commits
 
 ```javascript
-commits = await TaskOutput(commitsTask.id)
+commits = commitsResult  // Already collected in Step-2b
 
 classified = {
   breaking: commits.filter(c => c.match(/BREAKING/i)),
@@ -435,11 +428,11 @@ if (planMode && !skipPlan) {
 
 ### Sub-command Results Summary
 
-| Command | Applied | Failed | Deferred | Key Changes |
+| Command | Applied | Failed | Needs Approval | Key Changes |
 |---------|---------|--------|----------|-------------|
-| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.deferred} | {optimizeKeyChanges} |
-| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignResults.accounting.deferred} | {alignKeyChanges} |
-| **Total** | **{totalApplied}** | **{totalFailed}** | **{totalDeferred}** | |
+| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.needs_approval} | {optimizeKeyChanges} |
+| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignResults.accounting.needs_approval} | {alignKeyChanges} |
+| **Total** | **{totalApplied}** | **{totalFailed}** | **{totalNeedsApproval}** | |
 
 ### Verification Results
 
@@ -544,14 +537,7 @@ switch (planDecision) {
 // optimizeResults, alignResults - set from Skill calls in Step-2b
 // depResults - set from synchronous Task call in Step-1b
 
-// Bash background results via TaskOutput (launched in Step-1b and Step-2a)
-formatResults = await TaskOutput(verificationTasks.format)
-lintResults = await TaskOutput(verificationTasks.lint)
-typeResults = await TaskOutput(verificationTasks.type)
-testResults = await TaskOutput(verificationTasks.test)
-buildResults = await TaskOutput(verificationTasks.build)
-markersResult = await TaskOutput(markersTask.id)
-// Note: commitsTask already processed in Step-3
+// All background results collected in Step-2c
 
 // Check if format made changes
 formatChanged = formatResults.stdout?.includes("reformatted") || formatResults.stdout?.includes("fixed")
@@ -579,8 +565,8 @@ hasBlockers = allBlockers.length > 0
 // Calculate combined accounting
 totalApplied = (optimizeResults.accounting?.applied || 0) + (alignResults.accounting?.applied || 0)
 totalFailed = (optimizeResults.accounting?.failed || 0) + (alignResults.accounting?.failed || 0)
-totalDeferred = (optimizeResults.accounting?.deferred || 0) + (alignResults.accounting?.deferred || 0)
-totalFindings = totalApplied + totalFailed + totalDeferred
+totalNeedsApproval = (optimizeResults.accounting?.needs_approval || 0) + (alignResults.accounting?.needs_approval || 0)
+totalFindings = totalApplied + totalFailed + totalNeedsApproval
 ```
 
 ### Results Display [MANDATORY]
@@ -629,11 +615,11 @@ totalFindings = totalApplied + totalFailed + totalDeferred
 ```json
 {
   "status": "OK|WARN|BLOCKED",
-  "summary": "Applied 8, Failed 0, Deferred 0, Blockers 0, Version v1.2.0",
+  "summary": "Applied 8, Failed 0, Needs Approval 0, Blockers 0, Version v1.2.0",
   "data": {
-    "accounting": { "applied": 8, "failed": 0, "deferred": 0, "total": 8 },
-    "optimize": { "applied": 5, "failed": 0, "deferred": 0 },
-    "align": { "applied": 3, "failed": 0, "deferred": 0 },
+    "accounting": { "applied": 8, "failed": 0, "needs_approval": 0, "total": 8 },
+    "optimize": { "applied": 5, "failed": 0, "needs_approval": 0 },
+    "align": { "applied": 3, "failed": 0, "needs_approval": 0 },
     "blockers": [],
     "warnings": ["PRE-04: TODO markers found"],
     "version": { "current": "1.1.0", "suggested": "1.2.0", "bump": "MINOR" }
@@ -696,9 +682,9 @@ Version ${suggestedVersion} has been tagged.
 ```markdown
 ## Preflight Complete
 
-Status: {hasBlockers ? "BLOCKED" : (allWarnings.length > 0 ? "WARN" : "OK")} | Applied: {totalApplied} | Failed: {totalFailed} | Deferred: {totalDeferred} | Total: {totalFindings}
+Status: {hasBlockers ? "BLOCKED" : (allWarnings.length > 0 ? "WARN" : "OK")} | Applied: {totalApplied} | Failed: {totalFailed} | Deferred: {totalNeedsApproval} | Total: {totalFindings}
 
-**Invariant:** applied + failed + deferred = total
+**Invariant:** applied + failed + needs_approval = total
 
 Mode: {config.releaseMode}
 ```
@@ -816,12 +802,12 @@ Consensus: Both agree risk → BLOCKER. Only dev concern → WARNING
 
 ## Accounting
 
-**Invariant:** `applied + failed + deferred = total` (count findings, not locations)
+**Invariant:** `applied + failed + needs_approval = total` (count findings, not locations)
 
-**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason, or "deferred" for multi-file architectural changes, is acceptable.
+**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason, or "needs_approval" for multi-file architectural changes, is acceptable.
 
 Combined from both sub-commands:
 - totalApplied = optimize.applied + align.applied
 - totalFailed = optimize.failed + align.failed
-- totalDeferred = optimize.deferred + align.deferred
-- totalFindings = totalApplied + totalFailed + totalDeferred
+- totalNeedsApproval = optimize.needs_approval + align.needs_approval
+- totalFindings = totalApplied + totalFailed + totalNeedsApproval

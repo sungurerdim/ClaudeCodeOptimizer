@@ -6,7 +6,7 @@
 
 | Category | Files | Location | Loading |
 |----------|-------|----------|---------|
-| Core | 4 | Context (injected) | Always (SessionStart hook) |
+| Core | 4 | 3 injected + 1 reference | Always (SessionStart hook) |
 | Languages | 21 | `./.claude/rules/` | Per-project |
 | Frameworks | 8 | `./.claude/rules/` | Per-project |
 | Operations | 12 | `./.claude/rules/` | Per-project |
@@ -81,7 +81,7 @@ CCO leverages Claude Code's native rule loading — no custom loaders, no CLI wr
 
 ## Core Rules (4 files)
 
-*Injected into context on every session start via SessionStart hook.*
+*3 files (foundation, safety, workflow) injected into context via SessionStart hook. Thresholds is a reference file.*
 
 ### Foundation Rules [BLOCKER]
 
@@ -136,11 +136,11 @@ Execution patterns that enforce discipline:
 | **Task Completion** | No stopping early due to perceived limits. Every 20 steps: progress check |
 | **Severity Levels** | CRITICAL (security/crash) → HIGH (broken) → MEDIUM (suboptimal) → LOW (style) |
 | **No Deferrals** | In `--auto` mode: no "too complex", "might break", "consider later" — fix NOW |
-| **Accounting** | Every operation ends with: `Applied: N | Failed: M | Deferred: D | Total: N+M+D` |
+| **Accounting** | Every operation ends with: `Applied: N | Failed: M | Needs Approval: D | Total: N+M+D` |
 
-### Thresholds
+### Thresholds (Reference Only)
 
-**File:** `cco-thresholds.md`
+**File:** `cco-thresholds.md` — Not injected via hook, used as reference by agents.
 
 Documents all hardcoded thresholds with rationale and sources:
 - Complexity limits (cyclomatic, lines, nesting, parameters)

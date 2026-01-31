@@ -9,11 +9,11 @@ Detailed documentation for all CCO slash commands.
 | Command         | Purpose                                  | Model     | Steps |
 |-----------------|------------------------------------------|-----------|-------|
 | `/cco:tune`     | Configure CCO for this project           | **haiku** | 4     |
-| `/cco:optimize` | Security + Quality + Hygiene fixes       | **opus**  | 6     |
+| `/cco:optimize` | Security + Quality + Hygiene fixes       | **opus**  | 4     |
 | `/cco:align`    | Architecture gap analysis                | **opus**  | 5     |
 | `/cco:research` | Multi-source research with AI synthesis  | **opus**  | 5     |
-| `/cco:commit`   | Quality-gated atomic commits             | **opus**  | 4     |
-| `/cco:preflight`| Pre-release workflow orchestration       | **opus**  | 5     |
+| `/cco:commit`   | Quality-gated atomic commits             | **opus**  | 5     |
+| `/cco:preflight`| Pre-release workflow orchestration       | **opus**  | 4     |
 | `/cco:docs`     | Documentation gap analysis               | **opus**  | 5     |
 
 **Model Rationale:** Opus for coding commands (fewer errors), Haiku for configuration (fast).
@@ -78,7 +78,7 @@ Commands pre-collect context at execution start:
 
 - **Interactive Mode**: Complex changes prompt user for approval
 - **Unattended Mode (--auto)**: ALL findings fixed, no questions
-- **Accounting**: `applied + failed + deferred = total` (no AI declines allowed)
+- **Accounting**: `applied + failed + needs_approval = total` (no AI declines allowed)
 
 ---
 
@@ -99,10 +99,11 @@ Commands pre-collect context at execution start:
 | Step | Name      | Action                                      |
 |------|-----------|---------------------------------------------|
 | 1    | Validate  | Check existing profile                      |
-| 2    | Questions | Ask user preferences (8 questions, 2 rounds)|
-| 3    | Detect    | Analyze project stack via cco-agent-analyze |
-| 4    | Merge     | Combine answers + detection                 |
-| 5    | Write     | Create files via cco-agent-apply            |
+| 2    | Detect    | Analyze project stack via cco-agent-analyze |
+| 3    | Merge     | Combine detection + answers                 |
+| 4    | Write     | Create files via cco-agent-apply            |
+
+Detection runs BEFORE questions so detected values can be shown as "(Detected)" labels in the interactive flow. In auto mode, questions are skipped entirely.
 
 ### Interactive Questions (8 total)
 
@@ -159,16 +160,17 @@ Commands pre-collect context at execution start:
 
 ### Steps
 
-| Step | Name     | Action                                             |
-|------|----------|----------------------------------------------------|
-| 1    | Setup    | Q1: Combined settings (background analysis starts) |
-| 2    | Analyze  | Wait for background, show findings                 |
-| 3    | Auto-fix | Apply safe fixes (background)                      |
-| 4    | Approval | Q2: Approve remaining (conditional)                |
-| 5    | Apply    | Apply approved fixes                               |
-| 6    | Summary  | Show counts                                        |
+| Step | Name         | Action                                        |
+|------|--------------|-----------------------------------------------|
+| 1    | Setup        | Q1: Scopes + Intensity selection              |
+| 2    | Analyze      | Parallel scope analysis, show findings        |
+| 2.5  | Plan Review  | Show fix plan (mandatory when findings > 0)   |
+| 3    | Apply        | Apply fixes based on intensity                |
+| 4    | Summary      | Show counts                                   |
 
-### Scope Categories
+Plan Review is skipped in `--auto` mode or when 0 findings.
+
+### Scope Categories (10 Scopes, 105 Checks)
 
 | Scope          | Checks                                 |
 |----------------|----------------------------------------|
@@ -179,6 +181,9 @@ Commands pre-collect context at execution start:
 | Performance    | N+1, blocking I/O, missing caching     |
 | AI-Hygiene     | Hallucinated APIs, orphan abstractions |
 | Robustness     | Timeouts, retries, validation          |
+| Privacy        | PII exposure, data masking, consent    |
+| Doc-Sync       | README outdated, comment-code drift    |
+| Simplify       | Nested conditionals, god functions     |
 
 ---
 
@@ -199,21 +204,26 @@ Commands pre-collect context at execution start:
 
 | Step | Name            | Action                                              |
 |------|-----------------|-----------------------------------------------------|
-| 1    | Setup           | Q1: Focus + Intensity (background analysis starts)  |
-| 2    | Analysis        | Wait for results, show assessment                   |
-| 3    | Recommendations | Gap analysis with ideal metrics                     |
-| 4    | Apply           | Apply selected changes                              |
-| 5    | Summary         | Show results                                        |
+| 1a   | Setup           | Q1: Scope + Intensity selection                     |
+| 1b   | Analyze         | Parallel scope analysis                             |
+| 2    | Gap Analysis    | Current vs Ideal state comparison                   |
+| 3    | Recommendations | 80/20 prioritized findings                          |
+| 3.5  | Plan Review     | Architectural plan (mandatory when findings > 0)    |
+| 4    | Apply           | Apply recommendations                               |
+| 5    | Summary         | Show gap changes                                    |
 
-### Focus Areas
+Plan Review is skipped in `--auto` mode or when 0 findings.
 
-| Selection        | Agent Scope                                           |
-|------------------|-------------------------------------------------------|
-| Architecture     | Dependency graph, coupling, patterns, layers          |
-| Patterns         | SOLID, DRY, design patterns, consistency              |
-| Testing          | Test coverage, developer experience                   |
-| Maintainability  | Complexity, readability, naming                       |
-| AI-Architecture  | Over-engineering, drift, premature abstraction        |
+### Focus Areas (6 Scopes, 77 Checks)
+
+| Selection               | Agent Scope                                           |
+|-------------------------|-------------------------------------------------------|
+| Architecture            | Dependency graph, coupling, patterns, layers          |
+| Patterns                | SOLID, DRY, design patterns, consistency              |
+| Testing                 | Test coverage, developer experience                   |
+| Maintainability         | Complexity, readability, naming                       |
+| AI-Architecture         | Over-engineering, drift, premature abstraction        |
+| Functional-Completeness | CRUD coverage, pagination, edge cases, validation     |
 
 ### Gap Analysis
 
@@ -290,7 +300,8 @@ Compares current metrics to ideal targets:
 | 1    | Pre-checks | Conflicts check + parallel quality gates (background) |
 | 2    | Analyze    | Group changes atomically (while gates run)            |
 | 3    | Execute    | Create commits (direct, no approval)                  |
-| 4    | Summary    | Show results                                          |
+| 4    | Verify     | Confirm commits created via git log                   |
+| 5    | Summary    | Show results                                          |
 
 ### Quality Gates (Parallel)
 
@@ -330,13 +341,16 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Steps
 
-| Step | Name             | Action                                          |
-|------|------------------|-------------------------------------------------|
-| 1    | Pre-flight       | Release checks (parallel)                       |
-| 2    | Quality + Align  | Parallel: /cco:optimize + /cco:align (background)       |
-| 3    | Verification     | Background: test/build/lint                     |
-| 4    | Changelog        | Generate + suggest version (while tests run)    |
-| 5    | Decision         | Q1: Docs + Release decision                     |
+| Step | Name              | Action                                                 |
+|------|-------------------|--------------------------------------------------------|
+| 1a   | Settings          | Q1: Fix intensity selection                            |
+| 1b   | Pre-flight        | Git state, version sync, markers, deps (parallel)      |
+| 2    | Verify + Fix      | 2a: verify (bg Bash) + 2b: optimize+align (Skill)     |
+| 3    | Changelog         | Classify commits, suggest version, generate entry      |
+| 3.5  | Plan Review       | Combined release plan (conditional, when findings > 0) |
+| 4    | Release           | Tag/commit based on decision                           |
+
+Plan Review is skipped in `--auto` mode or when 0 findings + 0 blockers.
 
 ### Pre-flight Checks
 
@@ -375,13 +389,16 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Steps
 
-| Step | Name      | Action                                           |
-|------|-----------|--------------------------------------------------|
-| 1    | Setup     | Q1: Scope + Mode selection (background analysis) |
-| 2    | Analysis  | Scan existing docs, detect project type          |
-| 3    | Gap       | Compare ideal vs current                         |
-| 4    | Generate  | Create missing documentation                     |
-| 5    | Summary   | Show results                                     |
+| Step | Name         | Action                                           |
+|------|--------------|--------------------------------------------------|
+| 1a   | Scope        | Q1: Scope selection (parallel with analysis)     |
+| 1b   | Analysis     | Scan existing docs, detect project type          |
+| 2    | Gap          | Compare ideal vs current                         |
+| 3    | Plan Review  | Show generation plan (conditional)               |
+| 4    | Generate     | Create missing documentation                     |
+| 5    | Summary      | Show results                                     |
+
+Plan Review triggers when findings > 0, >3 documents to generate, or API scope selected. Skipped in `--auto` mode.
 
 ### Documentation Scopes
 
@@ -393,6 +410,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | user      | docs/user/*.md, USAGE.md        | End-user guides            |
 | ops       | docs/ops/*.md, DEPLOY.md        | Deployment, operations     |
 | changelog | CHANGELOG.md                    | Version history            |
+| refine    | Existing docs                   | UX/DX quality improvement  |
+| verify    | Existing docs                   | Verify claims vs source code |
 
 ### Ideal Docs by Project Type
 

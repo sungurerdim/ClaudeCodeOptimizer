@@ -223,7 +223,7 @@ commandsResults = Task("Explore", `
   2.1 Template compliance in commands/*.md:
       - Each command has Architecture table (| Step | Name | Action |)
       - Each command has Validation blocks with pass/fail criteria
-      - Fix commands report applied/failed/deferred accounting
+      - Fix commands report applied/failed/needs_approval accounting
   2.2 AskUserQuestion standards:
       - Zero plain text questions - all user interaction via AskUserQuestion tool
       - multiSelect: true used for batch selections
@@ -232,7 +232,7 @@ commandsResults = Task("Explore", `
   2.3 Fix workflow:
       - Commands follow: Analyze → Report → Approve → Apply → Verify
       - Severity order: CRITICAL → HIGH → MEDIUM → LOW
-      - Accounting invariant: applied + failed + deferred = total
+      - Accounting invariant: applied + failed + needs_approval = total
       - Quality Gates only in /cco:commit and /cco:preflight (NOT in /cco:optimize)
   2.4 Mode consistency:
       - --auto mode: zero AskUserQuestion calls, smart defaults
@@ -445,7 +445,7 @@ Cross-file terminology must match exactly:
 | Architecture table | Correct `\| Step \| Name \| Action \|` format | HIGH |
 | Validation blocks | Clear pass/fail criteria | MEDIUM |
 | Context check | Commands needing context verify it exists | HIGH |
-| Accounting | Fix commands report applied/failed/deferred | HIGH |
+| Accounting | Fix commands report applied/failed/needs_approval | HIGH |
 
 **NOT findings:** Simple commands, short commands without architecture tables.
 
@@ -471,7 +471,7 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 | Severity order | CRITICAL → HIGH → MEDIUM → LOW | MEDIUM |
 | Granular selection | User can select individual fixes | HIGH |
 | Before/after | Changes shown post-apply | MEDIUM |
-| Accounting invariant | applied + failed + deferred = total | HIGH |
+| Accounting invariant | applied + failed + needs_approval = total | HIGH |
 | Quality Gates | Only in /cco:commit and /cco:preflight (not /cco:optimize) | HIGH |
 
 ### 2.4 Mode Consistency
@@ -977,7 +977,7 @@ if (toApply.length > 0) {
     ${isFixAll ? `
     FIX-ALL MODE [MANDATORY]:
     Fix ALL items. Zero skips allowed.
-    Every item = `applied`, `failed` (with "Technical: [reason]"), or `deferred` (with "Deferred: [reason]").
+    Every item = `applied`, `failed` (with "Technical: [reason]"), or `needs_approval` (with "Needs-Approval: [reason]").
 
     FORBIDDEN RESPONSES (never use these as skip reasons):
     - "This is too complex" → Fix it
@@ -993,17 +993,17 @@ if (toApply.length > 0) {
     - Each fix = 1 item
 
     Return:
-    { applied: n, failed: n, deferred: n, total: n, details: [...] }
+    { applied: n, failed: n, needs_approval: n, total: n, details: [...] }
   `, { model: "opus" })
 
   // Verify accounting invariant
-  assert(applyResults.applied + applyResults.failed + applyResults.deferred === applyResults.total,
-    "Count mismatch: applied + failed + deferred must equal total")
+  assert(applyResults.applied + applyResults.failed + applyResults.needs_approval === applyResults.total,
+    "Count mismatch: applied + failed + needs_approval must equal total")
 }
 ```
 
 ### Accounting Invariant
-`applied + failed + deferred = total`
+`applied + failed + needs_approval = total`
 
 ---
 

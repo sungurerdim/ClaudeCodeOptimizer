@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero Global Pollution** — CCO never writes to `~/.claude/` or any global directory
 - **Context Injection** — Core rules injected via SessionStart hook, not file copying
 - **Safe Updates** — All rules use `cco-` prefix; your own rules are never touched
-- **Modular Rules** — 85 standards in 2 files → 44 focused rule files
+- **Modular Rules** — 85 standards in 2 files → 45 focused rule files
 
 ### Architecture Changes
 
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Command Changes** (v1 → v2):
 - `/cco-tune` → `/cco:tune`
-- `/cco-health` → removed (use `/cco:tune --check` instead)
+- `/cco-health` → removed (use `/cco:tune --preview` instead)
 - `/cco-generate` → `/cco:research`
 - `/cco-audit` + `/cco-optimize` → `/cco:optimize` (merged)
 - `/cco-review` + `/cco-refactor` → `/cco:align` (merged)
@@ -44,14 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organized structure** — Rules organized into `languages/`, `frameworks/`, `operations/`
 - **`/cco:preflight`** — NEW command for pre-release workflow with quality gates
 - **`cco-agent-research`** — NEW agent for external source research with reliability scoring (T1-T6)
-- **New analyze scopes** — `references`, `architecture`, `conventions`, `trends`
-- **Simplify scope** — `/cco:optimize` scope (SIM-01 to SIM-10) for code complexity reduction
+- **Simplify scope** — `/cco:optimize` scope (SIM-01 to SIM-11) for code complexity reduction
 - **`/cco:docs`** — NEW command for documentation gap analysis
 - **Confidence scoring** — 0-100 scale for findings with ≥80 threshold for auto-fix
 - **Phase gates** — Explicit checkpoints (GATE-1, GATE-2, etc.) in command workflows
 - **Parallel scope execution** — Multiple scope groups analyzed concurrently
 - **Standard output envelope** — Unified `{status, summary, data, error}` format across commands
-- **Test suite** — 58 tests covering commands, hooks, edge cases, and plugin structure
+- **Test suite** — 61 tests covering commands, hooks, edge cases, and plugin structure
 - **Permissions system** — Four levels (safe/balanced/permissive/full)
 - **Dynamic context injection** — Commands use real-time context at load time
 - **Tool restrictions** — `allowed-tools` frontmatter limits each command to declared tools
@@ -66,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rule files renamed** — All files now have `cco-` prefix
 - **Folder structure** — `rules/core/`, `rules/languages/`, `rules/frameworks/`, `rules/operations/`
 - **Claude Code 2.1.16+ compatibility** — Migrated from TodoWrite to task management system
-- **Model optimization** — Haiku for file operations, Opus reserved for code fixes
+- **Model optimization** — Haiku for analysis/research agents, Opus for apply agent and coding commands
 - **Model strategy** — Opus + Haiku only (no Sonnet)
 - **Commands streamlined** — Removed redundant explanations (~90 lines)
 - **Agent output mandatory** — `cco-agent-analyze` guarantees valid JSON with error field
@@ -89,8 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration
 
 ```bash
-# If upgrading from v1, reset your project config:
-/cco:tune --reset
+# If upgrading from v1, regenerate your project config:
+/cco:tune --update
 ```
 
 ---

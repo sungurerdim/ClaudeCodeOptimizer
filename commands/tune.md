@@ -63,7 +63,7 @@ model: haiku
 ## Step-1: Profile Validation + Before State
 
 <!-- NOTE: tune uses direct Read() for profile because it is the profile creator/updater,
-     not a consumer. Other commands delegate validation to tune via Skill("tune", "--preview"). -->
+     not a consumer. Other commands delegate validation to tune via Skill("cco:tune", "--preview"). -->
 
 ```javascript
 const profilePath = ".claude/rules/cco-profile.md"
@@ -580,6 +580,6 @@ The profile has 11 sections:
 Other commands call `--preview` at start:
 
 ```javascript
-const tuneResult = await Skill("tune", "--preview")
+const tuneResult = await Skill("cco:tune", "--preview")
 if (tuneResult.status === "skipped") return
 ```

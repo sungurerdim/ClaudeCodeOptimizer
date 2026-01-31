@@ -102,7 +102,7 @@ CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's
 
 ```javascript
 // Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("tune", "--preview")
+const tuneResult = await Skill("cco:tune", "--preview")
 
 if (tuneResult.status === "skipped") {
   console.log("CCO setup skipped. Run /cco:tune when ready.")
@@ -172,7 +172,7 @@ if (isUnattended) {
 | **PLAN** | 2.5 | Review | Show fix plan (mandatory when findings >0) | User approval |
 | **GATE-2** | - | Checkpoint | Approval received or skipped | → Apply |
 | **APPLY** | 3 | Fix | Apply fixes based on fix mode | Fixes verified |
-| **GATE-3** | - | Checkpoint | applied + failed + deferred = total | → Summary |
+| **GATE-3** | - | Checkpoint | applied + failed + needs_approval = total | → Summary |
 | **SUMMARY** | 4 | Report | Show counts | Done |
 
 **Execution Flow:** SETUP → ANALYZE → GATE-1 → [PLAN if triggered] → GATE-2 → APPLY → GATE-3 → SUMMARY
@@ -183,7 +183,7 @@ if (isUnattended) {
 |------|------|------|
 | GATE-1 (Post-Analysis) | findings is valid array | Analysis error or invalid structure |
 | GATE-2 (Post-Plan) | Approval received or plan skipped | User aborted |
-| GATE-3 (Post-Apply) | `applied + failed + deferred = total` | Accounting mismatch |
+| GATE-3 (Post-Apply) | `applied + failed + needs_approval = total` | Accounting mismatch |
 
 > **Note:** Quality Gates (format, lint, type, test) removed from optimize.
 > LNT and TYP scopes already analyze lint/type issues. Use `/cco:commit` for pre-commit gates.
@@ -595,7 +595,7 @@ switch (planDecision) {
 **Run fixes synchronously - Task tool returns results directly:**
 
 ```javascript
-let fixResults = { applied: 0, failed: 0, deferred: 0, total: 0 }
+let fixResults = { applied: 0, failed: 0, needs_approval: 0, total: 0 }
 
 if (config.action !== "Report only" && autoFixable.length > 0) {
   // Determine if unattended mode
@@ -612,7 +612,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
     ${isUnattendedMode ? `
     UNATTENDED MODE: Fix ALL items. No Deferrals Policy applies (see Core Rules).
-    Every item = applied, failed (Technical: reason), or deferred (Deferred: reason).
+    Every item = applied, failed (Technical: reason), or needs_approval (Needs-Approval: reason).
     ` : ""}
 
     CRITICAL - Counting:
@@ -621,7 +621,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     - Example: "Type ignore comments" with 3 locations = 1 finding
 
     Return accounting at FINDING level:
-    { applied: <findings_fixed>, failed: <findings_failed>, deferred: <findings_deferred>, total: <findings_attempted> }
+    { applied: <findings_fixed>, failed: <findings_failed>, needs_approval: <findings_needs_approval>, total: <findings_attempted> }
   `, { model: "opus" })  // No run_in_background - synchronous execution
 }
 ```
@@ -629,6 +629,60 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 ### Validation
 ```
 [x] All fixes applied based on fix mode
+→ Proceed to Step-3.5 (Approval) or Step-4 (Summary)
+```
+
+---
+
+## Step-3.5: Needs-Approval Review [CONDITIONAL]
+
+**Presents needs_approval items to user for decision. Skipped in --auto mode (all items attempted).**
+
+```javascript
+if (fixResults.needs_approval > 0 && !isUnattended) {
+  const needsApprovalItems = fixResults.details.filter(d => d.status === "needs_approval")
+
+  AskUserQuestion([{
+    question: `${needsApprovalItems.length} items need approval (architectural changes).`,
+    header: "Approval",
+    options: [
+      { label: "Fix All (Recommended)", description: "Apply all architectural changes" },
+      { label: "Skip", description: "Leave as-is" },
+      { label: "Review Each", description: "Approve individually" }
+    ],
+    multiSelect: false
+  }])
+
+  if (approvalDecision === "Fix All") {
+    approvalResults = Task("cco-agent-apply", `
+      fixes: ${JSON.stringify(needsApprovalItems)}
+      fixAll: true
+      Apply approved architectural changes.
+    `, { model: "opus" })
+    fixResults.applied += approvalResults.applied
+    fixResults.failed += approvalResults.failed
+    fixResults.needs_approval = 0
+  } else if (approvalDecision === "Review Each") {
+    for (const item of needsApprovalItems) {
+      AskUserQuestion([{
+        question: `[${item.id}] ${item.title}\nReason: ${item.reason}`,
+        header: "Fix?",
+        options: [
+          { label: "Apply", description: "Fix this item" },
+          { label: "Skip", description: "Leave as-is" }
+        ],
+        multiSelect: false
+      }])
+      // Apply or skip based on answer
+    }
+  }
+  // "Skip" → no action, needs_approval count stays
+}
+```
+
+### Validation
+```
+[x] Needs-approval items reviewed (or skipped in --auto)
 → Proceed to Step-4 (Summary)
 ```
 
@@ -644,7 +698,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 // - applied: successfully fixed
 // - failed: couldn't fix (technical reason required)
 //
-// Invariant: applied + failed + deferred = total
+// Invariant: applied + failed + needs_approval = total
 // NOTE: No "declined" category - AI has no option to decline. Fix, defer (architectural), or fail with reason.
 
 // fixResults already set in Step-3 (synchronous execution)
@@ -654,13 +708,13 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 finalCounts = {
   applied: fixResults.applied || 0,
   failed: fixResults.failed || 0,
-  deferred: fixResults.deferred || 0,
+  needs_approval: fixResults.needs_approval || 0,
   total: fixResults.total || 0
 }
 
 // Final verification - these MUST balance
-assert(finalCounts.applied + finalCounts.failed + finalCounts.deferred === finalCounts.total,
-  "Count mismatch: applied + failed + deferred must equal total")
+assert(finalCounts.applied + finalCounts.failed + finalCounts.needs_approval === finalCounts.total,
+  "Count mismatch: applied + failed + needs_approval must equal total")
 ```
 
 ### Unattended Mode Output [--auto]
@@ -670,7 +724,7 @@ assert(finalCounts.applied + finalCounts.failed + finalCounts.deferred === final
 ```javascript
 if (isUnattended) {
   const status = finalCounts.failed > 0 ? "WARN" : "OK"
-  console.log(`cco-optimize: ${status} | Applied: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Deferred: ${finalCounts.deferred} | Total: ${finalCounts.total}`)
+  console.log(`cco-optimize: ${status} | Applied: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Needs Approval: ${finalCounts.needs_approval} | Total: ${finalCounts.total}`)
   return
 }
 ```
@@ -685,7 +739,7 @@ let summary = `
 |--------|-------|
 | Applied | ${finalCounts.applied} |
 | Failed | ${finalCounts.failed} |
-| Deferred | ${finalCounts.deferred} |
+| Needs Approval | ${finalCounts.needs_approval} |
 | **Total** | **${finalCounts.total}** |
 
 Status: ${finalCounts.failed > 0 ? "WARN" : "OK"}
@@ -730,9 +784,9 @@ console.log(summary)
 ```json
 {
   "status": "OK|WARN|FAIL",
-  "summary": "Applied 5, Failed 0, Deferred 0, Total 5",
+  "summary": "Applied 5, Failed 0, Needs Approval 0, Total 5",
   "data": {
-    "accounting": { "applied": 5, "failed": 0, "deferred": 0, "total": 5 },
+    "accounting": { "applied": 5, "failed": 0, "needs_approval": 0, "total": 5 },
     "by_scope": { "security": 2, "hygiene": 3, "types": 0 },
     "by_severity": { "critical": 0, "high": 2, "medium": 3, "low": 0 },
     "blockers": []
@@ -746,7 +800,7 @@ console.log(summary)
 - `WARN`: failed > 0 but no CRITICAL
 - `FAIL`: any CRITICAL unfixed OR error != null
 
-**Accounting invariant:** `applied + failed + deferred = total`
+**Accounting invariant:** `applied + failed + needs_approval = total`
 
 **--auto mode:** Prints `summary` field only.
 
@@ -872,6 +926,6 @@ confidence = (patternMatch * 0.4) + (contextClarity * 0.3) +
 
 ## Accounting
 
-**Invariant:** `applied + failed + deferred = total` (count findings, not locations)
+**Invariant:** `applied + failed + needs_approval = total` (count findings, not locations)
 
 **See Core Rules:** `Accounting` for status definitions and no-declined policy.
