@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from conftest import ROOT
+from _paths import ROOT
 
 
 class TestPluginJson:
