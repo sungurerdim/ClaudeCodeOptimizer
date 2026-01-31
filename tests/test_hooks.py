@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -28,7 +29,7 @@ class TestHookJsonStructure:
     """Validate hook JSON file structure."""
 
     @pytest.fixture
-    def core_rules_json(self) -> dict:
+    def core_rules_json(self) -> dict[str, Any]:
         """Load core-rules.json content."""
         path = HOOKS_DIR / "core-rules.json"
         return json.loads(path.read_text(encoding="utf-8"))
@@ -56,13 +57,9 @@ class TestHookJsonStructure:
 
     def test_core_rules_json_structure(self, core_rules_json: dict) -> None:
         """core-rules.json must have hookSpecificOutput."""
-        assert "hookSpecificOutput" in core_rules_json, (
-            "core-rules.json missing hookSpecificOutput"
-        )
+        assert "hookSpecificOutput" in core_rules_json, "core-rules.json missing hookSpecificOutput"
         output = core_rules_json["hookSpecificOutput"]
-        assert output.get("hookEventName") == "SessionStart", (
-            "hookEventName should be SessionStart"
-        )
+        assert output.get("hookEventName") == "SessionStart", "hookEventName should be SessionStart"
         assert "additionalContext" in output, "Missing additionalContext"
 
 
@@ -178,18 +175,10 @@ class TestContentIntegrity:
 
     def test_tables_are_well_formed(self, additional_context: str) -> None:
         """Markdown tables should be well-formed."""
-        # Find table-like patterns (| col | col |)
-        table_lines = [
-            stripped
-            for line in additional_context.split("\n")
-            if (stripped := line.strip()).startswith("|")
-            and stripped.endswith("|")
-        ]
-        for line in table_lines:
-            # Each table row should have balanced pipes
-            # Count pipes (excluding escaped ones)
-            pipe_count = line.count("|")
-            assert pipe_count >= 2, f"Malformed table row: {line[:50]}..."
+        for line in additional_context.split("\n"):
+            stripped = line.strip()
+            if stripped.startswith("|") and stripped.endswith("|"):
+                assert stripped.count("|") >= 2, f"Malformed table row: {stripped[:50]}..."
 
     def test_code_blocks_are_closed(self, additional_context: str) -> None:
         """Code blocks should be properly closed."""
