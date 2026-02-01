@@ -75,7 +75,7 @@ Your rules (without `cco-` prefix) are never touched. CCO writes to `.claude/` (
 | [`/cco:preflight`](docs/commands.md#ccopreflight) | Pre-release verification |
 | [`/cco:docs`](docs/commands.md#ccodocs) | Documentation gap analysis |
 
-7 commands · 3 [specialized agents](docs/agents.md) · 45 [rules](docs/rules.md) (4 core + 21 languages + 8 frameworks + 12 operations)
+7 commands · 3 [specialized agents](docs/agents.md) · 45 [rule files](docs/rules.md) (4 core/30 rules · 21 language/121 rules · 8 framework/36 rules · 12 operation/66 rules)
 
 ---
 
