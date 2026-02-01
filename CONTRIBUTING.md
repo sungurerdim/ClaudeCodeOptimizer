@@ -42,9 +42,10 @@ Keep counts in sync when adding/removing files:
 
 ```bash
 # Verify counts match docs
-ls commands/*.md | wc -l    # Should match "Commands: 7"
-ls agents/*.md | wc -l       # Should match "Agents: 3"
-find rules -name "cco-*.md" | wc -l  # Should match "Rules: 45"
+ls commands/*.md | wc -l                    # Commands: 7
+ls agents/*.md | wc -l                       # Agents: 3
+find rules -name "cco-*.md" | wc -l         # Rule files: 45 (4 core/30 rules · 21 language/121 rules · 8 framework/36 rules · 12 operation/66 rules)
+grep -c '^## ' rules/**/*.md                # Rule count per file
 ```
 
 Update `README.md` and `docs/` if counts change.
