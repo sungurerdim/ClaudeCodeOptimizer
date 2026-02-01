@@ -62,36 +62,9 @@ model: opus
 
 ## Profile Requirement [CRITICAL]
 
-CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
+**See Tool Rules: Profile Validation.** Delegate to `/cco:tune --preview`, handle skip/error/success.
 
-**Sync with /cco:tune:** The profile's `documentation` section is populated by tune's detection phase. This includes:
-- 50+ documentation file patterns (README, API specs, CI/CD, etc.)
-- docs/ directory analysis
-- Critical missing docs based on project type
-
-This data is reused by docs command - no duplicate detection needed.
-
-<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
-
-**Check:** Delegate to `/cco:tune --preview` for profile validation:
-
-```javascript
-// Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("cco:tune", "--preview")
-
-if (tuneResult.status === "skipped") {
-  console.log("CCO setup skipped. Run /cco:tune when ready.")
-  return
-} else if (tuneResult.status === "error") {
-  console.error("Profile validation failed:", tuneResult.reason)
-  return
-}
-
-// Profile is now valid - continue with command
-// NOTE: Profile may be minimal for new projects - handle gracefully
-```
-
-**After tune completes → continue to Mode Detection**
+**Data source:** Docs command reads the `documentation` section from `.claude/rules/cco-profile.md` (populated by `/cco:tune`'s detection phase: file patterns, docs/ analysis, critical missing docs). No duplicate detection needed — profile is the single source.
 
 ---
 

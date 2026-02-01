@@ -76,17 +76,11 @@ A finding is **FIXABLE** if ALL conditions are met:
 
 ## Skip Patterns [CONSTRAINT]
 
-| Pattern | Reason |
-|---------|--------|
-| `# noqa`, `# intentional`, `# safe:` | Explicitly marked as intentional |
-| `_` prefixed variables | Intentional unused (convention) |
-| `TYPE_CHECKING` blocks | Type-only imports, not runtime |
-| `sys.platform`, `msvcrt`, `fcntl` | Platform-specific guards |
-| `fixtures/`, `testdata/`, `__snapshots__/` | Test data, not production code |
+**See Tool Rules: Skip Patterns.** Additionally for optimize: `sys.platform`, `msvcrt`, `fcntl` (platform-specific guards).
 
 ## Policies
 
-**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, Quality Thresholds, and Accounting invariant.
+**See Tool Rules:** No Deferrals, Accounting, Mode Detection, Execution Flow.
 
 ## Context
 
@@ -97,28 +91,7 @@ A finding is **FIXABLE** if ALL conditions are met:
 
 ## Profile Requirement [CRITICAL]
 
-<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
-
-CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
-
-**Check:** Delegate to `/cco:tune --preview` for profile validation:
-
-```javascript
-// Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("cco:tune", "--preview")
-
-if (tuneResult.status === "skipped") {
-  console.log("CCO setup skipped. Run /cco:tune when ready.")
-  return
-} else if (tuneResult.status === "error") {
-  console.error("Profile validation failed:", tuneResult.reason)
-  return
-}
-
-// Profile is now valid - continue with command
-```
-
-**After tune completes → continue to Mode Detection**
+**See Tool Rules: Profile Validation.** Delegate to `/cco:tune --preview`, handle skip/error/success.
 
 ## Mode Detection
 
@@ -851,7 +824,7 @@ console.log(summary)
 
 ### Model Strategy
 
-**See Core Rules:** `Model Strategy` for Opus/Haiku policy.
+Opus for orchestration/apply, Haiku for analysis agents.
 
 ### Scope Groups
 
@@ -891,7 +864,7 @@ Both commands use similar grouping strategy: security/privacy together, quality/
 
 ## Reasoning & Guards
 
-**See Core Rules:** `Reasoning`, `Anti-Overengineering Guard`, `Severity Levels` for shared patterns.
+**See Tool Rules:** Severity Levels, Plan Review, Confidence Scoring.
 
 **Optimize-specific Step-Back questions:**
 
@@ -906,42 +879,10 @@ Both commands use similar grouping strategy: security/privacy together, quality/
 
 ## Confidence Scoring
 
-Each finding includes a confidence score (0-100) indicating fix reliability.
-
-### Score Calculation
-
-| Factor | Weight | Criteria |
-|--------|--------|----------|
-| Pattern Match | 40% | How well does the issue match known patterns? |
-| Context Clarity | 30% | Is the surrounding code clear and unambiguous? |
-| Fix Determinism | 20% | Is there exactly one correct fix? |
-| Test Coverage | 10% | Are there tests that validate the fix? |
-
-```javascript
-confidence = (patternMatch * 0.4) + (contextClarity * 0.3) +
-             (fixDeterminism * 0.2) + (testCoverage * 0.1)
-```
-
-### Score Interpretation
-
-| Score | Level | Action |
-|-------|-------|--------|
-| 90-100 | Very High | Auto-fix without review |
-| 80-89 | High | Auto-fix, visible in diff |
-| 70-79 | Medium | Show in plan, recommend fix |
-| 60-69 | Low | Show in plan, ask approval |
-| <60 | Very Low | Report only, no auto-fix |
-
-### Threshold: ≥80
-
-- **"Apply Safe Only"** filters to confidence ≥80
-- Findings below 80 require explicit approval
-- CRITICAL severity bypasses confidence (always shown)
+**See Tool Rules: Confidence Scoring.** Threshold ≥80 for safe-only mode. CRITICAL bypasses confidence.
 
 ---
 
 ## Accounting
 
-**Invariant:** `applied + failed + needs_approval = total` (count findings, not locations)
-
-**See Core Rules:** `Accounting` for status definitions and no-declined policy.
+**See Tool Rules: Accounting.** Invariant: `applied + failed + needs_approval = total` (count findings, not locations).
