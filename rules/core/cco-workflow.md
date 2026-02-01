@@ -75,6 +75,8 @@ Changes needed?
 
 When `--auto` active, AI MUST attempt every fix.
 
+> `needs_approval` is not a deferral — it requires user consent for architectural decisions (API changes, file deletion, dependency changes). Technically solvable fixes are never deferred.
+
 **Forbidden reasons:**
 | Never Say | Do Instead |
 |-----------|------------|
