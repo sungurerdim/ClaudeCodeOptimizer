@@ -44,7 +44,7 @@ Keep counts in sync when adding/removing files:
 # Verify counts match docs
 ls commands/*.md | wc -l    # Should match "Commands: 7"
 ls agents/*.md | wc -l       # Should match "Agents: 3"
-find rules -name "cco-*.md" | wc -l  # Should match "Rules: 44"
+find rules -name "cco-*.md" | wc -l  # Should match "Rules: 45"
 ```
 
 Update `README.md` and `docs/` if counts change.
