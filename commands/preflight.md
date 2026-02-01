@@ -64,28 +64,7 @@ PREFLIGHT
 
 ## Profile Requirement [CRITICAL]
 
-CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
-
-<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
-
-**Check:** Delegate to `/cco:tune --preview` for profile validation:
-
-```javascript
-// Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("cco:tune", "--preview")
-
-if (tuneResult.status === "skipped") {
-  console.log("CCO setup skipped. Run /cco:tune when ready.")
-  return
-} else if (tuneResult.status === "error") {
-  console.error("Profile validation failed:", tuneResult.reason)
-  return
-}
-
-// Profile is now valid - continue with command
-```
-
-**After tune completes → continue to Step-0 (Mode Detection)**
+**See Tool Rules: Profile Validation.** Delegate to `/cco:tune --preview`, handle skip/error/success.
 
 ---
 
@@ -148,7 +127,7 @@ When `--auto` or user selects "Full Fix":
 - **Only technical failures** - File not found, parse error, permission denied
 - Final accounting: `applied + failed + needs_approval = total` (no AI declines allowed)
 
-**See Core Rules:** `No Deferrals Policy` for forbidden responses and valid failure reasons.
+**See Tool Rules:** No Deferrals, Accounting.
 
 ---
 
@@ -828,12 +807,4 @@ Consensus: Both agree risk → BLOCKER. Only dev concern → WARNING
 
 ## Accounting
 
-**Invariant:** `applied + failed + needs_approval = total` (count findings, not locations)
-
-**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason, or "needs_approval" for multi-file architectural changes, is acceptable.
-
-Combined from both sub-commands:
-- totalApplied = optimize.applied + align.applied
-- totalFailed = optimize.failed + align.failed
-- totalNeedsApproval = optimize.needs_approval + align.needs_approval
-- totalFindings = totalApplied + totalFailed + totalNeedsApproval
+**See Tool Rules: Accounting.** Combined from both sub-commands: totalApplied = optimize.applied + align.applied, etc.

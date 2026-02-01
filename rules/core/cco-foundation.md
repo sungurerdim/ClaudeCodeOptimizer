@@ -101,3 +101,5 @@ Before modifying shared code:
 Progress: `"Step 2/5: [action]..."`
 Summary: `"Changed 3 files, added 2 tests"`
 Errors: `"[SEVERITY] {what} in {file}:{line}"`
+
+> **Note:** This file is documentation. The active runtime rules are loaded from `hooks/core-rules.json` at session start, which includes Foundation Rules, Safety Rules, Workflow Rules, and Tool Rules.
