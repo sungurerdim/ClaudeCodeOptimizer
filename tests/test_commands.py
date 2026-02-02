@@ -392,12 +392,7 @@ class TestCommandModelPolicy:
     @staticmethod
     def _is_valid_sonnet_reference(line: str) -> bool:
         """Check if sonnet reference is valid (policy discussion, not actual usage)."""
-        return (
-            "sonnet" not in line
-            or "no sonnet" in line
-            or "policy" in line
-            or "only" in line
-        )
+        return "sonnet" not in line or "no sonnet" in line or "policy" in line or "only" in line
 
 
 class TestAllCommandsHaveAccountingInvariant:
