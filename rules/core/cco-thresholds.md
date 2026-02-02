@@ -256,7 +256,9 @@ def create_user(data: UserData):
 
 ---
 
-## Severity Classification
+## Severity Classification (Gap Analysis Only)
+
+> This classification is specific to metric deviations. For finding severity, see Workflow Rules → Severity Levels.
 
 ### HIGH Severity: >2x threshold deviation
 

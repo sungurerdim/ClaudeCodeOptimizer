@@ -1,16 +1,13 @@
-# CI workflow for Claude Code Plugin
-
 name: CI
 
 on:
   push:
     branches: [dev]
   pull_request:
-    branches: [dev]
+    branches: [dev, main]
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   validate:
@@ -21,56 +18,50 @@ jobs:
 
       - name: Validate plugin.json
         run: |
-          if [ ! -f ".claude-plugin/plugin.json" ]; then
-            echo "Error: .claude-plugin/plugin.json not found"
-            exit 1
-          fi
-          # Validate JSON syntax
           python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
-          echo "✓ plugin.json is valid"
+          echo "plugin.json is valid"
 
-      - name: Validate commands directory
+      - name: Validate directories
         run: |
-          if [ ! -d "commands" ]; then
-            echo "Error: commands/ directory not found"
-            exit 1
-          fi
-          count=$(ls -1 commands/*.md 2>/dev/null | wc -l)
-          echo "✓ Found $count command files"
-
-      - name: Validate agents directory
-        run: |
-          if [ ! -d "agents" ]; then
-            echo "Error: agents/ directory not found"
-            exit 1
-          fi
-          count=$(ls -1 agents/*.md 2>/dev/null | wc -l)
-          echo "✓ Found $count agent files"
-
-      - name: Validate rules directory structure
-        run: |
-          for subdir in core languages frameworks operations; do
-            if [ ! -d "rules/$subdir" ]; then
-              echo "Error: rules/$subdir directory not found"
+          for dir in commands agents rules/core rules/languages rules/frameworks rules/operations; do
+            if [ ! -d "$dir" ]; then
+              echo "Error: $dir not found"
               exit 1
             fi
           done
-          count=$(find rules -name "cco-*.md" -type f | wc -l)
-          echo "✓ Found $count rule files"
-          if [ "$count" -lt 1 ]; then
-            echo "Error: No rule files found"
-            exit 1
-          fi
+          echo "All directories exist"
 
-      - name: Validate core rules exist
+      - name: Validate core rules
         run: |
           for rule in cco-foundation.md cco-safety.md cco-workflow.md; do
             if [ ! -f "rules/core/$rule" ]; then
-              echo "Error: Required rule rules/core/$rule not found"
+              echo "Error: rules/core/$rule not found"
               exit 1
             fi
           done
-          echo "✓ Core rules exist"
+
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install ruff pyright pytest pyyaml
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Type check
+        run: pyright tests/
+        continue-on-error: true
 
   test:
     name: Run Tests

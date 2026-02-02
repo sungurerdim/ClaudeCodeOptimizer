@@ -11,21 +11,6 @@ Comprehensive codebase analysis with severity scoring. Returns structured JSON.
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
 
-## Calling This Agent [CRITICAL]
-
-**Always call synchronously (no `run_in_background`):**
-
-```javascript
-// CORRECT - synchronous, results returned directly
-results = Task("cco-agent-analyze", prompt, { model: "haiku" })
-
-// WRONG - background mode breaks result retrieval for Task (agent) calls
-// Do NOT use: Task(..., { run_in_background: true })
-// TaskOutput only works for Bash background, not Task (agent) background
-```
-
-**Why:** Task (agent) background results are delivered via `task-notification`, not `TaskOutput`. For reliable result handling, use synchronous calls. Multiple Task calls in same message execute in parallel automatically.
-
 ## When to Use This Agent [CRITICAL]
 
 | Scenario | Use This Agent | Use Default Tools Instead |
@@ -191,22 +176,9 @@ function validateAnalysisOutput(output) {
 | 3. Context | ALL matched files | `Read(file, offset, limit=20)` × N | **PARALLEL** |
 | 4. Output | Combined JSON | All findings tagged by scope | Instant |
 
-**CRITICAL Parallelization Rules:**
-```javascript
-// Step 1: ALL linters in ONE message
-Bash("{lint_command} 2>&1")          // These calls
-Bash("{type_command} 2>&1")          // must be in
-Bash("{format_check_command} 2>&1")  // SINGLE message
-
-// Step 2: ALL grep patterns in ONE message
-Grep("{secret_patterns}")         // All patterns
-Grep("{injection_patterns}")      // in single
-Grep("{complexity_patterns}")     // message
-```
-
 **Rules:** Cross-scope batch greps │ Parallel linters │ Deduplicate reads │ Skip linter domain
 
-**Skip:** `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/`
+**Skip:** Per Core Rules (Foundation → File Creation). Key: `.git/`, `node_modules/`, `vendor/`, `dist/`, `build/`, `__pycache__/`, `*.min.*`, `@generated`
 
 ---
 

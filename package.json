@@ -1,4 +1,6 @@
 {
+  "name": "claude-code-optimizer",
+  "version": "2.0.0",
   "private": true,
-  "description": "Plugin manifest is in .claude-plugin/plugin.json. This file exists for package-lock.json compatibility only."
+  "description": "Quality standards and adaptive rules for Claude Code."
 }
