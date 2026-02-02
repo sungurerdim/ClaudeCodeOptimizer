@@ -11,21 +11,6 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
 
-## Calling This Agent [CRITICAL]
-
-**Always call synchronously (no `run_in_background`):**
-
-```javascript
-// CORRECT - synchronous, results returned directly
-results = Task("cco-agent-apply", prompt, { model: "opus" })
-
-// WRONG - background mode breaks result retrieval for Task (agent) calls
-// Do NOT use: Task(..., { run_in_background: true })
-// TaskOutput only works for Bash background, not Task (agent) background
-```
-
-**Why:** Task (agent) background results are delivered via `task-notification`, not `TaskOutput`. For reliable result handling, use synchronous calls.
-
 ## When to Use This Agent [CRITICAL]
 
 | Scenario | Use This Agent | Use Edit/Write Instead |
@@ -123,24 +108,7 @@ For each fix:
 | 2. Read | All affected files | `Read(file, offset, limit=30)` × N | **PARALLEL** |
 | 3. Apply | All independent edits | `Edit(file, fix)` × N | **PARALLEL** (different files) |
 | 4. Verify | All checks | `Bash(lint)`, `Bash(type)`, `Bash(test)` | **PARALLEL** |
-| 5. Cascade | If new errors | Repeat 3-4 | Sequential |
-
-**CRITICAL Parallelization Rules:**
-```javascript
-// Step 2: ALL file reads in ONE message
-Read("{file_path}")        // All these
-Read("{file_path}")        // must be in
-Read("{file_path}")        // SINGLE message
-
-// Step 3: Edits to DIFFERENT files in ONE message
-Edit("{file_path}", {fix})   // Parallel for
-Edit("{file_path}", {fix})   // different files
-
-// Step 4: ALL verification in ONE message
-Bash("{lint_command} 2>&1")
-Bash("{type_command} 2>&1")
-Bash("{test_command} 2>&1")
-```
+| 5. Cascade | If new errors | Repeat 3-4 | Sequential (max 3 iterations, then remaining → `failed` reason: cascade-limit-exceeded) |
 
 **Rules:** Fix ALL issues │ Parallel reads │ Parallel edits (different files) │ Parallel verification
 
@@ -150,7 +118,7 @@ Bash("{test_command} 2>&1")
 |----------|-------|
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
 | Tracking | TODO list with ALL items │ One in_progress at a time │ `applied + failed + needs_approval = total` |
-| Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/` |
+| Skip | Per Core Rules (Foundation → File Creation). Key: `.git/`, `node_modules/`, `vendor/`, `dist/`, `build/`, `__pycache__/`, `*.min.*`, `@generated` |
 | Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **Execute all writes unconditionally** |
 
 ## Fix Categories

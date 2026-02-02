@@ -55,28 +55,7 @@ model: opus
 
 ## Profile Requirement [CRITICAL]
 
-<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
-
-CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
-
-**Check:** Delegate to `/cco:tune --preview` for profile validation:
-
-```javascript
-// Standard profile validation: delegate to tune, handle skip/error/success
-const tuneResult = await Skill("cco:tune", "--preview")
-
-if (tuneResult.status === "skipped") {
-  console.log("CCO setup skipped. Run /cco:tune when ready.")
-  return
-} else if (tuneResult.status === "error") {
-  console.error("Profile validation failed:", tuneResult.reason)
-  return
-}
-
-// Profile is now valid - continue with command
-```
-
-**After tune completes → continue to Step-0 (Mode Detection)**
+**See Tool Rules: Profile Validation.** Delegate to `/cco:tune --preview`, handle skip/error/success.
 
 ---
 
@@ -135,7 +114,7 @@ if (args.includes("--auto")) {
 
 ## Policies
 
-**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, Quality Thresholds, and Accounting invariant.
+**See Tool Rules:** No Deferrals, Accounting, Mode Detection, Execution Flow.
 
 ---
 
@@ -885,7 +864,7 @@ Both commands group related concerns together: structure (architecture+patterns)
 
 ### Model Strategy
 
-**See Core Rules:** `Model Strategy` for Opus/Haiku policy.
+Opus for orchestration/apply, Haiku for analysis agents.
 
 ### Ideal Metrics by Project Type
 
@@ -897,8 +876,6 @@ Both commands group related concerns together: structure (architecture+patterns)
 | Web | <60% | >65% | <15 | 70%+ |
 
 ### Metric Rationale
-
-**See Core Rules:** `cco-thresholds.md` for detailed metric rationale, sources, and override protocol.
 
 **NEVER recommend changes without evidence (file:line) and rationale.**
 
@@ -948,9 +925,7 @@ Default thresholds: coupling 10%, cohesion 10%, complexity 20%, coverage 10%.
 
 ## Reasoning & Guards
 
-**See Core Rules:** `Reasoning`, `Anti-Overengineering Guard`, `Severity Levels` for shared patterns.
-
-**See Core Rules:** `Confidence Scoring` in `cco-thresholds.md` for score calculation, interpretation, and ≥80 threshold.
+**See Tool Rules:** Severity Levels, Plan Review, Confidence Scoring.
 
 **Align-specific Step-Back questions:**
 
@@ -966,6 +941,4 @@ Default thresholds: coupling 10%, cohesion 10%, complexity 20%, coverage 10%.
 
 ## Accounting
 
-**Invariant:** `applied + failed + needs_approval = total` (count findings, not locations)
-
-**See Core Rules:** `Accounting` for status definitions and no-declined policy.
+**See Tool Rules: Accounting.** Invariant: `applied + failed + needs_approval = total` (count findings, not locations).

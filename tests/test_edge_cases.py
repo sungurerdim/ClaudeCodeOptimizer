@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from _paths import PROFILE_PATH, ROOT, RULES_DIR, SCHEMAS_DIR
+from _paths import PROFILE_PATH, ROOT, SCHEMAS_DIR
 
 
 class TestInvalidArgumentCombinations:

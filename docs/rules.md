@@ -4,13 +4,13 @@
 
 ## Summary
 
-| Category | Files | Location | Loading |
-|----------|-------|----------|---------|
-| Core | 4 | 3 injected + 1 reference | Always (SessionStart hook) |
-| Languages | 21 | `./.claude/rules/` | Per-project |
-| Frameworks | 8 | `./.claude/rules/` | Per-project |
-| Operations | 12 | `./.claude/rules/` | Per-project |
-| **Total** | **45** | | |
+| Category | Files | Rules | Location | Loading |
+|----------|-------|-------|----------|---------|
+| Core | 4 | 30 | 3 injected + 1 reference | Always (SessionStart hook) |
+| Languages | 21 | 121 | `./.claude/rules/` | Per-project |
+| Frameworks | 8 | 36 | `./.claude/rules/` | Per-project |
+| Operations | 12 | 66 | `./.claude/rules/` | Per-project |
+| **Total** | **45** | **253** | | |
 
 **All CCO rules use `cco-` prefix** for safe identification and updates.
 
@@ -79,7 +79,7 @@ CCO leverages Claude Code's native rule loading — no custom loaders, no CLI wr
 
 ---
 
-## Core Rules (4 files)
+## Core Rules (4 files · 30 rules)
 
 *3 files (foundation, safety, workflow) injected into context via SessionStart hook. Thresholds is a reference file.*
 
@@ -150,78 +150,78 @@ Documents all hardcoded thresholds with rationale and sources:
 
 ---
 
-## Language Rules (21 files)
+## Language Rules (21 files · 121 rules)
 
 *Copied to project `.claude/rules/` based on detection.*
 
-### Mainstream Languages (10)
+### Mainstream Languages (10 files · 53 rules)
 
-| File | Trigger | Key Rules |
-|------|---------|-----------|
-| `cco-python.md` | pyproject.toml, *.py | Type hints, async patterns, Pydantic |
-| `cco-typescript.md` | tsconfig.json, *.ts | Strict mode, Zod validation, ESM |
-| `cco-go.md` | go.mod, *.go | Error wrapping, context, interfaces |
-| `cco-rust.md` | Cargo.toml, *.rs | Result propagation, ownership, clippy |
-| `cco-java.md` | pom.xml, *.java | Virtual threads, records, streams |
-| `cco-ruby.md` | Gemfile, *.rb | Rails patterns, RSpec conventions |
-| `cco-php.md` | composer.json, *.php | Laravel patterns, PSR standards |
-| `cco-csharp.md` | *.csproj, *.cs | .NET patterns, async/await, LINQ |
-| `cco-swift.md` | Package.swift, *.swift | iOS patterns, SwiftUI, Combine |
-| `cco-kotlin.md` | build.gradle.kts, *.kt | Coroutines, Android patterns |
+| File | Rules | Trigger | Key Rules |
+|------|-------|---------|-----------|
+| `cco-python.md` | 4 | pyproject.toml, *.py | Type hints, async patterns, Pydantic |
+| `cco-typescript.md` | 4 | tsconfig.json, *.ts | Strict mode, Zod validation, ESM |
+| `cco-go.md` | 3 | go.mod, *.go | Error wrapping, context, interfaces |
+| `cco-rust.md` | 4 | Cargo.toml, *.rs | Result propagation, ownership, clippy |
+| `cco-java.md` | 8 | pom.xml, *.java | Virtual threads, records, streams |
+| `cco-ruby.md` | 7 | Gemfile, *.rb | Rails patterns, RSpec conventions |
+| `cco-php.md` | 7 | composer.json, *.php | Laravel patterns, PSR standards |
+| `cco-csharp.md` | 6 | *.csproj, *.cs | .NET patterns, async/await, LINQ |
+| `cco-swift.md` | 6 | Package.swift, *.swift | iOS patterns, SwiftUI, Combine |
+| `cco-kotlin.md` | 4 | build.gradle.kts, *.kt | Coroutines, Android patterns |
 
-### Niche Languages (11)
+### Niche Languages (11 files · 68 rules)
 
-| File | Trigger | Key Rules |
-|------|---------|-----------|
-| `cco-elixir.md` | mix.exs | OTP supervision, Phoenix, GenServer |
-| `cco-erlang.md` | rebar.config | OTP patterns, fault tolerance |
-| `cco-scala.md` | build.sbt | Functional patterns, Cats/ZIO |
-| `cco-haskell.md` | *.cabal, stack.yaml | Monads, type classes, lazy evaluation |
-| `cco-fsharp.md` | *.fsproj | Railway-oriented, computation expressions |
-| `cco-ocaml.md` | dune, *.opam | Module system, pattern matching |
-| `cco-gleam.md` | gleam.toml | Type-safe Erlang VM, pipelines |
-| `cco-clojure.md` | deps.edn, project.clj | Immutability, REPL-driven, specs |
-| `cco-r.md` | DESCRIPTION, *.R | Data frames, tidyverse, vectors |
-| `cco-julia.md` | Project.toml | Multiple dispatch, scientific computing |
-| `cco-perl.md` | cpanfile, *.pl | Regex, one-liners, CPAN patterns |
+| File | Rules | Trigger | Key Rules |
+|------|-------|---------|-----------|
+| `cco-elixir.md` | 4 | mix.exs | OTP supervision, Phoenix, GenServer |
+| `cco-erlang.md` | 10 | rebar.config | OTP patterns, fault tolerance |
+| `cco-scala.md` | 4 | build.sbt | Functional patterns, Cats/ZIO |
+| `cco-haskell.md` | 6 | *.cabal, stack.yaml | Monads, type classes, lazy evaluation |
+| `cco-fsharp.md` | 6 | *.fsproj | Railway-oriented, computation expressions |
+| `cco-ocaml.md` | 6 | dune, *.opam | Module system, pattern matching |
+| `cco-gleam.md` | 4 | gleam.toml | Type-safe Erlang VM, pipelines |
+| `cco-clojure.md` | 10 | deps.edn, project.clj | Immutability, REPL-driven, specs |
+| `cco-r.md` | 6 | DESCRIPTION, *.R | Data frames, tidyverse, vectors |
+| `cco-julia.md` | 6 | Project.toml | Multiple dispatch, scientific computing |
+| `cco-perl.md` | 6 | cpanfile, *.pl | Regex, one-liners, CPAN patterns |
 
 ---
 
-## Framework Rules (8 files)
+## Framework Rules (8 files · 36 rules)
 
 *Copied to project `.claude/rules/` based on detection.*
 
-| File | Trigger | Coverage |
-|------|---------|----------|
-| `cco-backend.md` | Framework deps | Express, FastAPI, Django, Rails, Spring, NestJS, Gin, Fiber, Echo, Phoenix, Actix, Axum, Rocket, Warp, Vapor, Ktor, ASP.NET, Flask, Hono, etc. |
-| `cco-frontend.md` | UI framework deps | React, Vue, Svelte, Angular, SolidJS, Qwik, Astro, Next.js, Nuxt, SvelteKit + i18n |
-| `cco-api.md` | routes/, decorators | REST, GraphQL, gRPC, OpenAPI, RFC 7807 errors |
-| `cco-testing.md` | Test framework deps | pytest, Jest, Vitest, RSpec, JUnit + coverage tiers (60/80/90%) |
-| `cco-orm.md` | ORM deps | Prisma, SQLAlchemy, TypeORM, Drizzle, ActiveRecord, Entity Framework |
-| `cco-mobile.md` | Mobile deps | Flutter, React Native, iOS (Swift), Android (Kotlin) |
-| `cco-ml.md` | ML deps | PyTorch, TensorFlow, LangChain, RAG patterns, prompt engineering |
-| `cco-realtime.md` | WebSocket deps | WebSocket, SSE, Socket.IO patterns |
+| File | Rules | Trigger | Coverage |
+|------|-------|---------|----------|
+| `cco-backend.md` | 3 | Framework deps | Express, FastAPI, Django, Rails, Spring, NestJS, Gin, Fiber, Echo, Phoenix, Actix, Axum, Rocket, Warp, Vapor, Ktor, ASP.NET, Flask, Hono, etc. |
+| `cco-frontend.md` | 3 | UI framework deps | React, Vue, Svelte, Angular, SolidJS, Qwik, Astro, Next.js, Nuxt, SvelteKit + i18n |
+| `cco-api.md` | 6 | routes/, decorators | REST, GraphQL, gRPC, OpenAPI, RFC 7807 errors |
+| `cco-testing.md` | 6 | Test framework deps | pytest, Jest, Vitest, RSpec, JUnit + coverage tiers (60/80/90%) |
+| `cco-orm.md` | 6 | ORM deps | Prisma, SQLAlchemy, TypeORM, Drizzle, ActiveRecord, Entity Framework |
+| `cco-mobile.md` | 6 | Mobile deps | Flutter, React Native, iOS (Swift), Android (Kotlin) |
+| `cco-ml.md` | 4 | ML deps | PyTorch, TensorFlow, LangChain, RAG patterns, prompt engineering |
+| `cco-realtime.md` | 2 | WebSocket deps | WebSocket, SSE, Socket.IO patterns |
 
 ---
 
-## Operations Rules (12 files)
+## Operations Rules (12 files · 66 rules)
 
 *Copied to project `.claude/rules/` based on detection.*
 
-| File | Trigger | Coverage |
-|------|---------|----------|
-| `cco-infrastructure.md` | Dockerfile, K8s | Docker multi-stage, K8s security, Terraform, IaC patterns, API Gateway, Service Mesh, Build Cache |
-| `cco-deployment.md` | Deploy configs | Fly.io, Railway, Render, Vercel, Netlify, AWS, GCP, Azure |
-| `cco-cicd.md` | CI configs | GitHub Actions, GitLab CI, Jenkins, CircleCI |
-| `cco-observability.md` | Monitoring deps | Prometheus, Grafana, OpenTelemetry, Sentry |
-| `cco-scale.md` | Scale indicators | Circuit breaker, retry patterns, rate limiting, caching + SLA tiers |
-| `cco-database.md` | DB deps | SQL, NoSQL, migrations, connection pools, indexing |
-| `cco-build.md` | Build tools | Monorepo (Nx, Turbo), bundlers, linters |
-| `cco-messagequeue.md` | Queue deps | Kafka, RabbitMQ, NATS, SQS, Redis queues |
-| `cco-runtimes.md` | Runtime indicators | Node.js, Bun, Deno patterns |
-| `cco-project-types.md` | Project structure | CLI, Library, Service patterns |
-| `cco-compliance.md` | Compliance selected | GDPR, HIPAA, PCI-DSS, SOC2, ISO27001 |
-| `cco-security.md` | PII/Regulated data | OWASP, input validation, encryption, audit logging |
+| File | Rules | Trigger | Coverage |
+|------|-------|---------|----------|
+| `cco-infrastructure.md` | 5 | Dockerfile, K8s | Docker multi-stage, K8s security, Terraform, IaC patterns, API Gateway, Service Mesh, Build Cache |
+| `cco-deployment.md` | 3 | Deploy configs | Fly.io, Railway, Render, Vercel, Netlify, AWS, GCP, Azure |
+| `cco-cicd.md` | 6 | CI configs | GitHub Actions, GitLab CI, Jenkins, CircleCI |
+| `cco-observability.md` | 4 | Monitoring deps | Prometheus, Grafana, OpenTelemetry, Sentry |
+| `cco-scale.md` | 7 | Scale indicators | Circuit breaker, retry patterns, rate limiting, caching + SLA tiers |
+| `cco-database.md` | 4 | DB deps | SQL, NoSQL, migrations, connection pools, indexing |
+| `cco-build.md` | 9 | Build tools | Monorepo (Nx, Turbo), bundlers, linters |
+| `cco-messagequeue.md` | 5 | Queue deps | Kafka, RabbitMQ, NATS, SQS, Redis queues |
+| `cco-runtimes.md` | 3 | Runtime indicators | Node.js, Bun, Deno patterns |
+| `cco-project-types.md` | 5 | Project structure | CLI, Library, Service patterns |
+| `cco-compliance.md` | 10 | Compliance selected | GDPR, HIPAA, PCI-DSS, SOC2, ISO27001 |
+| `cco-security.md` | 5 | PII/Regulated data | OWASP, input validation, encryption, audit logging |
 
 ---
 
