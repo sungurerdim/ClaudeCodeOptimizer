@@ -7,50 +7,16 @@ model: opus
 
 # /cco:preflight
 
-**Release Verification Gate** - Comprehensive pre-release checks with parallel orchestration.
+**Release Verification Gate** — Comprehensive pre-release checks with parallel orchestration.
 
-> **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
+Meta command orchestrating `/cco:optimize` and `/cco:align` with maximum parallelism.
 
-> **Standard Flow:** This command follows the standard CCO execution pattern:
-> Setup → Pre-check → (Verify ‖ Optimize ‖ Align) → Changelog → Plan → Execute (see docs/philosophy.md for rationale)
+## Args
 
-Meta command orchestrating /cco:optimize and /cco:align with maximum parallelism.
-
-**Orchestration:**
-```
-PREFLIGHT
-    |
-    +-- [Q1: Fix Intensity] ─────────────────┐
-    |                                        │
-    +-- [Pre-flight Checks] PARALLEL ────────┤
-    |       Git state, version sync,         │
-    |       markers, semver, dependencies    │
-    |                                        │
-    +-- [Verification] BACKGROUND ──────────┤
-    |       format, lint, type, test, build  │
-    |       (Bash background, started FIRST) │
-    |                                        │
-    +-- [Sub-commands] via Skill ────────────┤
-    |       +-- Skill("cco:optimize", "--auto")  │
-    |       +-- Skill("cco:align", "--auto")     │
-    |                                        │
-    +-- [Changelog] ─────────────────────────┘
-            Commit classification, version
-
-    ↓ (Wait for all)
-
-    [Plan Review] (conditional)
-        Combined release plan + reasoning
-
-    ↓
-
-    [Q2: Decision]
-        Proceed / Fix Issues / Abort
-```
-
-**Plan Review is MANDATORY when findings > 0 or blockers detected.**
-
-**Skipped when:** `--auto` mode or 0 findings + 0 blockers
+| Flag | Effect |
+|------|--------|
+| `--auto` | Full fix, no questions, single-line summary. Exit: 0/1/2 |
+| `--preview` | Run all checks, show results, don't release |
 
 ## Context
 
@@ -64,747 +30,76 @@ PREFLIGHT
 
 ## Profile Requirement [CRITICAL]
 
-**See Tool Rules: Profile Validation.** Delegate to `/cco:tune --preview`, handle skip/error/success.
+Delegate to `/cco:tune --preview`. Handle: skipped → exit, error → exit, success → continue.
 
----
+## Execution Flow
 
-## Mode Detection [CRITICAL]
+Setup → Pre-checks → (Verify ‖ Optimize ‖ Align) → Changelog → [Plan] → Execute
 
-<!-- Config shape: { fixMode: string, unattended: boolean } -->
+### Phase 1: Setup [SKIP IF --auto]
 
-```javascript
-// --auto mode: unattended, full fix, no questions, minimal output
-if (args.includes("--auto")) {
-  config = {
-    fixMode: "full-fix",          // All severities
-    unattended: true
-  }
-  // Skip Q1, proceed directly to Step-1
-}
-```
+**Q1:** Two questions:
+- Checks (multiselect): Security (Recommended), Code Quality (Recommended), Architecture, Tests + Build
+- Release mode: Fix Only (Recommended) / Fix + Commit + Tag
 
-**--auto use cases:** CI/CD pipelines, pre-commit hooks, scheduled cron jobs, IDE integrations (non-interactive)
+### Phase 2: Pre-flight Checks [PARALLEL]
 
----
+| Check | Type | Detail |
+|-------|------|--------|
+| PRE-01 | BLOCKER | Dirty working directory |
+| PRE-03 | BLOCKER | Version mismatch (manifest vs changelog) |
+| PRE-02 | WARN | Not on main/master/release/* branch |
+| PRE-04 | WARN | TODO/FIXME markers in code |
+| DEP-SEC | BLOCKER | Security advisories in dependencies |
+| DEP-OUT | WARN | Outdated non-security packages |
 
-## Architecture
+Dependency audit via cco-agent-research (scope: dependency).
 
-| Phase | Step | Name | Action | Gate |
-|-------|------|------|--------|------|
-| **SETUP** | 0-1a | Config | Mode + Q1: Settings | Config validated |
-| **PRE-CHECK** | 1b | Verify | Git, version, deps (parallel) | Pre-checks done |
-| **GATE-1** | - | Checkpoint | No blocking pre-checks | → Sub-commands |
-| **VERIFY+FIX** | 2 | Parallel | 2a: verify (bg Bash) + 2b: optimize+align (Skill) | All complete |
-| **GATE-2** | - | Checkpoint | All parallel complete | → Changelog |
-| **CHANGELOG** | 3 | Version | Generate + suggest | Entry ready |
-| **GATE-3** | - | Checkpoint | Blockers evaluated | → Plan or Release |
-| **PLAN** | 3.5 | Review | Combined plan (conditional) | User approval |
-| **GATE-4** | - | Checkpoint | Approval received | → Execute |
-| **RELEASE** | 4 | Execute | Tag/commit based on mode | Done |
+### Phase 3: Verify + Optimize + Align [PARALLEL]
 
-**Execution Flow:** SETUP → PRE-CHECK → GATE-1 → (VERIFY-bg ‖ OPTIMIZE-skill ‖ ALIGN-skill) → GATE-2 → CHANGELOG → GATE-3 → [PLAN if triggered] → GATE-4 → RELEASE
+Run concurrently:
+- Background Bash: format, lint, type, test, build commands
+- Skill calls: `Skill("cco:optimize", "--auto")` and `Skill("cco:align", "--auto")`
 
-### Phase Gates
+Collect ALL background results via TaskOutput before any output.
 
-| Gate | Pass | Fail |
-|------|------|------|
-| GATE-1 (Post Pre-checks) | No unresolved blockers | BLOCKER pre-checks found |
-| GATE-2 (Post Parallel) | optimize + align + tests completed | Collect accounting + test results |
-| GATE-3 (Blocker Eval) | blockers = 0 | Any blockers remain |
-| GATE-4 (Post-Plan) | Approval received or plan skipped | User aborted or "Fix and Retry" |
+### Phase 4: Changelog
 
-**Single question at start** - All settings collected upfront, then uninterrupted flow (unless plan mode).
+Classify commits since last tag by conventional commit type. Suggest version bump: breaking → MAJOR, feat → MINOR, else → PATCH. Generate changelog entry.
 
----
+### Phase 5: Plan Review [CONDITIONAL]
 
-## Everything Mode [CRITICAL]
+Triggers when: findings > 0 OR blockers detected. Skip in --auto.
 
-When `--auto` or user selects "Full Fix":
-- Pass to both `/cco:optimize --auto` and `/cco:align --auto`
-- **Zero commentary** - No "this is complex", "needs refactor", "minor detail", "consider later"
-- **Zero deferrals** - No "future iteration", "lower priority", "recommend manual"
-- **Zero skips** - Every finding fixed NOW, no exceptions
-- **Only technical failures** - File not found, parse error, permission denied
-- Final accounting: `applied + failed + needs_approval = total` (no AI declines allowed)
+Display release plan: pre-flight status, sub-command results, verification results, breaking changes, blockers, changelog preview, release checklist.
 
-**See Tool Rules:** No Deferrals, Accounting.
+If blockers: ask Fix and Retry / View Details / Abort.
+If no blockers: standard Action + Severity questions.
 
----
+### Phase 6: Execute
 
-## Step-1a: Settings Selection [Q1]
+Based on release mode:
+- Fix Only: apply fixes, suggest next steps
+- Fix + Commit + Tag: commit and tag with suggested version
 
-**Skip if --auto mode (config already set)**
+### Phase 7: Summary
 
-```javascript
-if (!isUnattended) {
-  AskUserQuestion([
-  {
-    question: "Which checks to run?",
-    header: "Checks",
-    options: [
-      { label: "Security (Recommended)", description: "Vulnerabilities, secrets, dependencies" },
-      { label: "Code Quality (Recommended)", description: "Types, lint, hygiene" },
-      { label: "Architecture", description: "Patterns, structure, maintainability" },
-      { label: "Tests + Build", description: "Run test suite and build" }
-    ],
-    multiSelect: true
-  },
-  {
-    question: "After checks pass?",
-    header: "Release",
-    options: [
-      { label: "Fix Only (Recommended)", description: "Apply fixes, no tag, no commit" },
-      { label: "Fix + Commit + Tag", description: "Apply fixes, commit, create git tag" }
-    ],
-    multiSelect: false
-  }
-  ])
-}
-```
+Combined applied/failed/total accounting from optimize + align. Verification results table.
 
-### Settings Mapping
+--auto mode: `cco-preflight: {OK|WARN|BLOCKED} | Applied: N | Failed: N | Version: vX.Y.Z`
 
-| Selection | Effect |
-|-----------|--------|
-| **Fix Only** | Apply fixes only, no commit, no tag |
-| **Fix + Commit + Tag** | Apply fixes, create commit, create git tag |
-| **CHANGELOG** | Generate changelog entry |
-| **Skip docs** | No doc updates |
+Status: OK (blockers=0, tests pass, build pass), WARN (warnings only), BLOCKED (blockers or test/build fail).
 
-### Validation
-```
-[x] User completed Q1 (all settings)
-→ Store as: config = { fixMode, releaseMode, docs }
-→ Proceed to Step-1b
-```
+## Release Checks (14 total)
 
----
+**BLOCKERS:** PRE-01 (dirty git), PRE-03 (version mismatch), VER-01 (tests fail), VER-02 (build fail), VER-03 (type errors), DEP-SEC (CVE), OPT-CRIT (optimize critical), REV-CRIT (align critical)
 
-## Step-1b: Pre-flight Checks [PARALLEL BACKGROUND]
-
-**All checks run in parallel background, no questions:**
-
-### 1.1: Git State [BLOCKER]
-
-```javascript
-const blockers = []
-const warnings = []
-
-// Check from context
-if (gitStatus.trim().length > 0) {
-  blockers.push({
-    id: "PRE-01",
-    type: "GIT_DIRTY",
-    message: "Working directory has uncommitted changes"
-  })
-}
-
-if (!branch.match(/^(main|master|release\/.*)$/)) {
-  warnings.push({
-    id: "PRE-02",
-    type: "BRANCH",
-    message: `On branch '${branch}' - expected main/master or release/*`
-  })
-}
-```
-
-### 1.2: Version Sync [BLOCKER]
-
-```javascript
-// Extract versions from context
-manifestVersion = extractVersion(versionContext)
-changelogVersion = extractChangelogVersion(changelog)
-
-if (manifestVersion !== changelogVersion) {
-  blockers.push({
-    id: "PRE-03",
-    type: "VERSION_MISMATCH",
-    message: `Manifest: ${manifestVersion}, Changelog: ${changelogVersion}`
-  })
-}
-```
-
-### 1.3: Leftover Markers [WARN]
-
-```javascript
-// Check for leftover code markers
-markersTask = Bash("grep -rn 'TODO\\|FIXME\\|XXX\\|HACK' --exclude-dir=node_modules --exclude-dir=.venv --exclude-dir=vendor --exclude-dir=dist --exclude-dir=build --exclude='*.min.*' . 2>/dev/null | head -20 || true", { run_in_background: true })
-```
-
-### 1.4: SemVer Review [WARN]
-
-```javascript
-// Analyze commits since last tag
-commitsTask = Bash(`git log ${lastTag}..HEAD --oneline 2>/dev/null || git log --oneline -20`, { run_in_background: true })
-```
-
-### 1.5: Dependency Audit [BLOCKER if security]
-
-```javascript
-depResults = Task("cco-agent-research", `
-  scope: dependency
-
-  Pre-release dependency audit:
-  1. Read manifest files (pyproject.toml, package.json, Cargo.toml, go.mod)
-  2. Check each dependency for latest stable version
-  3. Check for known security advisories (CVEs)
-
-  Return: {
-    outdated: [{ package, current, latest, updateType, breaking }],
-    security: [{ package, advisory, severity, cve }],
-    summary: { total, outdated, security }
-  }
-`, { model: "haiku", timeout: 120000 })  // Synchronous - result needed before GATE-1
-```
-
-**Security advisories are BLOCKERS.** Outdated packages are warnings.
-
-### Validation
-```
-[x] All pre-flight checks launched
-→ Store task IDs for later collection
-→ Proceed to Step-2
-```
-
----
-
-## Step-2: Verify + Optimize + Align [PARALLEL]
-
-> **Pattern:** Quality Gates run external tools. Preflight runs full verification including
-> build command (unique to release). Unlike /cco:commit (conditional on changed files),
-> preflight runs comprehensive release verification on full project.
-
-**Pattern:** Background Bash runs concurrently with Skill calls. Collect all results before any output.
-
-```javascript
-// Step-2a: Background verification (runs during Skill calls)
-formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
-lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
-typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
-testTask = Bash("{test_command} 2>&1", { run_in_background: true })
-buildTask = Bash("{build_command} 2>&1", { run_in_background: true })
-
-// Step-2b: Skill calls (synchronous — background Bash runs concurrently)
-optimizeResults = Skill("cco:optimize", "--auto")
-alignResults = Skill("cco:align", "--auto")
-
-// Step-2c: Collect ALL background results before proceeding
-formatResults = await TaskOutput(formatTask.id)
-lintResults = await TaskOutput(lintTask.id)
-typeResults = await TaskOutput(typeTask.id)
-testResults = await TaskOutput(testTask.id)
-buildResults = await TaskOutput(buildTask.id)
-markersResult = await TaskOutput(markersTask.id)
-commitsResult = await TaskOutput(commitsTask.id)
-```
-
-### Validation
-```
-[x] Skill calls completed
-[x] All background results collected via TaskOutput
-→ Proceed to Step-3
-```
-
----
-
-## Step-3: Changelog [WHILE BACKGROUND RUNS]
-
-**Generate changelog while tests run:**
-
-### 4.1: Classify Commits
-
-```javascript
-commits = commitsResult  // Already collected in Step-2b
-
-classified = {
-  breaking: commits.filter(c => c.match(/BREAKING/i)),
-  added: commits.filter(c => c.match(/^feat:/)),
-  changed: commits.filter(c => c.match(/^(refactor|perf):/)),
-  fixed: commits.filter(c => c.match(/^fix:/)),
-  security: commits.filter(c => c.match(/^security:/i))
-}
-```
-
-### 4.2: Suggest Version
-
-```javascript
-if (classified.breaking.length > 0) {
-  suggestedBump = "MAJOR"
-} else if (classified.added.length > 0) {
-  suggestedBump = "MINOR"
-} else {
-  suggestedBump = "PATCH"
-}
-
-suggestedVersion = calculateNextVersion(manifestVersion, suggestedBump)
-```
-
-### 4.3: Generate Changelog Entry
-
-```javascript
-changelogEntry = generateChangelogEntry(classified, suggestedVersion)
-```
-
-### Validation
-```
-[x] Commits classified
-[x] Version suggested
-[x] Changelog entry generated
-→ Check Plan Review triggers → Step-3.5 or Step-4
-```
-
----
-
-## Step-3.5: Plan Review [CONDITIONAL]
-
-**"Think before you release"** - Consolidated view of all changes before release.
-
-### Trigger Conditions
-
-```javascript
-// Determine if Plan Review is needed
-const totalFindings = (optimizeResults.accounting?.total || 0) + (alignResults.accounting?.total || 0)
-const hasBlockers = allBlockers.length > 0
-const hasBreaking = classified.breaking.length > 0
-
-const planMode = (totalFindings > 0) || hasBlockers
-
-// Skip in --auto mode
-const skipPlan = isUnattended
-
-if (planMode && !skipPlan) {
-  // → Enter Plan Review
-} else {
-  // → Skip to Step-4
-}
-```
-
-### Release Plan Display [MANDATORY - DISPLAY BEFORE ASKING]
-
-**[CRITICAL] You MUST display the following release plan to the user BEFORE asking for approval. NEVER skip this display. NEVER ask "How to proceed?" without first showing the full plan.**
-
-```markdown
-## Release Plan Review
-
-**Version:** {manifestVersion} → {suggestedVersion} ({suggestedBump})
-**Branch:** {branch} | **Previous:** {lastTag}
-
-> This is a consolidated view of all changes before release. Review carefully.
-
-### Pre-flight Status
-
-| Check | Status | Detail |
-|-------|--------|--------|
-| Git State | {gitClean ? "Clean" : "Dirty"} | {gitDetail} |
-| Version Sync | {versionMatch ? "Match" : "Mismatch"} | {versionDetail} |
-| Dependencies | {depSecure ? "Secure" : "Vulnerabilities"} | {depDetail} |
-
-### Sub-command Results Summary
-
-| Command | Applied | Failed | Needs Approval | Key Changes |
-|---------|---------|--------|----------|-------------|
-| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.needs_approval} | {optimizeKeyChanges} |
-| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignResults.accounting.needs_approval} | {alignKeyChanges} |
-| **Total** | **{totalApplied}** | **{totalFailed}** | **{totalNeedsApproval}** | |
-
-### Verification Results
-
-| Gate | Status | Must Pass? |
-|------|--------|------------|
-| Tests | {testStatus} | Yes |
-| Build | {buildStatus} | Yes |
-| Types | {typeStatus} | Yes |
-| Lint | {lintStatus} | No (warnings OK) |
-| Format | {formatStatus} | No (auto-fixed) |
-
-### Breaking Changes
-
-{hasBreaking ? `
-**[WARN] Breaking changes detected:**
-${classified.breaking.map(c => `- ${c}`).join('\n')}
-
-This will require a MAJOR version bump.
-` : "No breaking changes detected."}
-
-### Blockers
-
-{hasBlockers ? `
-**[BLOCKED] Blockers must be resolved:**
-${allBlockers.map((b, i) => `${i+1}. [CRITICAL] ${b.id}: ${b.message} (${b.type})`).join('\n')}
-` : "No blockers - ready to proceed."}
-
-### Changelog Preview
-
-\`\`\`markdown
-${changelogEntry}
-\`\`\`
-
-### Release Checklist
-
-- [${!hasBlockers ? 'x' : ' '}] No blockers
-- [${testResults.exitCode === 0 ? 'x' : ' '}] Tests passing
-- [${buildResults.exitCode === 0 ? 'x' : ' '}] Build successful
-- [${versionMatch ? 'x' : ' '}] Version synced
-- [${!hasBreaking || suggestedBump === 'MAJOR' ? 'x' : ' '}] Breaking changes versioned correctly
-```
-
-### User Decision
-
-```javascript
-if (hasBlockers) {
-  AskUserQuestion([{
-    question: "Blockers detected. How to proceed?",
-    header: "Decision",
-    options: [
-      { label: "Fix and Retry", description: "Address blockers, then re-run preflight" },
-      { label: "View Details", description: "Show detailed blocker information" },
-      { label: "Abort", description: "Cancel release" }
-    ],
-    multiSelect: false
-  }])
-} else {
-  // Standard Post-Analysis Q2: Action + Severity (same pattern in optimize, align, preflight)
-  AskUserQuestion([
-    {
-      question: `${totalFindings} finding across optimize + align. How to proceed?`,
-      header: "Action",
-      options: [
-        { label: "Fix All (Recommended)", description: `Apply all ${totalFindings} fixes and proceed` },
-        { label: "By Severity", description: "Choose which severity levels to fix" },
-        { label: "Review Each", description: "Approve each fix individually" },
-        { label: "Report Only", description: "No changes, just report" }
-      ],
-      multiSelect: false
-    },
-    {
-      question: "Which severity levels to include?",
-      header: "Severity",
-      options: [
-        { label: `CRITICAL (${criticalCount})`, description: "Security, data loss, crash" },
-        { label: `HIGH (${highCount})`, description: "Broken functionality" },
-        { label: `MEDIUM (${mediumCount})`, description: "Suboptimal but works" },
-        { label: `LOW (${lowCount})`, description: "Style, minor improvements" }
-      ],
-      multiSelect: true
-    }
-  ])
-}
-
-// Handle blocker path responses
-if (hasBlockers) {
-  switch (planDecision) {
-    case "Fix and Retry":
-    case "Abort":
-      console.log("Release aborted. Fix issues and re-run /cco:preflight.")
-      return
-    case "View Details":
-      // Show details, re-prompt
-      break
-  }
-} else {
-  // Handle standard Q2 responses
-  switch (actionDecision) {
-    case "Fix All":
-      config.reviewMode = "apply-all"
-      break
-    case "By Severity":
-      config.reviewMode = "apply-all"
-      // Filter findings by selected severities
-      break
-    case "Review Each":
-      config.reviewMode = "interactive"
-      break
-    case "Report Only":
-      config.reviewMode = "report-only"
-      break
-  }
-}
-```
-
-### Validation
-```
-[x] Release plan displayed
-[x] All results consolidated
-[x] User decision captured
-→ If Abort/Fix: Exit
-→ Proceed to Step-4 with config.releaseMode
-```
-
----
-
-## Step-4: Results + Execute
-
-**Collect Bash background results, then show summary and execute based on Q1 settings:**
-
-```javascript
-// Skill results from Step-2b (already available)
-// optimizeResults, alignResults - set from Skill calls in Step-2b
-// depResults - set from synchronous Task call in Step-1b
-
-// All background results collected in Step-2c
-
-// Check if format made changes
-formatChanged = formatResults.stdout?.includes("reformatted") || formatResults.stdout?.includes("fixed")
-
-// Aggregate blockers and warnings
-allBlockers = [
-  ...blockers,
-  ...(testResults.exitCode !== 0 ? [{ id: "VER-01", type: "TESTS", message: "Tests failed" }] : []),
-  ...(buildResults.exitCode !== 0 ? [{ id: "VER-02", type: "BUILD", message: "Build failed" }] : []),
-  ...(typeResults.exitCode !== 0 ? [{ id: "VER-03", type: "TYPES", message: "Type errors found" }] : []),
-  ...(depResults.security || []).map(s => ({ id: "DEP-SEC", type: "SECURITY", message: `${s.package}: ${s.advisory} (${s.cve})` })),
-  ...(optimizeResults.accounting?.failed > 0 && optimizeResults.data?.blockers?.filter(b => b.severity === "CRITICAL") || [])
-]
-
-allWarnings = [
-  ...warnings,
-  ...(lintResults.exitCode !== 0 ? [{ id: "VER-04", type: "LINT", message: "Lint warnings" }] : []),
-  ...(formatChanged ? [{ id: "VER-05", type: "FORMAT", message: "Files reformatted - review changes" }] : []),
-  ...(markersResult.stdout?.trim() ? [{ id: "PRE-04", type: "MARKERS", message: "TODO/FIXME markers found" }] : []),
-  ...(depResults.outdated || []).map(d => ({ id: "DEP-OUT", type: "OUTDATED", message: `${d.package}: ${d.current} → ${d.latest}` }))
-]
-
-hasBlockers = allBlockers.length > 0
-
-// Calculate combined accounting
-totalApplied = (optimizeResults.accounting?.applied || 0) + (alignResults.accounting?.applied || 0)
-totalFailed = (optimizeResults.accounting?.failed || 0) + (alignResults.accounting?.failed || 0)
-totalNeedsApproval = (optimizeResults.accounting?.needs_approval || 0) + (alignResults.accounting?.needs_approval || 0)
-totalFindings = totalApplied + totalFailed + totalNeedsApproval
-```
-
-### Results Display [MANDATORY]
-
-```markdown
-## Release Readiness
-
-| Metric | Value |
-|--------|-------|
-| Version | {manifestVersion} → {suggestedVersion} ({suggestedBump}) |
-| Branch | {branch} |
-| Previous | {lastTag} |
-| Fix Mode | {config.fixMode} |
-| Release Mode | {config.releaseMode} |
-
-### Sub-command Results
-| Command | Applied | Failed | Total |
-|---------|---------|--------|-------|
-| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
-| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignResults.accounting.total} |
-| **Combined** | **{totalApplied}** | **{totalFailed}** | **{totalFindings}** |
-
-### Verification Results
-| Check | Status | Detail |
-|-------|--------|--------|
-| Pre-flight | {blockers.length === 0 ? "PASS" : "FAIL"} | {detail} |
-| Tests | {testResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
-| Build | {buildResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
-| Types | {typeResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
-| Lint | {lintResults.exitCode === 0 ? "PASS" : "WARN"} | {detail} |
-| Dependencies | {depResults.summary.security > 0 ? "FAIL" : "PASS"} | {depResults.summary.security} security, {depResults.summary.outdated} outdated |
-
-### Blockers
-{allBlockers.length === 0 ? "None - ready to release!" : allBlockers.map((b, i) => `${i+1}. [CRITICAL] ${b.id}: ${b.message} (${b.type})`).join('\n')}
-
-### Warnings
-{allWarnings.length === 0 ? "None" : allWarnings.map((w, i) => `${i+1}. [WARN] ${w.id}: ${w.message} (${w.type})`).join('\n')}
-
-**Release Ready:** {hasBlockers ? "NO - blockers must be fixed" : "YES"}
-```
-
-### Output Schema [STANDARD ENVELOPE]
-
-**All CCO commands use same envelope.**
-
-```json
-{
-  "status": "OK|WARN|BLOCKED",
-  "summary": "Applied 8, Failed 0, Needs Approval 0, Blockers 0, Version v1.2.0",
-  "data": {
-    "accounting": { "applied": 8, "failed": 0, "needs_approval": 0, "total": 8 },
-    "optimize": { "applied": 5, "failed": 0, "needs_approval": 0 },
-    "align": { "applied": 3, "failed": 0, "needs_approval": 0 },
-    "blockers": [],
-    "warnings": ["[WARN] PRE-04: TODO markers found"],
-    "version": { "current": "1.1.0", "suggested": "1.2.0", "bump": "MINOR" }
-  },
-  "error": null
-}
-```
-
-**Status rules:**
-- `OK`: blockers = 0, tests pass, build pass
-- `WARN`: blockers = 0 but warnings > 0
-- `BLOCKED`: blockers > 0 OR tests fail OR build fail
-
-**--auto mode:** Prints `summary` field only.
-Exit code: 0 (OK), 1 (WARN), 2 (BLOCKED)
-
-### Execute Release Mode (from Q1)
-
-```javascript
-// Apply documentation updates (selected in Q1)
-if (config.docs.includes("CHANGELOG")) {
-  Edit(changelogFile, changelogEntry)
-}
-
-// Execute release action based on Q1 selection
-if (hasBlockers) {
-  console.log(`
-## Blocked
-
-${allBlockers.length} blocker(s) must be fixed before release.
-Run \`git diff\` to review changes, fix blockers, and re-run preflight.
-`)
-} else if (config.releaseMode === "Fix Only") {
-  console.log(`
-## Fixes Applied
-
-All checks passed. Fixes have been applied.
-
-**Next Steps:**
-1. Review changes: \`git diff\`
-2. Commit: \`git commit -am "chore: apply fixes"\`
-3. Push when ready: \`git push\`
-`)
-} else if (config.releaseMode === "tag" || config.releaseMode === "Create Tag") {
-  Bash(`git commit -am "chore: release ${suggestedVersion}" && git tag v${suggestedVersion}`)
-  console.log(`
-## Tagged
-
-Version ${suggestedVersion} has been tagged.
-
-**Next Steps:**
-1. Review: \`git log --oneline -3\`
-2. Push when ready: \`git push && git push --tags\`
-`)
-}
-```
-
-### Final Summary
-
-```markdown
-## Preflight Complete
-
-Status: {hasBlockers ? "BLOCKED" : (allWarnings.length > 0 ? "WARN" : "OK")} | Applied: {totalApplied} | Failed: {totalFailed} | Deferred: {totalNeedsApproval} | Total: {totalFindings}
-
-**Invariant:** applied + failed + needs_approval = total
-
-Mode: {config.releaseMode}
-```
-
-### Validation
-```
-[x] All background results collected
-[x] Summary displayed
-[x] User made decision
-→ Done
-```
-
----
-
-## Reference
-
-### Question Flow Summary
-
-| Scenario | Questions | Total |
-|----------|-----------|-------|
-| --auto mode | - | **0** |
-| Interactive, no findings | Q1 (Checks + Release) | **1** |
-| Interactive, findings | Q1 (Checks + Release) + Q2 (Action/Severity) | **2** |
-
-**Settings upfront, action after analysis** - Q1 collects scope/release config, Q2 post-analysis collects fix action + severity filter.
-
-### Flags
-
-| Flag | Effect |
-|------|--------|
-| `--auto` | Unattended mode: all scopes, all severities, no questions |
-| `--preview` | Run all checks, show results, don't release |
-
-### Release-Specific Checks (14 total)
-
-**BLOCKERS (must fix):**
-| ID | Check | Criteria |
-|----|-------|----------|
-| PRE-01 | Dirty git | Working directory has uncommitted changes |
-| PRE-03 | Version mismatch | Manifest version != changelog version |
-| VER-01 | Tests fail | Test suite exits non-zero |
-| VER-02 | Build fail | Build command exits non-zero |
-| VER-03 | Type errors | Type checker finds errors |
-| DEP-SEC | Security CVE | Known vulnerability in dependency |
-| OPT-CRIT | Optimize critical | Unfixed CRITICAL from /cco:optimize |
-| REV-CRIT | Review critical | Unfixed CRITICAL gap from /cco:align |
-
-**WARNINGS (can override):**
-| ID | Check | Criteria |
-|----|-------|----------|
-| PRE-02 | Branch name | Not on main/master or release/* |
-| PRE-04 | Markers | TODO/FIXME found in code |
-| VER-04 | Lint warnings | Linter has warnings |
-| VER-05 | Format changes | Formatter made changes |
-| DEP-OUT | Outdated deps | Non-security outdated packages |
-| SEM-01 | SemVer mismatch | Commits suggest different bump |
-
-### Go/No-Go Status
-
-| Status | Meaning | Action |
-|--------|---------|--------|
-| BLOCKED (red) | Has blockers | Cannot release - must fix |
-| WARN (yellow) | Has warnings | User decides |
-| OK (green) | All clear | Ready to release |
-
-### Model Strategy
-
-**Policy:** Opus + Haiku only (no Sonnet)
-
-| Task | Model | Reason |
-|------|-------|--------|
-| /cco:optimize | Skill (owns model) | Delegated — optimize controls its own models |
-| /cco:align | Skill (owns model) | Delegated — align controls its own models |
-| Dependency audit | Haiku | Read-only research |
-| Verification | Bash | Direct execution |
-
----
+**WARNINGS:** PRE-02 (branch), PRE-04 (markers), VER-04 (lint), VER-05 (format changes), DEP-OUT (outdated), SEM-01 (semver mismatch)
 
 ## Recovery
 
 | Situation | Recovery |
 |-----------|----------|
-| Wrong version suggested | Edit version manually before tagging |
+| Wrong version | Edit version before tagging |
 | Changelog wrong | Edit CHANGELOG.md before commit |
-| Tests failed | Fix tests, re-run preflight |
-| Build failed | Fix build issues, re-run |
-| Blockers remain | Run with --auto |
-
----
-
-## Rules
-
-1. **Scope + release upfront** - Checks and release mode in Q1, fix action post-analysis in Q2
-2. **All parallel execution** - Bash verification in background, Skill calls for sub-commands
-3. **Full scope** - Run ALL scopes for both optimize (10) and align (6)
-4. **No mid-flow questions** - All decisions made at start, uninterrupted execution
-5. **Git safety** - Clean state required, version sync verified
-6. **Blockers stop release** - Cannot proceed with blockers regardless of release mode
-7. **Security blocks release** - Dependency security advisories are always blockers
-
----
-
-## Blocker Classification
-
-### Self-Consistency (BLOCKER Decisions)
-For blocker classification, validate with multiple perspectives:
-```
-Path A: "Does this pose risk to users/production?"
-Path B: "Is this a development-time concern only?"
-Consensus: Both agree risk → BLOCKER. Only dev concern → WARNING
-```
-
-**When uncertain → WARNING** (let user decide)
-
----
-
-## Accounting
-
-**See Tool Rules: Accounting.** Combined from both sub-commands: totalApplied = optimize.applied + align.applied, etc.
+| Tests/build failed | Fix and re-run preflight |
