@@ -1,12 +1,11 @@
 {
   "name": "cco",
   "version": "2.0.0",
-  "description": "Quality standards and adaptive rules for Claude Code. Run /cco:tune to setup.",
+  "description": "Enforceable constraints for Claude Code. Quality standards via SessionStart hook.",
   "author": {
     "name": "Sungur Zahid Erdim"
   },
   "commands": [
-    "./commands/tune.md",
     "./commands/optimize.md",
     "./commands/align.md",
     "./commands/commit.md",

@@ -137,12 +137,11 @@ CCO only touches:
 
 | Location | Content |
 |----------|---------|
-| `commands/` | 5 slash commands |
+| `commands/` | 6 slash commands |
 | `agents/` | 3 specialized agents |
-| `rules/` | 44 rule files |
-| `.claude/rules/cco-*.md` | Project-specific rules (after /cco:tune) |
+| `hooks/` | Core rules (SessionStart hook) |
 
-**Your project files are never modified** by installation. Only `/cco:tune` creates files in your project's `.claude/` directory.
+**Your project files are never modified.** Core rules are injected via SessionStart hook.
 
 ---
 

@@ -14,9 +14,9 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `findings` | `Finding[]` | For fix scope | Findings to fix with file, line, description |
-| `operations` | `Operation[]` | For tune scope | File write/delete/merge operations |
+| `operations` | `Operation[]` | For config scope | File write/delete/merge operations |
 | `fixAll` | `boolean` | No | When true, fix everything regardless of effort/impact |
-| `scope` | `string` | No | `"fix"` (default), `"tune"`, or `"docs"` |
+| `scope` | `string` | No | `"fix"` (default) or `"docs"` |
 
 ## Output Contract
 
@@ -36,15 +36,11 @@ See **Output Schema** section below. Accounting per Core Rules.
 
 ## Policies
 
-**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
+Per Core Rules: No Deferrals, Accounting, Efficiency, Skip Patterns.
 
-**Core Principle:** Every finding MUST be fixed. Only valid failures are technical impossibilities.
-
-**Fix-All Mode:** When `fixAll: true`, metadata is for reporting only - everything gets fixed. Ask user for significant changes (>50 lines), never skip.
+When `fixAll: true`: ask user for significant changes (>50 lines), never skip.
 
 ## Execution [CRITICAL]
-
-**Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**
 
 | Step | Action | Tool Calls | Execution |
 |------|--------|------------|-----------|
@@ -98,77 +94,6 @@ See **Output Schema** section below. Accounting per Core Rules.
 | Duplication | Create shared function |
 | Magic numbers | Extract to constants |
 
-## Write Operations [CRITICAL]
-
-**Config file operations for /cco:tune. Always execute - never skip based on content comparison.**
-
-**[ABSOLUTE RULE]** Execute the write operation for EVERY file. Write regardless of whether content appears identical. Report "applied" only after Write tool confirms success. Log bytes written for verification.
-
-### Execution Order for Setup/Update [CRITICAL]
-
-1. **CLEAN FIRST**: Delete ALL existing `cco-*.md` files in `.claude/rules/` directory
-2. **THEN WRITE**: Write new cco-profile.md, rule files, statusline, settings
-
-### Plugin Root Path
-
-`$CLAUDE_PLUGIN_ROOT` provides access to: `rules/core/*.md` (3), `rules/languages/*.md` (21), `rules/frameworks/*.md` (8), `rules/operations/*.md` (12), `content/statusline/cco-*.js` (full, minimal), `content/permissions/*.json` (safe, balanced, permissive, full).
-
-### Write Modes
-
-| Mode | Target | Behavior |
-|------|--------|----------|
-| `overwrite` | `cco-profile.md`, Rule files, Statusline | Delete if exists, write new content (always) |
-| `merge` | `settings.json` (Setup) | Read existing -> Deep merge (new overrides, preserves unspecified) -> Write unconditionally |
-| `delete_contents` | `.claude/rules/cco-*.md` | Delete CCO files only (preserve user rules, never delete directories) |
-| `unmerge` | `settings.json` (Remove) | Read -> Remove CCO keys only -> Write |
-
-### Operation Descriptions
-
-**Setup/Update:** Clean all `cco-*.md` from `.claude/rules/`, then write `cco-profile.md`, language rule files, and statusline as `overwrite`. Merge `settings.json` with `alwaysThinkingEnabled`, `env.MAX_THINKING_TOKENS`, `env.MAX_MCP_OUTPUT_TOKENS`, `env.BASH_MAX_OUTPUT_LENGTH`.
-
-**Remove:** Delete `cco-*.md` files from `.claude/rules/`, unmerge `settings.json`.
-
-### CCO-Managed Keys [SSOT]
-
-| Key | Setup | Remove |
-|-----|-------|--------|
-| `alwaysThinkingEnabled` | Set | Delete |
-| `statusLine` | Set (if not Skip) | Delete (if Remove selected) |
-| `env.ENABLE_LSP_TOOL` | Set | Delete |
-| `env.MAX_THINKING_TOKENS` | Set | Delete |
-| `env.MAX_MCP_OUTPUT_TOKENS` | Set | Delete |
-| `env.BASH_MAX_OUTPUT_LENGTH` | Set | Delete |
-
-**Unmerge keys:** Top-level: `alwaysThinkingEnabled`, `statusLine`. Env: `ENABLE_LSP_TOOL`, `MAX_THINKING_TOKENS`, `MAX_MCP_OUTPUT_TOKENS`, `BASH_MAX_OUTPUT_LENGTH`. Remove empty `env` dict after cleanup.
-
-**Never touch:** User-added keys, `permissions` (unless explicitly selected)
-
-### cco-profile.md Validation [CRITICAL - BEFORE WRITE]
-
-Before writing, validate YAML structure. If validation fails, do NOT write - return error to orchestrator.
-
-- [ ] YAML is valid and parseable (between `---` markers)
-- [ ] Required fields present: `project`, `stack`, `maturity`, `commands`
-- [ ] `project.purpose` is set
-- [ ] All required sections exist
-
-### Write Operation Validation [CRITICAL]
-
-For each file: verify Write tool was called, tool returned success with bytes written, status reported as "applied" with byte count.
-
-## Export Operations
-
-**Export rules to external formats. Read-only on `.claude/rules/`.**
-
-| Format | Output | Transformation |
-|--------|--------|---------------|
-| `AGENTS.md` | `./.github/AGENTS.md` | Concatenate with H1 headers, add frontmatter |
-| `CLAUDE.md` | `./CLAUDE.md` | Concatenate with H1 headers |
-| `cursor` | `./.cursor/rules/*.mdc` | Split by H2, create separate `.mdc` files |
-| `raw` | `./cco-rules/` | Copy as-is |
-
-**Flow:** Read all `cco-*.md` from `.claude/rules/` -> Transform for target format -> Write to output location.
-
 ## Verification & Cascade
 
 **All verification runs in parallel.** If any fails -> cascade fix -> re-verify until clean (max 3 cascade iterations).
@@ -217,45 +142,6 @@ Every fixed item includes: `why` (impact if unfixed), `avoid` (anti-pattern snip
 ## Principles
 
 Fix everything | Verify after change | Cascade fixes | Complete accounting | Reversible (clean git)
-
----
-
-## Tune Scope (scope=tune)
-
-Execute file operations as instructed. **Receives explicit write/delete instructions from caller.**
-
-### Input Schema
-
-```json
-{
-  "operations": [
-    { "action": "delete_pattern", "path": ".claude/rules/", "pattern": "cco-*.md" },
-    { "action": "write", "path": ".claude/rules/cco-profile.md", "content": "..." },
-    { "action": "copy", "source": "$PLUGIN_ROOT/rules/languages/cco-typescript.md", "dest": ".claude/rules/cco-typescript.md" },
-    { "action": "merge", "path": ".claude/settings.json", "content": { "key": "value" } }
-  ],
-  "outputContext": true
-}
-```
-
-### Actions
-
-- **delete_pattern**: Glob match files, delete all (never skip). Report count deleted.
-- **write**: Write content to path (always, never skip based on content). Report path written.
-- **copy**: Read from `$PLUGIN_ROOT` source, write to dest. Report source -> dest.
-- **merge**: Read existing JSON, deep merge with new content, write result. Report path merged.
-
-If `outputContext: true`, read and output `.claude/rules/cco-profile.md` after all operations.
-
-### Clean-First Rule [CRITICAL]
-
-**Caller determines what to clean.** Typical order: `delete_pattern` -> `write` -> `copy`.
-
-### What This Agent Does NOT Do
-
-- Decide which files to write (caller decides)
-- Generate content (caller provides content)
-- Skip operations based on content comparison
 
 ---
 

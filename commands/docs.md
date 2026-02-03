@@ -33,10 +33,6 @@ Do NOT generate: filler, marketing language, obvious statements, duplicate conte
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
-## Profile Requirement [CRITICAL]
-
-Delegate to `/cco:tune --preview`. Reads `documentation` section from profile (populated by tune's detection). No duplicate detection needed.
-
 ## Scopes
 
 | Scope | Target | Purpose |

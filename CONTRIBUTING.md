@@ -21,31 +21,29 @@ python -c "import json; json.load(open('hooks/core-rules.json'))"
 
 | Type | Pattern | Location |
 |------|---------|----------|
-| Rules | `cco-{name}.md` | `rules/{category}/` |
 | Commands | `{name}.md` | `commands/` |
 | Agents | `cco-agent-{name}.md` | `agents/` |
-
-**All rule files require `cco-` prefix.**
+| Core Rules | `core-rules.json` | `hooks/` |
 
 ## Making Changes
 
 ### Adding/Modifying Rules
 
-1. Edit files in `rules/core/`, `rules/languages/`, `rules/frameworks/`, or `rules/operations/`
-2. If modifying core rules, regenerate hooks:
-   - Concatenate into `hooks/core-rules.json` under `additionalContext`
-   - Validate JSON before committing
+1. Edit `hooks/core-rules.json` (single source of truth)
+2. Validate JSON before committing:
+   ```bash
+   python -c "import json; json.load(open('hooks/core-rules.json'))"
+   ```
+3. Update `docs/rules.md` to reflect changes
 
 ### Updating Documentation
 
 Keep counts in sync when adding/removing files:
 
 ```bash
-# Verify counts match docs
-ls commands/*.md | wc -l                    # Commands: 7
-ls agents/*.md | wc -l                       # Agents: 3
-find rules -name "cco-*.md" | wc -l         # Rule files: 45 (4 core/30 rules · 21 language/121 rules · 8 framework/36 rules · 12 operation/66 rules)
-grep -c '^## ' rules/**/*.md                # Rule count per file
+# Verify counts (cross-platform: use Glob in Claude Code)
+# Commands: 6 (optimize, align, commit, research, preflight, docs)
+# Agents: 3 (analyze, apply, research)
 ```
 
 Update `README.md` and `docs/` if counts change.

@@ -8,7 +8,6 @@ Detailed documentation for all CCO slash commands.
 
 | Command         | Purpose                                  | Model     | Steps |
 |-----------------|------------------------------------------|-----------|-------|
-| `/cco:tune`     | Configure CCO for this project           | **haiku** | 4     |
 | `/cco:optimize` | Security + Quality + Hygiene fixes       | **opus**  | 4     |
 | `/cco:align`    | Architecture gap analysis                | **opus**  | 5     |
 | `/cco:research` | Multi-source research with AI synthesis  | **opus**  | 5     |
@@ -16,9 +15,7 @@ Detailed documentation for all CCO slash commands.
 | `/cco:preflight`| Pre-release workflow orchestration       | **opus**  | 4     |
 | `/cco:docs`     | Documentation gap analysis               | **opus**  | 5     |
 
-**Model Rationale:** Opus for coding commands (fewer errors), Haiku for configuration (fast).
-
-**Project Configuration:** Run `/cco:tune` to configure CCO for your project.
+**Model Rationale:** Opus for coding commands (fewer errors), Haiku for analysis agents (fast).
 
 ---
 
@@ -52,16 +49,6 @@ All commands follow a standardized structure for consistency and reliability.
 
 ## Common Features
 
-### Project Configuration
-
-Run `/cco:tune` to configure CCO for your project:
-
-```
-/cco:tune           # Interactive setup
-/cco:tune --auto    # Auto-detect, skip questions
-/cco:tune --preview # Validate existing profile
-```
-
 ### Dynamic Context
 
 Commands pre-collect context at execution start:
@@ -82,64 +69,6 @@ Commands pre-collect context at execution start:
 
 ---
 
-## /cco:tune
-
-**Purpose:** Configure CCO for this project - analyze stack, create profile, load rules.
-
-**Usage:**
-```bash
-/cco:tune                # Interactive setup with questions
-/cco:tune --auto         # Unattended mode - auto-detect everything
-/cco:tune --preview      # Silent validation only, return status
-/cco:tune --update       # Update even if profile exists
-```
-
-### Steps
-
-| Step | Name      | Action                                      |
-|------|-----------|---------------------------------------------|
-| 1    | Validate  | Check existing profile                      |
-| 2    | Detect    | Analyze project stack via cco-agent-analyze |
-| 3    | Merge     | Combine detection + answers                 |
-| 4    | Write     | Create files via cco-agent-apply            |
-
-Detection runs BEFORE questions so detected values can be shown as "(Detected)" labels in the interactive flow. In auto mode, questions are skipped entirely.
-
-### Interactive Questions (8 total)
-
-**Round 1: Team & Policy**
-| Question | Options | Impact |
-|----------|---------|--------|
-| Team size | Solo / Small / Medium / Large | Review requirements |
-| Data sensitivity | Public / Internal / PII / Regulated | Security level |
-| Top priority | Security / Performance / Maintainability / Velocity | Check ordering |
-| Breaking changes | Never / Major only / Semver / Flexible | API rules |
-
-**Round 2: Development & Deployment**
-| Question | Options | Impact |
-|----------|---------|--------|
-| API consumers | Internal / Partners / Public / No API | Doc requirements |
-| Testing approach | Minimal / Coverage / TDD / Comprehensive | Commit gates |
-| Documentation level | Code only / README / API docs / Full docs | Generation scope |
-| Deployment target | Local / Cloud / Self-hosted / Serverless | Ops rules |
-
-### Generated Files
-
-| File | Content |
-|------|---------|
-| `.claude/rules/cco-profile.md` | Project metadata (YAML frontmatter) |
-| `.claude/rules/cco-{language}.md` | Language-specific rules |
-| `.claude/rules/cco-{framework}.md` | Framework-specific rules |
-
-### Detection Capabilities
-
-- **Languages:** Manifest files (pyproject.toml, package.json, go.mod, Cargo.toml)
-- **Frameworks:** Dependency analysis (Django, FastAPI, React, Next.js, etc.)
-- **Commands:** Auto-detect format, lint, type, test, build commands
-- **Maturity:** File count, test presence, CI configuration
-
----
-
 ## /cco:optimize
 
 **Purpose:** Full-stack optimization combining security, code quality, and hygiene checks.
@@ -152,7 +81,6 @@ Detection runs BEFORE questions so detected values can be shown as "(Detected)" 
 /cco:optimize --scope=security     # Security focus only
 /cco:optimize --scope=hygiene      # Hygiene focus
 /cco:optimize --scope=types        # Type annotations
-/cco:optimize --scope=lint         # Lint/format fixes
 /cco:optimize --scope=performance  # Performance issues
 /cco:optimize --preview            # Report only, no fixes
 /cco:optimize --auto               # Unattended mode: fix all, no questions
@@ -170,14 +98,13 @@ Detection runs BEFORE questions so detected values can be shown as "(Detected)" 
 
 Plan Review is skipped in `--auto` mode or when 0 findings.
 
-### Scope Categories (10 Scopes, 105 Checks)
+### Scope Categories (9 Scopes, 97 Checks)
 
 | Scope          | Checks                                 |
 |----------------|----------------------------------------|
 | Security       | OWASP, secrets, CVEs, input validation |
 | Hygiene        | Orphans, stale refs, duplicates        |
 | Types          | Type annotations, mypy/pyright errors  |
-| Lint           | Format, import order, naming, style    |
 | Performance    | N+1, blocking I/O, missing caching     |
 | AI-Hygiene     | Hallucinated APIs, orphan abstractions |
 | Robustness     | Timeouts, retries, validation          |

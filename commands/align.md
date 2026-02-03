@@ -26,10 +26,6 @@ model: opus
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
-## Profile Requirement [CRITICAL]
-
-Delegate to `/cco:tune --preview`. Handle: skipped → exit, error → exit, success → continue.
-
 ## Skip Patterns
 
 Don't flag: simple CRUD appropriate for scale, single-implementation interfaces in prototyping, framework-mandated patterns, ADR-documented trade-offs, legacy code in maintenance mode.
@@ -86,7 +82,7 @@ Categorize by effort/impact: Quick Win (high impact, low effort) → Moderate �
 
 ### Phase 5: Plan Review [MANDATORY when findings > 0, SKIP if --auto]
 
-Display architectural plan BEFORE asking. For each recommendation: what, why, approach, alternatives, risks, affected modules, breaking changes.
+Per Core Rules: Plan Review. Display architectural plan BEFORE asking.
 
 **Post-analysis Q2:**
 - Action: Fix All (Recommended) / By Severity / Review Each / Report Only
@@ -100,7 +96,7 @@ Count FINDINGS, not locations. Accounting per Core Rules.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-If needs_approval > 0: display items table, ask Fix All / Skip / Review Each.
+Per Core Rules: Needs-Approval Flow.
 
 ### Phase 7: Summary
 

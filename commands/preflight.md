@@ -18,19 +18,19 @@ Meta command orchestrating `/cco:optimize` and `/cco:align` with maximum paralle
 | `--auto` | Full fix, no questions, single-line summary. Exit: 0/1/2 |
 | `--preview` | Run all checks, show results, don't release |
 
-## Context
+## Context Detection
 
-- Version: !`for f in pyproject.toml package.json setup.py; do test -f "$f" && grep -E "version|__version__|VERSION" "$f"; done | head -1`
-- Branch: !`git branch --show-current 2>/dev/null || echo ""`
-- Changelog: !`test -f CHANGELOG.md && head -20 CHANGELOG.md || echo "No CHANGELOG.md"`
-- Git status: !`git status --short 2>/dev/null || echo ""`
-- Last tag: !`git describe --tags --abbrev=0 2>/dev/null || echo "No tags"`
+At start, detect project context using Claude's native tools:
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
+| Context | Detection Method |
+|---------|------------------|
+| Version | Glob for `pyproject.toml`, `package.json`, `setup.py` → Read version field |
+| Branch | `git branch --show-current` |
+| Changelog | Read first 20 lines of `CHANGELOG.md` if exists |
+| Git status | `git status --short` |
+| Last tag | `git describe --tags --abbrev=0` |
 
-## Profile Requirement [CRITICAL]
-
-Delegate to `/cco:tune --preview`. Handle: skipped → exit, error → exit, success → continue.
+**Use Glob/Read for file detection. Git commands are cross-platform.**
 
 ## Execution Flow
 
