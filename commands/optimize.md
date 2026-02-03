@@ -17,9 +17,9 @@ model: opus
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | All 10 scopes, all severities, no questions, single-line summary. Exit: 0/1/2 |
+| `--auto` | All 9 scopes, all severities, no questions, single-line summary. Exit: 0/1/2 |
 | `--preview` | Analyze and report findings without applying fixes |
-| `--scope=<name>` | Specific scope(s), comma-separated. Valid: security, hygiene, types, lint, performance, ai-hygiene, robustness, privacy, doc-sync, simplify |
+| `--scope=<name>` | Specific scope(s), comma-separated. Valid: security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify |
 
 ## Context
 
@@ -27,10 +27,6 @@ model: opus
 - Args: $ARGS
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-
-## Profile Requirement [CRITICAL]
-
-Delegate to `/cco:tune --preview`. Handle: skipped → exit, error → exit, success → continue.
 
 ## Core Principle [CRITICAL]
 
@@ -57,20 +53,20 @@ Setup → Analyze → Gate → [Plan] → Apply → Summary
 
 **Q1 (multiselect):** "Which areas to check?"
 - Security & Privacy (Recommended): SEC + ROB + PRV
-- Code Quality (Recommended): HYG + TYP + LNT + SIM
+- Code Quality (Recommended): HYG + TYP + SIM
 - Performance: PRF
 - AI Cleanup: AIH + DOC
 
 **Q2 (conditional, only if git dirty):** "Uncommitted changes detected. Proceed?"
 - Continue (Recommended) / Stash first / Cancel
 
-In --auto mode: all 10 scopes, no stash, no questions.
+In --auto mode: all 9 scopes, no stash, no questions.
 
 ### Phase 2: Analyze [PARALLEL SCOPES]
 
 Launch scope groups as parallel Task calls to cco-agent-analyze:
 - Security & Privacy: security, robustness, privacy
-- Code Quality: hygiene, types, lint, simplify
+- Code Quality: hygiene, types, simplify
 - Performance: performance
 - AI Cleanup: ai-hygiene, doc-sync
 
@@ -80,9 +76,7 @@ Analysis always scans ALL severities. Filtering happens post-analysis via Plan R
 
 ### Phase 3: Plan Review [MANDATORY when findings > 0, SKIP if --auto]
 
-Display full plan table BEFORE asking. Never ask without showing plan first.
-
-For each finding: what will change, why, approach, risks, confidence.
+Per Core Rules: Plan Review. Display plan table BEFORE asking.
 
 **Post-analysis Q2:**
 - Action: Fix All (Recommended) / By Severity / Review Each / Report Only
@@ -94,13 +88,13 @@ Severity question only applies when Action = "By Severity".
 
 Send findings to cco-agent-apply. Group by file for efficiency.
 
-In --auto/full-fix: No Deferrals applies — every item = applied, failed (technical reason), or needs_approval (architectural reason).
+Per Core Rules: No Deferrals, Accounting.
 
 Count FINDINGS, not locations. On failure: retry with alternative fix approach.
 
 ### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-If needs_approval > 0: display items table, ask Fix All / Skip / Review Each.
+Per Core Rules: Needs-Approval Flow.
 
 ### Validation [x]
 
@@ -115,14 +109,13 @@ Interactive: table with counts, failed items list, stash reminder if applicable.
 
 Status: OK (failed=0), WARN (failed>0 no CRITICAL), FAIL (CRITICAL unfixed or error).
 
-## Scopes (10 scopes, 105 checks)
+## Scopes (9 scopes, 97 checks)
 
 | Scope | ID Range | Checks |
 |-------|----------|--------|
 | security | SEC-01-12 | Secrets, injection, deserialization, eval, debug, crypto |
 | hygiene | HYG-01-20 | Unused code, dead code, duplicates, stale TODOs, comment quality |
 | types | TYP-01-10 | Type errors, missing annotations, type:ignore, Any in API |
-| lint | LNT-01-08 | Format, import order, naming, magic numbers |
 | performance | PRF-01-10 | N+1, blocking async, missing cache/pagination/pool |
 | ai-hygiene | AIH-01-08 | Hallucinated APIs, orphan abstractions, over-documented, stale mocks |
 | robustness | ROB-01-10 | Missing timeout/retry, unbounded collections, resource cleanup |

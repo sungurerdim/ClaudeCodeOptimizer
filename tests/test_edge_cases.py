@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from _paths import PROFILE_PATH, ROOT, SCHEMAS_DIR
+from _paths import ROOT, SCHEMAS_DIR
 
 
 class TestInvalidArgumentCombinations:
@@ -46,23 +46,6 @@ class TestInvalidArgumentCombinations:
         assert "intensity" not in props, "Schema should not have intensity property"
 
 
-class TestMissingProfileHandling:
-    """Validate graceful handling when profile doesn't exist."""
-
-    def test_actual_profile_exists_at_conventional_path(self) -> None:
-        """Actual project profile should exist at .claude/rules/cco-profile.md."""
-        assert PROFILE_PATH.exists(), f"Profile not found at {PROFILE_PATH}"
-
-    def test_actual_profile_is_valid_markdown(self) -> None:
-        """Actual project profile should be readable and non-empty."""
-        if PROFILE_PATH.exists():
-            content = PROFILE_PATH.read_text(encoding="utf-8")
-            assert len(content) > 50, "Profile content is too short"
-            assert "## Stack" in content or "## stack" in content.lower(), (
-                "Profile should contain Stack section"
-            )
-
-
 class TestMalformedJsonHandling:
     """Validate detection of malformed JSON in hook files."""
 
@@ -85,27 +68,6 @@ class TestMalformedJsonHandling:
         output = data["hookSpecificOutput"]
         assert "hookEventName" in output, "Missing hookEventName"
         assert "additionalContext" in output, "Missing additionalContext"
-
-
-class TestActualProfileValidation:
-    """Validate actual project profile structure."""
-
-    @pytest.fixture
-    def profile_content(self) -> str:
-        """Load actual profile content."""
-        if not PROFILE_PATH.exists():
-            pytest.skip("Profile not found")
-        return PROFILE_PATH.read_text(encoding="utf-8")
-
-    def test_profile_has_stack_section(self, profile_content: str) -> None:
-        """Profile must document the project stack."""
-        assert "## Stack" in profile_content, "Profile missing Stack section"
-
-    def test_profile_has_language_info(self, profile_content: str) -> None:
-        """Profile must list at least one language."""
-        assert "Languages" in profile_content or "languages" in profile_content, (
-            "Profile missing language information"
-        )
 
 
 class TestSchemaExistence:

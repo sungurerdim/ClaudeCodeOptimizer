@@ -14,17 +14,12 @@ How to integrate CCO into your development workflow.
 | Prepare for release | `/cco:preflight` |
 | Research a topic | `/cco:research` |
 
-**Note:** Run `/cco:tune` first to configure CCO for your project.
-
 ---
 
 ## Daily Development
 
 ```
 Start session
-     │
-     ▼
-[Run /cco:tune if not configured]
      │
      ▼
   [Write code]

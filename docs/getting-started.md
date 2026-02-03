@@ -51,46 +51,7 @@ claude plugin install cco@ClaudeCodeOptimizer
 
 ## First 10 Minutes
 
-### Step 1: Run /cco:tune
-
-Configure CCO for your project:
-
-```
-/cco:tune
-```
-
-This will:
-1. **Auto-detect** your stack (language, framework, database, tools)
-2. **Ask questions** about team size, data sensitivity, priorities
-3. **Generate rules** specific to your project in `.claude/rules/`
-
-**Quick mode** (skip questions):
-```
-/cco:tune --auto
-```
-
-<details>
-<summary>Example detection output</summary>
-
-```
-Detected:
-├── Language: Python 3.12
-├── Framework: FastAPI
-├── Database: PostgreSQL (SQLAlchemy)
-├── Testing: pytest with 82% coverage
-├── CI/CD: GitHub Actions
-└── Type: API Service
-
-Generated rules in .claude/rules/:
-├── cco-profile.md (project metadata)
-├── cco-python.md (language best practices)
-├── cco-backend.md (API patterns)
-└── cco-testing.md (test standards)
-```
-
-</details>
-
-### Step 2: Quick Wins
+### Step 1: Quick Wins
 
 ```
 /cco:optimize
@@ -104,7 +65,7 @@ Auto-fixes safe issues:
 
 **Risky changes** (auth, schema, API) will ask for approval. Use `--auto` for unattended mode or `--scope=security` for a specific scope.
 
-### Step 3: Architecture Check (Optional)
+### Step 2: Architecture Check (Optional)
 
 ```
 /cco:align
@@ -116,7 +77,7 @@ Shows gap analysis between current state and ideal architecture. Use `--preview`
 
 ## Rule Loading
 
-CCO automatically loads rules via the SessionStart hook. Core rules are injected into context, and project rules are loaded from `.claude/rules/*.md`. For technical details on the rule loading mechanism, see [Rules Reference](rules.md#zero-config-loading-mechanism).
+CCO rules are injected automatically via the SessionStart hook from `hooks/core-rules.json`. See [Rules](rules.md) for full documentation.
 
 ---
 
@@ -141,35 +102,18 @@ Injected automatically at session start via hook. These are **enforceable constr
 
 These apply to **all projects** automatically and cannot be overridden.
 
-### Adaptive Rules (Per-Project)
-
-| Category | Files | Examples |
-|----------|-------|----------|
-| Languages | 21 | `cco-python.md`, `cco-typescript.md`, `cco-go.md` |
-| Frameworks | 8 | `cco-backend.md`, `cco-frontend.md`, `cco-api.md` |
-| Operations | 12 | `cco-cicd.md`, `cco-testing.md`, `cco-infrastructure.md` |
-
-Selected automatically based on your stack detection.
 
 ---
 
 ## Common Questions
 
-### "How does CCO know about my project?"
-
-CCO stores project config in `.claude/rules/cco-profile.md`. Run `/cco:tune` to create or update it.
-
-### "Can I customize the generated rules?"
-
-Yes. Edit `.claude/rules/cco-profile.md` directly. Your changes persist. Re-run setup anytime to reconfigure.
-
 ### "How do I see what rules are active?"
 
-Check `.claude/rules/` in your project. All `cco-*.md` files are managed by CCO.
+See [docs/rules.md](rules.md) — all CCO rules are documented there.
 
-### "What if detection is wrong?"
+### "Can I add custom rules?"
 
-Choose "Interactive" during setup to answer questions manually. You can also edit generated rules directly.
+Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them automatically.
 
 ---
 
@@ -184,10 +128,6 @@ Choose "Interactive" during setup to answer questions manually. You can also edi
    /plugin uninstall cco@ClaudeCodeOptimizer
    /plugin install cco@ClaudeCodeOptimizer
    ```
-
-### "CCO profile not found"
-
-Run `/cco:tune` to configure CCO for your project, or any CCO command will offer setup options.
 
 ---
 

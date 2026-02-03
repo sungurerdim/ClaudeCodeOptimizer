@@ -70,14 +70,13 @@ Need changes?
 
 ### Scopes
 
-**OPTIMIZE Scopes** (tactical, file-level fixes — 10 scopes, 105 checks):
+**OPTIMIZE Scopes** (tactical, file-level fixes — 9 scopes, 97 checks):
 
 | Scope          | ID Range         | Checks | Focus                                    |
 |----------------|------------------|--------|------------------------------------------|
 | `security`     | SEC-01 to SEC-12 | 12     | OWASP, secrets, injection, unsafe patterns |
 | `hygiene`      | HYG-01 to HYG-20 | 20     | Unused code, orphan files, dead code     |
 | `types`        | TYP-01 to TYP-10 | 10     | Type annotations, mypy/pyright errors    |
-| `lint`         | LNT-01 to LNT-08 | 8      | Format, import order, naming, style      |
 | `performance`  | PRF-01 to PRF-10 | 10     | N+1, blocking I/O, missing caching       |
 | `ai-hygiene`   | AIH-01 to AIH-08 | 8      | Hallucinated APIs, orphan abstractions   |
 | `robustness`   | ROB-01 to ROB-10 | 10     | Timeouts, retries, validation            |
@@ -95,12 +94,6 @@ Need changes?
 | `maintainability`  | MNT-01 to MNT-12 | 12     | Complexity, readability, naming          |
 | `ai-architecture`  | AIA-01 to AIA-10 | 10     | Over-engineering, drift, premature abstraction |
 | `functional-completeness` | FUN-01 to FUN-18 | 18 | CRUD completeness, edge cases            |
-
-**Other Scopes:**
-
-| Scope  | Purpose                              |
-|--------|--------------------------------------|
-| `tune` | Project detection for `/cco:tune`    |
 
 ### Output
 
@@ -231,13 +224,11 @@ After each change:
 
 | Command          | Analyze Scope                                      | Apply          | Research     |
 |------------------|----------------------------------------------------|----------------|--------------|
-| `/cco:optimize`  | security, hygiene, types, lint, performance, etc.  | Yes            | dependency   |
+| `/cco:optimize`  | security, hygiene, types, performance, etc.        | Yes            | dependency   |
 | `/cco:align`     | architecture, patterns, testing, maintainability   | Yes            | dependency   |
 | `/cco:commit`    | (quality gates only)                               | No             | No           |
 | `/cco:research`  | -                                                  | No             | full         |
 | `/cco:preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
-
-**Configuration:** `/cco:tune` uses cco-agent-analyze with `scope=tune` for detection, then cco-agent-apply for file writes.
 
 ---
 

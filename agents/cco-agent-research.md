@@ -30,7 +30,7 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
 ## Execution [CRITICAL]
 
-**Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**
+Per Core Rules: Efficiency (parallel tool calls).
 
 | Step | Action | Tool Calls | Execution |
 |------|--------|------------|-----------|
