@@ -437,5 +437,3 @@ class TestResearchCommandPatterns:
         assert "T1" in content or "tier" in content.lower(), (
             "research.md should document source tiers"
         )
-
-
