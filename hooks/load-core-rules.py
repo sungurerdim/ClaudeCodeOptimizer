@@ -6,6 +6,10 @@ import sys
 
 
 def main() -> None:
+    # Fix Windows stdout encoding for Unicode characters
+    if sys.platform == "win32":
+        sys.stdout.reconfigure(encoding="utf-8")
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     rules_path = os.path.join(script_dir, "core-rules.json")
 
