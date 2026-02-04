@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v2.0.0...v2.0.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* **ci:** update workflow for new hooks-based structure ([95687bd](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/95687bd2eaf8bdaf50670612177198a8d69f60eb))
+* **hooks:** simplify to Python script, add Windows encoding fix ([cfbdc0c](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/cfbdc0ce1c92b561f4a20ff31d1b2e92e828a64b))
+* **release:** configure manifest mode for release-please ([d983aec](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/d983aeccce8272592014a08f2b0cee7f3e804f54))
+* **release:** configure manifest mode for release-please ([0669e47](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/0669e47b96dfc3a60cde2cbd8390e57a7038b752))
+* **release:** switch to simple release type ([dc55817](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/dc5581784c637951cde2fa297f44f527a17d870e))
+* **release:** use config file instead of hardcoded node type ([33e022d](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/33e022dae6d21e317540c8491ac91bedbe273375))
+* **release:** use config file instead of hardcoded node type ([a47ff8d](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/a47ff8d4406c01601c67d92fba55364e66daa613))
+* **release:** use simple release type instead of node ([3e93f93](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/3e93f933897eb3b6305881a7a9bfae6d55e97973))
+
+
+### Reverts
+
+* **release:** restore original working config ([e45da1b](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/e45da1b64691c97bd97f6ab52df48bf5203c122b))
+
 ## [2.0.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/tag/v2.0.0) (2025-01-24)
 
 ### ⚠ BREAKING CHANGES
