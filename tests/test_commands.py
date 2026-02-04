@@ -52,12 +52,11 @@ BUILTIN_AGENTS = {
 # definitions in cco-agent-analyze.md. Commands reference these scopes via
 # the analyze agent, and tests validate consistency between command docs and agent definitions.
 
-# Optimize scope ID to name mapping (10 scopes, 105 checks)
+# Optimize scope ID to name mapping (9 scopes, 97 checks)
 OPTIMIZE_SCOPES = {
     "SEC": "security",
     "HYG": "hygiene",
     "TYP": "types",
-    "LNT": "lint",
     "PRF": "performance",
     "AIH": "ai-hygiene",
     "ROB": "robustness",
@@ -285,7 +284,7 @@ class TestScopeConsistency:
 
     def test_scope_check_counts_match(self, agent_content: str, optimize_content: str) -> None:
         """Scope check ranges in command should match agent definitions."""
-        # Verify key scope ranges exist in both
+        # Verify key scope ranges exist in agent (9 scopes, lint removed)
         scope_ranges = [
             ("SEC-01", "SEC-12"),
             ("HYG-01", "HYG-20"),
@@ -437,24 +436,4 @@ class TestResearchCommandPatterns:
         # Should mention tiered sources
         assert "T1" in content or "tier" in content.lower(), (
             "research.md should document source tiers"
-        )
-
-
-class TestTuneCommandPatterns:
-    """Validate tune-specific patterns."""
-
-    def test_tune_documents_modes(self) -> None:
-        """Tune command should document auto and interactive modes."""
-        content = (COMMANDS_DIR / "tune.md").read_text(encoding="utf-8")
-        assert "--auto" in content, "tune.md should document --auto mode"
-        assert "interactive" in content.lower(), "tune.md should document interactive mode"
-
-    def test_tune_has_agent_orchestration(self) -> None:
-        """Tune command should orchestrate analyze and apply agents."""
-        content = (COMMANDS_DIR / "tune.md").read_text(encoding="utf-8")
-        assert "cco-agent-analyze" in content or "analyze" in content, (
-            "tune.md should reference analyze agent"
-        )
-        assert "cco-agent-apply" in content or "apply" in content, (
-            "tune.md should reference apply agent"
         )

@@ -51,71 +51,6 @@ Common issues and solutions.
 
 ---
 
-## Profile Issues
-
-### "CCO profile not found"
-
-**Symptoms:** Commands report missing profile.
-
-**Solutions:**
-
-1. **Run tune:**
-   ```
-   /cco:tune
-   ```
-
-2. **Auto-setup:**
-   ```
-   /cco:tune --auto
-   ```
-
-3. **Check file exists:**
-   ```bash
-   ls .claude/rules/cco-profile.md
-   ```
-
-### Profile incomplete
-
-**Symptoms:** Commands warn about missing fields.
-
-**Solutions:**
-
-1. **Force update:**
-   ```
-   /cco:tune --update
-   ```
-
-2. **Check required fields:**
-   - `project.name`
-   - `project.purpose`
-   - `stack.languages`
-   - `maturity`
-   - `commands`
-
-### Detection is wrong
-
-**Symptoms:** Wrong language/framework detected.
-
-**Solutions:**
-
-1. **Use interactive mode:**
-   ```
-   /cco:tune
-   ```
-   Select "Interactive" to answer questions manually
-
-2. **Edit profile directly:**
-   ```
-   Edit .claude/rules/cco-profile.md
-   ```
-
-3. **Re-run with force:**
-   ```
-   /cco:tune --update
-   ```
-
----
-
 ## Command Issues
 
 ### Command hangs or times out
@@ -182,23 +117,11 @@ Common issues and solutions.
 
 **Solutions:**
 
-1. **Re-run tune to detect commands:**
-   ```
-   /cco:tune --update
-   ```
-
-2. **Check profile commands section:**
-   ```yaml
-   commands:
-     format: "black ."
-     lint: "ruff check ."
-     type: "mypy src/"
-     test: "pytest"
-   ```
-
-3. **Install missing tools:**
+1. **Check your package.json or pyproject.toml** for scripts
+2. **Install missing tools:**
    ```bash
-   pip install black ruff mypy pytest
+   pip install black ruff mypy pytest  # Python
+   npm install -D prettier eslint      # Node.js
    ```
 
 ### Tests fail during commit
@@ -281,17 +204,12 @@ Common issues and solutions.
 
 ### Remove CCO from project
 
-1. **Delete CCO files:**
-   ```bash
-   rm .claude/rules/cco-*.md
-   ```
+**Uninstall plugin:**
+```
+/plugin uninstall cco@ClaudeCodeOptimizer
+```
 
-2. **User rules are preserved** - Files without `cco-` prefix stay
-
-3. **Uninstall plugin (optional):**
-   ```
-   /plugin uninstall cco@ClaudeCodeOptimizer
-   ```
+CCO doesn't write files to your project, so no cleanup needed.
 
 ---
 
@@ -307,42 +225,21 @@ Most commands support `--preview` for dry-run:
 /cco:preflight --preview  # Check without releasing
 ```
 
-### Check what tune detected
-
-```
-/cco:tune --preview
-```
-
-Returns detection status and profile validation.
-
 ### View loaded rules
 
-Check `.claude/rules/` directory:
-
-```bash
-ls -la .claude/rules/
-```
-
-Should show:
-- `cco-profile.md` - Project metadata
-- `cco-{language}.md` - Language rules
-- `cco-{framework}.md` - Framework rules (if detected)
+Core rules are injected via SessionStart hook automatically. Check your project's `.claude/rules/` for any custom rules you've added.
 
 ---
 
 ## FAQ
 
-### "Can I customize generated rules?"
-
-Yes. Edit `.claude/rules/cco-profile.md` directly. Changes persist until next `/cco:tune --update`.
-
 ### "How do I see what rules are active?"
 
-All `cco-*.md` files in `.claude/rules/` are active. Claude Code loads them automatically.
+Core rules are injected via SessionStart hook. Any `.md` files in your project's `.claude/rules/` are also loaded by Claude Code.
 
 ### "Will CCO break my existing Claude rules?"
 
-No. CCO only manages files with `cco-` prefix. Your rules (without prefix) are never touched.
+No. CCO core rules are injected via hook, not written to your project. Your custom rules in `.claude/rules/` are never touched.
 
 ### "Why does optimize report 0 applied?"
 

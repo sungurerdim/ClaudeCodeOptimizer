@@ -20,7 +20,7 @@ SessionStart Hook                    .claude/rules/*.md
                           |
               ┌───────────┼───────────┐
               |           |           |
-         /cco:tune   /cco:optimize  /cco:commit
+        /cco:optimize  /cco:align  /cco:commit
               |           |           |
               └─────┬─────┴─────┬─────┘
                     |           |
@@ -35,8 +35,7 @@ SessionStart Hook                    .claude/rules/*.md
 ClaudeCodeOptimizer/
 ├── .claude-plugin/
 │   └── plugin.json           # Plugin manifest
-├── commands/                  # Slash commands (7 files)
-│   ├── tune.md
+├── commands/                  # Slash commands (6 files)
 │   ├── optimize.md
 │   ├── align.md
 │   ├── commit.md
@@ -47,13 +46,8 @@ ClaudeCodeOptimizer/
 │   ├── cco-agent-analyze.md
 │   ├── cco-agent-apply.md
 │   └── cco-agent-research.md
-├── rules/                     # Rule files (44 files)
-│   ├── core/                  # Foundation, Safety, Workflow
-│   ├── languages/             # 21 language-specific
-│   ├── frameworks/            # 8 framework-specific
-│   └── operations/            # 12 operations-specific
 └── hooks/
-    └── core-rules.json        # SessionStart hook
+    └── core-rules.json        # Core rules + SessionStart hook (single source)
 ```
 
 ---
@@ -74,7 +68,6 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 |------------|--------|
 | Security scan | SEC-01 to SEC-12 findings |
 | Quality metrics | Coupling, cohesion, complexity |
-| Project detection | Stack, frameworks, maturity |
 | Documentation scan | 50+ file patterns |
 
 **Execution pattern:**
@@ -93,7 +86,6 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 | Capability | Output |
 |------------|--------|
 | Code fixes | Edit files with verification |
-| Config writes | Profile, rules, settings |
 | Cascade fixes | Fix errors caused by fixes |
 | Accounting | applied + failed + needs_approval = total |
 
@@ -122,39 +114,6 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 ## Command Flow
 
-### /cco:tune
-
-```
-User: /cco:tune
-          |
-          v
-    ┌─────────────────┐
-    │ Validate profile │
-    └────────┬────────┘
-             |
-    ┌────────┴────────┐
-    │ cco-agent-analyze│  ← Detect stack (scope: tune)
-    │   - manifests    │
-    │   - extensions   │
-    │   - frameworks   │
-    │   - commands     │
-    └────────┬────────┘
-             |
-    ┌────────┴────────┐
-    │ Ask questions   │  ← 8 questions (or --auto)
-    │ (if interactive) │
-    └────────┬────────┘
-             |
-    ┌────────┴────────┐
-    │ cco-agent-apply │  ← Write files (scope: tune)
-    │   - clean old   │
-    │   - write new   │
-    │   - copy rules  │
-    └────────┬────────┘
-             |
-          Profile created
-```
-
 ### /cco:optimize
 
 ```
@@ -166,7 +125,7 @@ User: /cco:optimize
     └─────┬─────┘
           |
     ┌─────┴─────┐
-    │  Analyze  │  ← cco-agent-analyze (105 checks)
+    │  Analyze  │  ← cco-agent-analyze (97 checks)
     └─────┬─────┘
           |
     ┌─────┴─────┐
@@ -223,16 +182,6 @@ Injected via SessionStart hook. Cannot be overridden.
 | Security Violations | BLOCKER | Fix before continuing |
 | Accounting | BLOCKER | applied + failed + needs_approval = total |
 
-### Adaptive Rules (Per-Project)
-
-Loaded from `.claude/rules/cco-*.md`. Selected by detection.
-
-| Category | Files | Trigger |
-|----------|-------|---------|
-| Languages | 21 | File extensions, manifests |
-| Frameworks | 8 | Dependencies in manifest |
-| Operations | 12 | CI/CD, infrastructure files |
-
 ---
 
 ## Parallelization Strategy
@@ -271,29 +220,6 @@ results = Task("cco-agent-analyze", prompt)
 ---
 
 ## Data Flow
-
-### Profile Schema
-
-```yaml
-project:
-  name: my-project
-  purpose: API for user management
-  type: [api]
-
-stack:
-  languages: [python, typescript]
-  frameworks: [fastapi, react]
-  testing: [pytest, jest]
-  build: [docker]
-
-maturity: active  # prototype | active | stable | legacy
-
-commands:
-  format: "black . && prettier --write ."
-  lint: "ruff check ."
-  test: "pytest tests/"
-  type: "mypy src/"
-```
 
 ### Finding Schema
 

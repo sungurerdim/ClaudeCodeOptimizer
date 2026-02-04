@@ -37,135 +37,17 @@ Description of what the rule enforces.
 
 ---
 
-## Core Rules Structure
+## Core Rules
 
-Three core rule files in `rules/core/`:
+All CCO rules are in `hooks/core-rules.json` — injected via SessionStart hook.
 
-### cco-foundation.md
+**Categories:**
+- **Foundation** - Uncertainty, Complexity, Change Scope, Validation
+- **Safety** - Security violations that block execution
+- **Workflow** - Read-Before-Edit, Accounting, No Deferrals
+- **Tool** - Execution flow, confidence scoring
 
-Enforceable constraints with measurable thresholds.
-
-**Key rules:**
-- Uncertainty Protocol - Stop and ask when unclear
-- Complexity Limits - Method ≤50 lines, CC ≤15
-- Change Scope - Only requested changes
-- Validation Boundaries - Input validation requirements
-
-### cco-safety.md
-
-Security violations that block execution.
-
-**Key rules:**
-- No secrets in source
-- No bare except/catch
-- No unsafe deserialization
-- Required input sanitization
-
-### cco-workflow.md
-
-Execution patterns and accounting.
-
-**Key rules:**
-- Read-Before-Edit - Must read before editing
-- No Deferrals - AI cannot skip fixes in auto mode
-- Accounting - applied + failed + needs_approval = total
-
----
-
-## Language Rules
-
-Located in `rules/languages/cco-{language}.md`.
-
-### File Naming
-
-```
-cco-{language}.md
-```
-
-Examples: `cco-python.md`, `cco-typescript.md`, `cco-go.md`
-
-### Structure
-
-```markdown
-# {Language} Rules
-*Stack-specific rules for {Language} projects*
-
-**Trigger:** {manifest_files}, {extensions}
-
-## Category Name
-
-- **Rule-Name**: Description of the rule
-- **Another-Rule**: Another description
-
-## Another Category
-
-- **Pattern-Name**: Use `good pattern` not `bad pattern`
-```
-
-### Example: Python Rules
-
-```markdown
-# Python Rules
-*Stack-specific rules for Python projects*
-
-**Trigger:** {py_manifest}, {py_ext}
-
-## Type Annotations
-
-- **Modern-Types**: Use `str | None` not `Optional[str]`
-- **Self-Type**: Use `Self` for return type in methods
-
-## Modern Syntax
-
-- **Match-Case**: Use `match`/`case` for complex conditionals
-- **F-Strings**: Use f-strings: `f"Hello {name}"`
-
-## Async Patterns
-
-- **TaskGroup**: Use `async with asyncio.TaskGroup()`
-```
-
----
-
-## Framework Rules
-
-Located in `rules/frameworks/cco-{framework}.md`.
-
-### Available Frameworks
-
-| File | Covers |
-|------|--------|
-| cco-backend.md | FastAPI, Django, Flask, Express |
-| cco-frontend.md | React, Vue, Svelte, Next.js |
-| cco-api.md | REST, GraphQL, gRPC patterns |
-| cco-testing.md | pytest, jest, testing patterns |
-| cco-orm.md | SQLAlchemy, Prisma, TypeORM |
-| cco-ml.md | PyTorch, TensorFlow, scikit-learn |
-| cco-mobile.md | React Native, Flutter |
-| cco-realtime.md | WebSocket, SSE patterns |
-
----
-
-## Operations Rules
-
-Located in `rules/operations/cco-{topic}.md`.
-
-### Available Topics
-
-| File | Covers |
-|------|--------|
-| cco-security.md | OWASP, auth, encryption |
-| cco-cicd.md | GitHub Actions, GitLab CI |
-| cco-deployment.md | Docker, Kubernetes |
-| cco-database.md | SQL, migrations, indexing |
-| cco-observability.md | Logging, metrics, tracing |
-| cco-scale.md | Caching, queuing, sharding |
-| cco-infrastructure.md | Terraform, cloud patterns |
-| cco-build.md | Bundlers, compilers |
-| cco-runtimes.md | Node.js, Python, Go |
-| cco-messagequeue.md | Kafka, RabbitMQ, Redis |
-| cco-compliance.md | GDPR, SOC2, HIPAA |
-| cco-project-types.md | CLI, Library, API, Web |
+See [docs/rules.md](rules.md) for full documentation.
 
 ---
 
@@ -173,7 +55,7 @@ Located in `rules/operations/cco-{topic}.md`.
 
 ### Step 1: Create File
 
-Create a file in `.claude/rules/` (project-specific) or contribute to `rules/` (plugin).
+Create a file in `.claude/rules/` for project-specific rules.
 
 ```markdown
 # My Custom Rules
@@ -331,9 +213,9 @@ Implementation details...
 
 | Type | Pattern | Location |
 |------|---------|----------|
-| Rules | `cco-{name}.md` | `rules/{category}/` |
 | Commands | `{name}.md` | `commands/` |
 | Agents | `cco-agent-{name}.md` | `agents/` |
+| Core Rules | `core-rules.json` | `hooks/` |
 
 ### Validation
 
@@ -347,10 +229,9 @@ python -m pytest tests/ -v
 python -c "import json; json.load(open('.claude-plugin/plugin.json'))"
 python -c "import json; json.load(open('hooks/core-rules.json'))"
 
-# Check counts match docs
-ls commands/*.md | wc -l       # Should match "Commands: 7"
-ls agents/*.md | wc -l         # Should match "Agents: 3"
-find rules -name "cco-*.md" | wc -l  # Should match "Rules: 44"
+# Check counts
+ls commands/*.md | wc -l       # Commands: 6
+ls agents/*.md | wc -l         # Agents: 3
 ```
 
 ### Pull Request Guidelines
@@ -362,26 +243,17 @@ find rules -name "cco-*.md" | wc -l  # Should match "Rules: 44"
 
 ---
 
-## User Rules vs CCO Rules
+## User Rules
 
-### User Rules (Preserved)
-
-Files in `.claude/rules/` without `cco-` prefix are user rules:
+Files in `.claude/rules/` are user rules loaded by Claude Code:
 
 ```
 .claude/rules/
-├── cco-profile.md       ← CCO (managed)
-├── cco-python.md        ← CCO (managed)
 ├── my-team-rules.md     ← User (preserved)
 └── project-patterns.md  ← User (preserved)
 ```
 
-### CCO Rules (Managed)
-
-Files with `cco-` prefix are managed by CCO:
-- Replaced on `/cco:tune`
-- Removed on plugin uninstall
-- Never manually edit (changes lost on update)
+CCO core rules are injected via SessionStart hook, not copied to project.
 
 ---
 

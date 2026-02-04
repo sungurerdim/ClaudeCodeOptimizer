@@ -15,7 +15,7 @@
     },
     "scope": {
       "type": "string",
-      "description": "Run specific scope(s) only. Comma-separated. Valid: security, hygiene, types, lint, performance, ai-hygiene, robustness, privacy, doc-sync, simplify"
+      "description": "Run specific scope(s) only. Comma-separated. Valid: security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify"
     }
   },
   "allOf": [

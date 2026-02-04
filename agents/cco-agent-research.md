@@ -9,36 +9,11 @@ model: haiku
 
 Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
-> **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
-
-## When to Use This Agent [CRITICAL]
-
-| Scenario | Use This Agent | Use WebSearch/WebFetch Instead |
-|----------|----------------|-------------------------------|
-| Need 3+ sources | ✓ | - |
-| CVE/security audit | ✓ | - |
-| "Which library should I use?" | ✓ | - |
-| Contradicting info online | ✓ | - |
-| Single known URL | - | ✓ |
-| Quick fact check | - | ✓ |
-| Official docs lookup | - | ✓ |
-
-## Advantages Over Default Tools
-
-| Capability | WebSearch/WebFetch | This Agent |
-|------------|-------------------|------------|
-| Source scoring | None | CRAAP+ with T1-T6 tiers (official docs → unverified) |
-| Freshness weighting | None | +10 for <3mo, -15 for >12mo |
-| Cross-verification | Manual | Automatic (T1 agree = HIGH confidence) |
-| Contradiction handling | None | Detects, logs, resolves by hierarchy |
-| Confidence output | None | HIGH/MEDIUM/LOW with reasoning |
-| Bias detection | None | Vendor self-promo: -5, Sponsored: -15 |
-
 ## Input Contract
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `scope` | `string` | Yes | `"local"` (codebase search) or `"search"` (web search) |
+| `scope` | `string` | Yes | `"local"`, `"search"`, `"analyze"`, `"synthesize"`, `"full"`, `"dependency"` |
 | `query` | `string` | Yes | Search query or concepts |
 | `patterns` | `string[]` | For local | Glob patterns to search |
 | `allowed_domains` | `string[]` | For search | Domain filters for web sources |
@@ -52,81 +27,34 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 | `confidence` | `string` | `"HIGH"` / `"MEDIUM"` / `"LOW"` |
 | `contradictions` | `Contradiction[]` | Detected conflicting information |
 | `error` | `string?` | Error message if failed |
-| Saturation | Manual stop | Auto-stop when 3 sources repeat themes |
-| Search strategies | 1 query | 4 parallel: docs, github, tutorial, stackoverflow |
-| Output format | Raw results | JSON: `{sources[], contradictions, recommendation}` |
 
 ## Execution [CRITICAL]
 
-**Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**
+Per Core Rules: Efficiency (parallel tool calls).
 
 | Step | Action | Tool Calls | Execution |
 |------|--------|------------|-----------|
 | 1. Search | Diverse strategies | `WebSearch(docs)`, `WebSearch(github)`, `WebSearch(tutorial)` | **PARALLEL** |
-| 2. Fetch | All high-tier URLs | `WebFetch(url, "extract key claims")` × N | **PARALLEL** |
+| 2. Fetch | All high-tier URLs | `WebFetch(url, "extract key claims")` x N | **PARALLEL** |
 | 3. Score | Tier assignment | Process results | Instant |
 | 4. Output | Structured JSON | Return findings | Instant |
 
-**CRITICAL Parallelization Rules:**
-```javascript
-// Step 1: ALL search strategies in ONE message
-WebSearch("{query} official docs")
-WebSearch("{query} github examples")
-WebSearch("{query} tutorial best practices")
-WebSearch("{query} stackoverflow common issues")
-
-// Step 2: ALL fetches in ONE message
-WebFetch({url}, "extract key claims")
-WebFetch({url}, "extract key claims")
-WebFetch({url}, "extract key claims")
-```
-
-**Rules:** Parallel all independent calls │ Stop when themes repeat 3× │ Uncertain → lower confidence │ Penalize promotional content
+Run all search strategies (docs, github, tutorial, stackoverflow) in one message. Then fetch all top URLs in one message. Stop when themes repeat 3x. Penalize promotional content.
 
 ## Scope Parameter
 
 | Scope | Returns | Strategy | Depth |
 |-------|---------|----------|-------|
-| `local` | Codebase findings | Glob → Grep → Read | Quick |
-| `search` | Ranked sources | WebSearch batch → WebFetch top results | Quick |
+| `local` | Codebase findings | Glob, Grep, Read | Quick |
+| `search` | Ranked sources | WebSearch batch, WebFetch top results | Quick |
 | `analyze` | Deep analysis | Parallel WebFetch all sources | Standard |
 | `synthesize` | Recommendation | Process only (no fetches) | - |
-| `full` | All combined | Search → Analyze → Synthesize | Deep |
+| `full` | All combined | Search, Analyze, Synthesize | Deep |
 | `dependency` | Package CVE, versions | WebSearch security DB + changelog | Standard |
 
-### Local Scope (Codebase Search)
+### Local Scope
 
-**Use for:** Project-specific context, existing implementations, local patterns.
-
-```javascript
-// Called from /cco:research command
-scope: local
-query: "authentication middleware"
-patterns: ["**/*.{py,ts,js}"]
-context_lines: 3
-
-// Execution
-Glob(patterns)                    // Find matching files
-Grep(query, { "-C": context_lines }) // Search with context
-Read(relevantFiles)               // Get full context for matches
-```
-
-**Returns:**
-```json
-{
-  "scope": "local",
-  "query": "authentication middleware",
-  "findings": [
-    {
-      "file": "src/middleware/auth.py",
-      "line": 42,
-      "context": "...",
-      "relevance": "HIGH"
-    }
-  ],
-  "summary": "Found 3 implementations of authentication middleware"
-}
-```
+Use for project-specific context, existing implementations, local patterns. Finds matching files via Glob, searches with context via Grep, reads full context for relevant matches. Returns findings with file, line, context, and relevance rating.
 
 ## Source Tiers & Modifiers
 
@@ -139,7 +67,7 @@ Read(relevantFiles)               // Get full context for matches
 | T5 | 40-54 | General community (blogs, Reddit) |
 | T6 | 0-39 | Unverified (AI-gen, >12mo, unknown) |
 
-**Modifiers:** Fresh 0-3mo +10 │ Dated >12mo -15 │ High engagement +5 │ Core maintainer +10 │ Cross-verified T1-T2 +10 │ Vendor self-promo -5 │ Sponsored -15
+**Modifiers:** Fresh 0-3mo +10 | Dated >12mo -15 | High engagement +5 | Core maintainer +10 | Cross-verified T1-T2 +10 | Vendor self-promo -5 | Sponsored -15
 
 ## CRAAP+ Scoring Framework
 
@@ -151,7 +79,7 @@ Read(relevantFiles)               // Get full context for matches
 | Accuracy | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
 | Purpose | 10% | Educational: 100, Info: 80, Commercial: 40 |
 
-**Quality Bands:** [A] Primary (85-100) | [B] Supporting (70-84) | [C] Background (50-69) | [WARN] Caution (<50): **REPLACE**
+**Quality Bands:** [A] Primary (85-100) | [B] Supporting (70-84) | [C] Background (50-69) | [WARN] Caution (<50): REPLACE
 
 ## Research Quality [CRITICAL]
 
@@ -164,25 +92,17 @@ Read(relevantFiles)               // Get full context for matches
 | Duplicate | SKIP - Already covered |
 | Outdated >2y | FLAG - Seek newer |
 
-### Hypothesis Tracking
-```
-H1: {hypothesis} - Confidence: {%}
-  Evidence: {sources supporting}
-  Counter: {sources against}
-```
+### Hypothesis Tracking & Self-Critique
 
-### Self-Critique Loop
-1. What evidence would **disprove** current conclusion?
-2. Which sources **contradict** each other?
-3. Am I missing a **major perspective**?
+Track hypotheses with confidence percentages, supporting evidence, and counter-evidence. Continuously ask: what would disprove the current conclusion, which sources contradict each other, and whether a major perspective is missing. Adjust confidence as evidence accumulates.
 
 ## Confidence & Contradictions
 
 | Condition | Confidence |
 |-----------|------------|
-| T1 agree, no contradictions | HIGH (90-100%) |
-| T1-T2 majority, minor contradictions | MEDIUM (60-89%) |
-| Mixed sources, unresolved conflicts | LOW (0-59%) |
+| T1 agree, no contradictions | HIGH |
+| T1-T2 majority, minor contradictions | MEDIUM |
+| Mixed sources, unresolved conflicts | LOW |
 
 **Never report HIGH without cross-verification.**
 
@@ -195,15 +115,11 @@ H1: {hypothesis} - Confidence: {%}
 | Opinion-based | Weight by authority |
 | Factual error | Cross-verify T1 |
 
-**Hierarchy:** T1 overrides all → Newer wins (same tier) → Higher engagement → Note unresolved
+**Hierarchy:** T1 overrides all > Newer wins (same tier) > Higher engagement > Note unresolved
 
 ### Knowledge Gaps
 
-| Gap | Report As |
-|-----|-----------|
-| Unanswered | "No sources addressed {X}" |
-| Edge cases | "Limited info on {Y}" |
-| Limitations | "May not apply to {Z}" |
+Report unanswered questions as "No sources addressed {X}", edge cases as "Limited info on {Y}", and limitations as "May not apply to {Z}".
 
 ## Iterative Deepening (Deep Mode)
 
@@ -212,9 +128,7 @@ H1: {hypothesis} - Confidence: {%}
 3. **Forward Snowballing**: Find newer sources citing results
 4. **Keyword Expansion**: Extract new terms, search expanded
 
-**Saturation:** Stop when last 3 sources repeat themes │ No new terms │ 80%+ overlap
-
----
+**Saturation:** Stop when last 3 sources repeat themes, no new terms, or 80%+ overlap.
 
 ## Special Modes
 
@@ -233,11 +147,9 @@ H1: {hypothesis} - Confidence: {%}
 - Rust: `https://crates.io/api/v1/crates/{pkg}`
 - Go: `https://pkg.go.dev/{pkg}?tab=versions`
 
-**Flow:** 1. Fetch latest → 2. SemVer compare → 3. Changelog for major → 4. CVE check → 5. Deprecation check
+**Flow:** Fetch latest > SemVer compare > Changelog for major > CVE check > Deprecation check
 
-**Batch:** Group by ecosystem, parallel fetch same registry, sequential changelog for major only
-
----
+**Batch:** Group by ecosystem, parallel fetch same registry, sequential changelog for major only.
 
 ## Output Schemas
 
@@ -247,13 +159,7 @@ H1: {hypothesis} - Confidence: {%}
 {
   "query": "fastapi authentication best practices",
   "sources": [
-    {
-      "url": "https://fastapi.tiangolo.com/tutorial/security/",
-      "title": "Security - FastAPI",
-      "tier": "T1",
-      "finalScore": 95,
-      "date": "2024-01-15"
-    }
+    { "url": "https://fastapi.tiangolo.com/tutorial/security/", "title": "Security - FastAPI", "tier": "T1", "finalScore": 95, "date": "2024-01-15" }
   ],
   "tierSummary": { "T1": 2, "T2": 3, "T3": 5 },
   "topSources": ["fastapi.tiangolo.com", "auth0.com"]
@@ -265,12 +171,7 @@ H1: {hypothesis} - Confidence: {%}
 ```json
 {
   "sources": [
-    {
-      "url": "https://example.com/article",
-      "claims": ["OAuth2 is preferred", "JWT for stateless auth"],
-      "codeExamples": 3,
-      "caveats": ["Requires HTTPS in production"]
-    }
+    { "url": "https://example.com/article", "claims": ["OAuth2 is preferred", "JWT for stateless auth"], "codeExamples": 3, "caveats": ["Requires HTTPS in production"] }
   ],
   "contradictions": [
     { "topic": "session vs JWT", "sourceA": "url1", "sourceB": "url2" }
@@ -283,11 +184,7 @@ H1: {hypothesis} - Confidence: {%}
 
 ```json
 {
-  "recommendation": {
-    "summary": "Use OAuth2 with JWT tokens for stateless authentication",
-    "confidence": "HIGH",
-    "confidenceScore": 92
-  },
+  "recommendation": { "summary": "Use OAuth2 with JWT tokens", "confidence": "HIGH", "confidenceScore": 92 },
   "keyFindings": ["T1 sources agree on OAuth2", "JWT preferred for APIs"],
   "caveats": ["Requires proper token refresh strategy"],
   "alternatives": ["Session-based auth for traditional web apps"],
@@ -312,17 +209,15 @@ H1: {hypothesis} - Confidence: {%}
 }
 ```
 
----
-
 ## Artifact Handling
 
 | Rule | Implementation |
 |------|----------------|
 | Reference-Large | Store by URL, return summaries |
 | Summarize-First | Extract key claims before full analysis |
-| Chunk-Processing | Long pages → process sections sequentially |
+| Chunk-Processing | Long pages: process sections sequentially |
 | Cache-Artifacts | Never re-fetch same URL within session |
 
 ## Principles
 
-Tier-aware │ Bias-conscious │ Freshness-first │ Contradiction-aware │ Confidence-honest │ Source-traceable
+Tier-aware | Bias-conscious | Freshness-first | Contradiction-aware | Confidence-honest | Source-traceable

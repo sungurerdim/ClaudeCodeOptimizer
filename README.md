@@ -45,7 +45,6 @@ claude plugin install cco@ClaudeCodeOptimizer
 ## Quick Start
 
 ```
-/cco:tune       # Configure for this project (once)
 /cco:optimize   # Fix issues
 /cco:align      # Architecture gaps
 /cco:commit     # Quality-gated commits
@@ -56,10 +55,10 @@ claude plugin install cco@ClaudeCodeOptimizer
 ## How It Works
 
 1. **Install** → SessionStart hook injects core rules every session, automatically
-2. **`/cco:tune`** (once per project) → Creates `.claude/rules/cco-*.md`
-3. Claude Code natively loads `.claude/rules/*.md` → Rules active, zero manual activation
+2. **Use commands** → `/cco:optimize`, `/cco:align`, etc.
+3. Core rules always active via hook — no configuration needed
 
-Your rules (without `cco-` prefix) are never touched. CCO writes to `.claude/` (rules and settings), never global.
+Your project files are never modified by CCO. Rules are injected via hook, not written to disk.
 
 ---
 
@@ -67,15 +66,14 @@ Your rules (without `cco-` prefix) are never touched. CCO writes to `.claude/` (
 
 | Command | Purpose |
 |---------|---------|
-| [`/cco:tune`](docs/commands.md#ccotune) | Detect stack, create project profile |
-| [`/cco:optimize`](docs/commands.md#ccooptimize) | Fix security, types, lint, performance |
+| [`/cco:optimize`](docs/commands.md#ccooptimize) | Fix security, types, performance issues |
 | [`/cco:align`](docs/commands.md#ccoalign) | Architecture and pattern analysis |
 | [`/cco:commit`](docs/commands.md#ccocommit) | Atomic commits with quality gates |
 | [`/cco:research`](docs/commands.md#ccoresearch) | Multi-source research with scoring |
 | [`/cco:preflight`](docs/commands.md#ccopreflight) | Pre-release verification |
 | [`/cco:docs`](docs/commands.md#ccodocs) | Documentation gap analysis |
 
-7 commands · 3 [specialized agents](docs/agents.md) · 45 [rule files](docs/rules.md) (4 core/30 rules · 21 language/121 rules · 8 framework/36 rules · 12 operation/66 rules)
+6 commands · 3 [specialized agents](docs/agents.md) · Core rules via [SessionStart hook](docs/rules.md)
 
 ---
 
@@ -169,15 +167,14 @@ Remove any `@import` lines referencing CCO rules — v2 uses SessionStart hooks 
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
 /plugin install cco@ClaudeCodeOptimizer
-/cco:tune
 ```
 
 ### Command mapping
 
 | v1 | v2 |
 |----|-----|
-| `/cco-tune` | `/cco:tune` |
-| `/cco-health` | removed (use `/cco:tune --preview`) |
+| `/cco-tune` | removed (rules now injected via hook) |
+| `/cco-health` | removed |
 | `/cco-generate` | removed |
 | — | `/cco:research` (new) |
 | `/cco-audit` | `/cco:optimize` |
