@@ -1,6 +1,6 @@
 {
   "name": "cco",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Enforceable constraints for Claude Code. Quality standards via SessionStart hook.",
   "author": {
     "name": "Sungur Zahid Erdim"
