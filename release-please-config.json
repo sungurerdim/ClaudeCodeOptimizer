@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
     ".": {
       "release-type": "node",
@@ -7,8 +8,16 @@
       "bump-patch-for-minor-pre-major": false,
       "include-component-in-tag": false,
       "extra-files": [
-        ".claude-plugin/plugin.json",
-        "pyproject.toml"
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "pyproject.toml",
+          "key": "project.version"
+        }
       ]
     }
   }
