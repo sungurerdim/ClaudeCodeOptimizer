@@ -8,64 +8,12 @@ Complete parameter and flag documentation for all CCO commands.
 
 | Command | Purpose | Model | Flags |
 |---------|---------|-------|-------|
-| `/cco:tune` | Configure project | Haiku | `--auto`, `--preview`, `--update` |
 | `/cco:optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X` |
 | `/cco:align` | Architecture gaps | Opus | `--auto`, `--preview` |
 | `/cco:commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
 | `/cco:research` | Multi-source research | Opus | `--quick`, `--deep` |
 | `/cco:preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
 | `/cco:docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
-
----
-
-## /cco:tune
-
-Configure CCO for a project. Detects stack, creates profile, loads rules.
-
-### Parameters
-
-| Flag | Effect |
-|------|--------|
-| `--auto` | Unattended mode - auto-detect everything, skip questions |
-| `--preview` | Silent validation only, return status |
-| `--update` | Update even if profile exists |
-
-### Interactive Questions (8 total)
-
-**Round 1: Team & Policy**
-
-| Question | Options |
-|----------|---------|
-| Team size | Solo, Small (2-5), Medium (6-15), Large (15+) |
-| Data sensitivity | No, Internal, User data, Regulated |
-| Top priority | Security, Performance, Readability, Ship fast |
-| Breaking changes | Never, Major only, With warning, When needed |
-
-**Round 2: Development & Deployment**
-
-| Question | Options |
-|----------|---------|
-| API consumers | No, Internal, Partners, Public |
-| Testing approach | Minimal, Target-based, Test first, Everything |
-| Documentation | Code only, Basic, Detailed, Comprehensive |
-| Deployment | Dev only, Cloud, Self-hosted, Serverless |
-
-### Generated Files
-
-| File | Purpose |
-|------|---------|
-| `.claude/rules/cco-profile.md` | Project metadata (YAML frontmatter) |
-| `.claude/rules/cco-{language}.md` | Language-specific rules |
-| `.claude/rules/cco-{framework}.md` | Framework-specific rules |
-
-### Examples
-
-```bash
-/cco:tune              # Interactive setup
-/cco:tune --auto       # Auto-detect everything
-/cco:tune --preview    # Validate existing profile
-/cco:tune --update     # Update existing profile
-```
 
 ---
 
@@ -81,18 +29,19 @@ Fix security, quality, and hygiene issues.
 | `--preview` | Analyze only, show findings and quality score, don't apply fixes |
 | `--scope=<name>` | Run specific scope(s) only, comma-separated |
 
-### Scope Coverage (105 Checks)
+### Scope Coverage (97 Checks)
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
 | Security | SEC-01-12 | Secrets, injection, validation |
-| Hygiene | HYG-01-15 | Unused code, dead code, imports |
+| Hygiene | HYG-01-20 | Unused code, dead code, imports |
 | Types | TYP-01-10 | Type errors, annotations |
-| Lint | LNT-01-08 | Format, naming, style |
 | Performance | PRF-01-10 | N+1, caching, async |
 | AI Hygiene | AIH-01-08 | Hallucinated APIs, orphan abstractions |
 | Robustness | ROB-01-10 | Timeouts, retries, validation |
+| Privacy | PRV-01-08 | PII exposure, data masking |
 | Doc Sync | DOC-01-08 | Documentation-code consistency |
+| Simplify | SIM-01-11 | Deep nesting, duplicates, god functions |
 
 ### Intensity Levels
 

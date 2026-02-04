@@ -46,14 +46,17 @@ class TestHookJsonStructure:
         assert len(session_start) > 0, "SessionStart must have at least one hook"
 
     def test_hook_definition_structure(self, hooks_json: dict) -> None:
-        """Hook definition must have correct structure."""
+        """Hook definition must have correct nested structure."""
         session_start = hooks_json["hooks"]["SessionStart"]
-        hook_def = session_start[0]
-        assert "hooks" in hook_def, "Hook definition missing hooks array"
-        inner_hook = hook_def["hooks"][0]
-        assert "type" in inner_hook, "Inner hook missing type"
-        assert inner_hook["type"] == "command", "Hook type should be command"
-        assert "command" in inner_hook, "Inner hook missing command"
+        matcher_group = session_start[0]
+        assert "hooks" in matcher_group, "Matcher group missing hooks array"
+        hooks_array = matcher_group["hooks"]
+        assert isinstance(hooks_array, list), "hooks must be an array"
+        assert len(hooks_array) > 0, "hooks array must have at least one handler"
+        hook_handler = hooks_array[0]
+        assert "type" in hook_handler, "Hook handler missing type"
+        assert hook_handler["type"] == "command", "Hook type should be command"
+        assert "command" in hook_handler, "Hook handler missing command"
 
     def test_core_rules_json_structure(self, core_rules_json: dict) -> None:
         """core-rules.json must have hookSpecificOutput."""
@@ -104,45 +107,45 @@ class TestAdditionalContextSections:
 class TestCrossPlatformCommands:
     """Validate command syntax works cross-platform."""
 
-    def test_command_uses_cat_for_portability(self, hooks_json: dict) -> None:
-        """Hook command should use cat which works on all platforms."""
+    def test_command_uses_python_for_portability(self, hooks_json: dict) -> None:
+        """Hook command should use python which works on all platforms."""
         session_start = hooks_json["hooks"]["SessionStart"]
-        hook_def = session_start[0]["hooks"][0]
-        command = hook_def["command"]
-        # cat is available on Linux, macOS, and Windows (via Git Bash/WSL)
-        assert "cat" in command, "Command should use cat for portability"
+        hook_handler = session_start[0]["hooks"][0]
+        command = hook_handler["command"]
+        # Python is cross-platform and handles encoding properly
+        assert "python" in command, "Command should use python for portability"
 
     def test_command_uses_relative_paths(self, hooks_json: dict) -> None:
         """Hook command should use relative paths from plugin root."""
         session_start = hooks_json["hooks"]["SessionStart"]
-        hook_def = session_start[0]["hooks"][0]
-        command = hook_def["command"]
+        hook_handler = session_start[0]["hooks"][0]
+        command = hook_handler["command"]
         # Should not have absolute paths
-        assert not command.startswith("/"), "Should use relative paths"
         assert "C:\\" not in command, "Should not have Windows absolute paths"
+        # Uses CLAUDE_PLUGIN_ROOT variable
+        assert "CLAUDE_PLUGIN_ROOT" in command, "Should use CLAUDE_PLUGIN_ROOT variable"
 
     def test_command_references_core_rules(self, hooks_json: dict) -> None:
-        """Hook command should reference core-rules.json."""
+        """Hook command should reference load-core-rules.py."""
         session_start = hooks_json["hooks"]["SessionStart"]
-        hook_def = session_start[0]["hooks"][0]
-        command = hook_def["command"]
-        assert "core-rules.json" in command, "Command should reference core-rules.json"
+        hook_handler = session_start[0]["hooks"][0]
+        command = hook_handler["command"]
+        assert "load-core-rules.py" in command, "Command should reference load-core-rules.py"
 
 
 class TestHookWiring:
     """Validate hook wiring between files."""
 
     def test_hooks_json_references_correct_file(self) -> None:
-        """hooks.json should reference hooks/core-rules.json."""
+        """hooks.json should reference load-core-rules.py."""
         hooks_path = HOOKS_DIR / "hooks.json"
         hooks_json = json.loads(hooks_path.read_text(encoding="utf-8"))
         session_start = hooks_json["hooks"]["SessionStart"]
-        command = session_start[0]["hooks"][0]["command"]
+        hook_handler = session_start[0]["hooks"][0]
+        command = hook_handler["command"]
 
-        # Should reference the correct path
-        assert "hooks/core-rules.json" in command or "core-rules.json" in command, (
-            "hooks.json should reference core-rules.json"
-        )
+        # Should reference the loader script
+        assert "load-core-rules.py" in command, "hooks.json should reference load-core-rules.py"
 
     def test_core_rules_file_exists(self) -> None:
         """core-rules.json must exist for hook to work."""

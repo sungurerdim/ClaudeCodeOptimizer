@@ -7,12 +7,12 @@
 * **Command Changes** (v1 → v2):
   * `/cco-tune` → `/cco:tune`
   * `/cco-health` → removed (use `/cco:tune --preview` instead)
-  * `/cco-generate` → `/cco:research`
+  * `/cco-generate` → removed (generation now handled inline by agents)
   * `/cco-audit` + `/cco-optimize` → `/cco:optimize` (merged)
   * `/cco-review` + `/cco-refactor` → `/cco:align` (merged)
 * **Agent Restructure**:
-  * `Explore` + `Plan` → `cco-agent-analyze`
-  * `Action` → `cco-agent-apply`
+  * `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`
+  * `cco-agent-action` → `cco-agent-apply`
   * NEW: `cco-agent-research`
 
 ### Features
@@ -23,12 +23,13 @@
 * **Modular Rules** — 85 standards in 2 files → 45 focused rule files
 * **SessionStart hook** — Injects core rules directly into context via `additionalContext`
 * **`/cco:preflight`** — Pre-release workflow with quality gates
+* **`/cco:research`** — Multi-source research with CRAAP+ reliability scoring
 * **`/cco:docs`** — Documentation gap analysis
 * **`cco-agent-research`** — External source research with reliability scoring (T1-T6)
 * **Confidence scoring** — 0-100 scale for findings with ≥80 threshold for auto-fix
 * **Phase gates** — Explicit checkpoints (GATE-1, GATE-2, etc.) in command workflows
 * **Parallel scope execution** — Multiple scope groups analyzed concurrently
-* **Test suite** — 61 tests covering commands, hooks, edge cases, and plugin structure
+* **Test suite** — 69 tests covering commands, hooks, edge cases, and plugin structure
 * **Permissions system** — Four levels (safe/balanced/permissive/full)
 
 ### Bug Fixes
@@ -43,7 +44,7 @@
 ### Features
 
 * **8 slash commands** — `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-optimize`, `/cco-review`, `/cco-generate`, `/cco-refactor`, `/cco-commit`
-* **3 specialized agents** — Explore, Plan, Action
+* **3 specialized agents** — `cco-agent-detect`, `cco-agent-scan`, `cco-agent-action`
 * **85 standards** — 51 universal + 34 Claude-specific
 * **Risk-based approval flow** — AskUserQuestion integration
 * **Project-aware tuning** — Stack detection via `/cco-tune`
