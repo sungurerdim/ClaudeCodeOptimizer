@@ -23,7 +23,7 @@ jobs:
 
       - name: Validate directories
         run: |
-          for dir in commands agents rules/core rules/languages rules/frameworks rules/operations; do
+          for dir in commands agents hooks; do
             if [ ! -d "$dir" ]; then
               echo "Error: $dir not found"
               exit 1
@@ -31,14 +31,16 @@ jobs:
           done
           echo "All directories exist"
 
-      - name: Validate core rules
+      - name: Validate hooks
         run: |
-          for rule in cco-foundation.md cco-safety.md cco-workflow.md; do
-            if [ ! -f "rules/core/$rule" ]; then
-              echo "Error: rules/core/$rule not found"
+          for file in hooks/hooks.json hooks/core-rules.json hooks/load-core-rules.py; do
+            if [ ! -f "$file" ]; then
+              echo "Error: $file not found"
               exit 1
             fi
           done
+          python3 -c "import json; json.load(open('hooks/core-rules.json'))"
+          echo "Hooks validated"
 
   lint:
     name: Lint & Type Check
