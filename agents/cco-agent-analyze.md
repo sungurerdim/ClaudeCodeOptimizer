@@ -43,38 +43,38 @@ Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
 ## Execution
 
 1. **Linters** — Run format/lint/type checkers in parallel via Bash
-2. **Grep** — ALL patterns from ALL scopes in single parallel batch
+2. **Grep** — All patterns from all scopes in single parallel batch
 3. **Context** — Read matched files in parallel (offset+limit=20 around match)
 4. **Output** — Combined JSON with findings tagged by scope
 
-Per Core Rules: Efficiency (parallel tool calls), Skip Patterns.
+Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks, platform guards, test fixtures).
 
 ## Scopes
 
-### OPTIMIZE Scopes (tactical, file-level)
+### Optimize Scopes (tactical, file-level)
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
 | security | SEC-01 to SEC-12 | Secrets, injection, unsafe deserialization, eval, debug endpoints, weak crypto |
-| hygiene | HYG-01 to HYG-20 | Unused imports/vars/functions, dead code, orphan files, duplicates, stale TODOs, comment quality (accuracy, staleness, obvious, missing-why, misleading examples) |
+| hygiene | HYG-01 to HYG-20 | Unused imports/vars/functions, dead code, orphan files, duplicates, stale TODOs, comment quality |
 | types | TYP-01 to TYP-10 | Type errors, missing annotations, untyped args, type:ignore without reason, Any in API |
 | performance | PRF-01 to PRF-10 | N+1 queries, blocking in async, large file reads, missing pagination/cache/pool |
-| ai-hygiene | AIH-01 to AIH-08 | Hallucinated APIs, orphan abstractions, over-documented trivial code, dead feature flags, stale mocks, incomplete implementations |
-| robustness | ROB-01 to ROB-10 | Missing timeout/retry, unbounded collections, implicit coercion, missing null checks, resource cleanup, concurrent safety |
+| ai-hygiene | AIH-01 to AIH-08 | Hallucinated APIs, orphan abstractions, over-documented trivial code, dead feature flags, stale mocks |
+| robustness | ROB-01 to ROB-10 | Missing timeout/retry, unbounded collections, implicit coercion, missing null checks, resource cleanup |
 | privacy | PRV-01 to PRV-08 | PII exposure/logging, missing masking/consent/retention/audit, insecure PII storage |
 | doc-sync | DOC-01 to DOC-08 | README drift, API signature mismatch, deprecated refs in docs, broken links, changelog gaps |
-| simplify | SIM-01 to SIM-11 | Deep nesting (>3), duplicate similar code, unnecessary abstractions, single-use wrappers, over-engineered patterns, complex booleans, test bloat |
+| simplify | SIM-01 to SIM-11 | Deep nesting (>3), duplicate similar code, unnecessary abstractions, single-use wrappers, complex booleans, test bloat |
 
-### REVIEW Scopes (strategic, architecture-level)
+### Review Scopes (strategic, architecture-level)
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
-| architecture | ARC-01 to ARC-15 | Coupling/cohesion scores, circular deps, layer violations, god classes, feature envy, shotgun surgery, dependency direction |
+| architecture | ARC-01 to ARC-15 | Coupling/cohesion scores, circular deps, layer violations, god classes, feature envy, dependency direction |
 | patterns | PAT-01 to PAT-12 | Inconsistent error handling/logging/async, SOLID/DRY violations, primitive obsession, data clumps |
-| testing | TST-01 to TST-10 | Coverage by module, critical path coverage, test ratio, missing edge cases, flaky tests, isolation, mock overuse |
-| maintainability | MNT-01 to MNT-12 | Complexity hotspots, cognitive complexity, long methods/params, deep nesting, magic in logic, missing docs, hardcoded config |
-| ai-architecture | AIA-01 to AIA-10 | Over-engineering (interface with 1 impl), local solutions, architectural drift, pattern inconsistency, coupling hotspots |
-| functional-completeness | FUN-01 to FUN-18 | Missing CRUD/pagination/filter, incomplete error handling, state transition gaps, missing soft delete, concurrent data access, caching/indexing strategy |
+| testing | TST-01 to TST-10 | Coverage by module, critical path coverage, test ratio, missing edge cases, flaky tests, isolation |
+| maintainability | MNT-01 to MNT-12 | Complexity hotspots, cognitive complexity, long methods/params, deep nesting, magic in logic, hardcoded config |
+| ai-architecture | AIA-01 to AIA-10 | Over-engineering (interface with 1 impl), local solutions, architectural drift, pattern inconsistency |
+| functional-completeness | FUN-01 to FUN-18 | Missing CRUD/pagination/filter, incomplete error handling, state transition gaps, caching/indexing strategy |
 
 ## Judgment Rules
 
@@ -84,21 +84,5 @@ Per Core Rules: Efficiency (parallel tool calls), Skip Patterns.
 | Conservative | Uncertain → lower severity. Style → max LOW. Single occurrence → max MEDIUM (except security). |
 | Pattern threshold | 3+ examples before concluding systemic pattern |
 | Confidence ≥80 | Only report findings with confidence ≥80. Quality over quantity. |
-| False positives | Don't flag: pre-existing issues, platform-guarded code, `# intentional`/`# noqa`/`# safe:`, linter domain, test fixtures, single occurrences |
-| Platform filtering | Skip `sys.platform` blocks, cross-platform imports (`msvcrt`, `fcntl`, etc.), `TYPE_CHECKING` blocks. Track excluded items in `excluded` field. |
-| Error handling scrutiny | Flag: empty catch blocks, catch-log-continue, return null on error without logging, optional chaining hiding failures |
-| CRITICAL validation | Dual perspective: analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |
-
-## Scope Overlap Notes
-
-Some checks overlap between optimize and review scopes at different thresholds:
-
-- Nesting: SIM-01 (>3, tactical) vs MNT-05 (>4, strategic)
-- Params: SIM-07 (>4) vs MNT-04 (>5)
-- God functions: SIM-08 (split) vs MNT-03 (assessment)
-- Duplicates: HYG-06 (>10 identical) vs SIM-02 (>5 similar) vs PAT-05 (>3 codebase-wide)
-- Resource cleanup: ROB-09 (code pattern) vs MNT-10 (architecture)
-- Timeout: ROB-01 (missing param) vs FUN-10 (configurability)
-- Retry: ROB-02 (code presence) vs FUN-11 (strategy/policy)
-- Validation: ROB-03 (decorator guards) vs FUN-06 (schema definitions)
-- Concurrent: ROB-10 (threading) vs FUN-09 (data-level locking)
+| False positives | Skip: pre-existing issues, platform-guarded code, intentional markers, linter domain, test fixtures, single occurrences |
+| CRITICAL validation | Analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |

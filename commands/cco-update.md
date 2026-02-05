@@ -23,8 +23,6 @@ Without flags: check for update, ask before upgrading.
 - CCO version: from `cco_version` in cco-rules.md frontmatter (already in context)
 - Last check: from `last_update_check` in cco-rules.md frontmatter (already in context)
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
-
 ## Execution Flow
 
 Version Check → Compare → [Upgrade] → Verify → Summary
@@ -55,20 +53,8 @@ Display: `Current: vX.Y.Z → Latest: vA.B.C`
 **Upgrade process:**
 
 1. Determine `~/.claude/` path (`$HOME/.claude/` on Unix, `$USERPROFILE\.claude\` on Windows)
-2. For each file in the release, WebFetch raw content from GitHub:
-   - `rules/cco-rules.md` → `~/.claude/rules/cco-rules.md`
-   - `commands/cco-optimize.md` → `~/.claude/commands/cco-optimize.md`
-   - `commands/cco-align.md` → `~/.claude/commands/cco-align.md`
-   - `commands/cco-commit.md` → `~/.claude/commands/cco-commit.md`
-   - `commands/cco-research.md` → `~/.claude/commands/cco-research.md`
-   - `commands/cco-preflight.md` → `~/.claude/commands/cco-preflight.md`
-   - `commands/cco-docs.md` → `~/.claude/commands/cco-docs.md`
-   - `commands/cco-update.md` → `~/.claude/commands/cco-update.md`
-   - `agents/cco-agent-analyze.md` → `~/.claude/agents/cco-agent-analyze.md`
-   - `agents/cco-agent-apply.md` → `~/.claude/agents/cco-agent-apply.md`
-   - `agents/cco-agent-research.md` → `~/.claude/agents/cco-agent-research.md`
-3. Write each file with Write tool
-4. Update `cco_version` and `last_update_check` in cco-rules.md frontmatter
+2. For each CCO file (rules/, commands/, agents/), WebFetch raw content from GitHub and write to local path
+3. Update `cco_version` and `last_update_check` in cco-rules.md frontmatter
 
 **Source URL pattern:** `https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/v{VERSION}/{path}`
 
@@ -85,11 +71,3 @@ Read cco-rules.md frontmatter → confirm `cco_version` matches latest.
 | Interactive | Version info, files updated count, restart reminder |
 
 **Restart reminder:** "Restart Claude Code session to load updated rules."
-
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Update failed mid-way | Re-run `/cco-update` |
-| Wrong version | Re-run `/cco-update --auto` |
-| Want to rollback | Re-run installer with specific version tag |

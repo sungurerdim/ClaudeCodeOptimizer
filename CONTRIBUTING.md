@@ -25,6 +25,8 @@ cd ClaudeCodeOptimizer
 1. Edit `rules/cco-rules.md` (single source of truth)
 2. Update `docs/rules.md` to reflect changes
 
+Rule categories: Focus and Discipline, Code Quality, Security, Workflow, CCO Operations.
+
 ### Updating Documentation
 
 Keep counts in sync when adding/removing files:

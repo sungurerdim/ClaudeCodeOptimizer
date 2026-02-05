@@ -15,14 +15,6 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research).
 
 - Current date: !`date +%Y-%m-%d`
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
-
-## Update Check
-
-1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
-2. If last check >24 hours ago → `/cco-update --check`
-3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
-
 ## Args
 
 | Flag | Effect |
@@ -48,7 +40,7 @@ Extract from $ARGS: concepts, date context, tech domain, comparison mode, search
 
 ### Phase 3: Research [PARALLEL]
 
-Launch ALL search agents in single message via parallel Task calls to cco-agent-research:
+Launch all search agents in single message via parallel Task calls to cco-agent-research:
 
 | Track | Scope | When |
 |-------|-------|------|

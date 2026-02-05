@@ -2,16 +2,16 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Enforceable constraints for Claude Code.** Stops over-engineering, scope creep, and silent assumptions.
+**Structured guardrails for Claude Code.** Optimized by Opus 4.6, for Opus 4.6 — every rule tuned to how the model actually thinks.
+
+*Minimal touch, maximum impact.* CCO adds just enough structure to prevent over-engineering, scope creep, and silent assumptions — without slowing Claude down.
 
 | Without CCO | With CCO |
 |-------------|----------|
-| Adds AbstractValidatorFactory for simple validation | Only requested changes — enforced |
-| Edits 5 files when asked for 1 fix | Must read before edit — enforced |
-| Guesses requirements silently | Stops and asks — enforced |
-| Method grows to 200 lines | ≤50 lines, ≤3 nesting — enforced |
-
-These are **BLOCKER** rules — execution stops, not suggestions to ignore.
+| Adds AbstractValidatorFactory for simple validation | Only requested changes |
+| Edits 5 files when asked for 1 fix | Scoped to the task |
+| Guesses requirements silently | Stops and asks |
+| Method grows to 200 lines | ≤50 lines, ≤3 nesting |
 
 ---
 
@@ -31,6 +31,21 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 
 Restart Claude Code. Done.
 
+<details>
+<summary>Dev channel (latest commit)</summary>
+
+**Mac / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash -s -- --dev
+```
+
+**Windows (PowerShell):**
+```powershell
+iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1) } --dev"
+```
+
+</details>
+
 ---
 
 ## Quick Start
@@ -45,10 +60,10 @@ Restart Claude Code. Done.
 
 ## How It Works
 
-1. **Install** → Rules, commands, and agents are placed in `~/.claude/`
-2. **Rules auto-load** → `~/.claude/rules/cco-rules.md` is loaded into every session automatically
-3. **Use commands** → `/cco-optimize`, `/cco-align`, etc.
-4. **Update** → `/cco-update` checks for new versions
+1. **Install** — Rules, commands, and agents are placed in `~/.claude/`
+2. **Rules auto-load** — `~/.claude/rules/cco-rules.md` is loaded into every session automatically
+3. **Use commands** — `/cco-optimize`, `/cco-align`, etc.
+4. **Update** — `/cco-update` checks for new versions
 
 No hooks, no plugins, no dependencies. Just markdown files.
 
@@ -73,8 +88,7 @@ No hooks, no plugins, no dependencies. Just markdown files.
 ## Docs
 
 - [Getting Started](docs/getting-started.md) — First 10 minutes
-- [Commands](docs/commands.md) — Flags and examples
-- [Commands Reference](docs/commands-reference.md) — Full parameter docs
+- [Commands](docs/commands.md) — Flags, scopes, and examples
 - [Agents](docs/agents.md) — Specialized agents
 - [Rules](docs/rules.md) — Full rules reference
 

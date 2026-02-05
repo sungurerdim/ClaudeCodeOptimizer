@@ -3,19 +3,37 @@ cco_version: 2.0.0 # x-release-please-version
 last_update_check: 1970-01-01T00:00:00Z
 ---
 
-# Foundation Rules
-*Enforceable constraints with measurable thresholds*
+# CCO Rules
 
-## Uncertainty Protocol [BLOCKER]
+## Focus and Discipline
 
-When uncertain, STOP and surface it. Don't guess silently.
+### Decision Commitment
 
-- **Stop-When-Unclear**: If task is ambiguous → ask before proceeding
-- **Signal-Confidence**: State confidence level: "~90% sure", "uncertain about X"
+Pick one approach and follow through. When multiple solutions seem viable, choose the simplest one that meets the requirements. Only reassess if it fails.
 
-## Complexity Limits [BLOCKER]
+### Exploration Restraint
 
-Code exceeding limits = STOP and refactor first.
+Read only what you need before acting:
+
+| Task | Files to Read |
+|------|---------------|
+| Small fix (1-2 files) | 1-3 files |
+| Feature (3-5 files) | 5-10 files |
+| Architecture scan | Structure first, then deepen |
+
+### Change Scope
+
+Every changed line should trace directly to the user's request. Unrelated issues: mention, don't fix.
+
+### File Discipline
+
+Create new files only when the user explicitly requests them. Skip: `.git`, `node_modules`, `vendor`, `venv`, `dist`, `build`, `__pycache__`
+
+## Code Quality
+
+### Complexity Limits
+
+Refactor before proceeding when code exceeds these limits:
 
 | Metric | Limit |
 |--------|-------|
@@ -25,73 +43,24 @@ Code exceeding limits = STOP and refactor first.
 | Nesting Depth | ≤ 3 |
 | Parameters | ≤ 4 |
 
-## File Creation [BLOCKER]
+### Code Volume
 
-**BLOCK**: Creating new files without explicit user request.
+Avoid single-use abstractions, impossible error handling, and unnecessary bulk. If 100+ lines could be 50, prefer the shorter version.
 
-Skip: `.git`, `node_modules`, `vendor`, `venv`, `dist`, `build`, `__pycache__`
+### Anti-Overengineering Guard
 
-## Change Scope [BLOCKER]
-
-**Test**: Can every changed line trace directly to user's request?
-
-- NO → Revert that change
-- Unrelated issues → mention, don't fix
-
-## Code Volume [CHECK]
-
-- [ ] No single-use abstractions
-- [ ] No impossible error handling
-- [ ] 100+ lines → could it be 50? Rewrite if yes
-
-## Anti-Overengineering Guard [BLOCKER]
-
-Before flagging ANY finding, all three must be YES:
+Before flagging any finding, all three must be YES:
 1. Does this actually break something or pose a risk?
 2. Does this cause real problems for developers/users?
 3. Is fixing it worth the effort and side effects?
 
-**All NO → not a finding.**
+All NO = not a finding.
 
-## Validation Boundaries [CHECK]
+## Security
 
-Public APIs: validate numbers (min/max), strings (max length), arrays (max items), external calls (timeout), resources (cleanup in finally).
+### Security Patterns
 
-## Refactoring Safety [CHECK]
-
-Before modifying shared code:
-- [ ] **Delete**: Found ALL callers
-- [ ] **Rename**: Will update ALL references
-- [ ] **Move**: Will update ALL imports
-- [ ] **Signature**: Will update ALL call sites
-
-## Modern Patterns [CHECK]
-
-Prefer modern, idiomatic syntax for each language:
-- Union types over Optional (`str | None` not `Optional[str]`)
-- Pattern matching over if/elif chains where clearer
-- Comprehensions over manual loops for transforms
-- Explicit over implicit (named params, type hints on public APIs)
-- Standard library over dependencies for simple tasks
-
-## Context Awareness [CHECK]
-
-At project start, quickly assess:
-
-| Signal | Look For | Impact |
-|--------|----------|--------|
-| Data sensitivity | PII patterns, health/financial terms, encryption usage | Extra caution on logging, errors, exports |
-| Priority | "security-first" in docs, performance benchmarks, rapid deployment | Check ordering |
-| Team size | CODEOWNERS, contributor count | Review expectations |
-
-If sensitive data detected → never log raw values, mask in errors, audit data flows.
-
-# Safety Rules
-*BLOCKER violations*
-
-## Security Violations [BLOCKER]
-
-Finding ANY = STOP. Fix before continuing.
+Address these patterns before continuing:
 
 | Pattern | Fix |
 |---------|-----|
@@ -101,38 +70,17 @@ Finding ANY = STOP. Fix before continuing.
 | Unsanitized external data | Add validation |
 | eval/pickle/yaml.load | Use safe alternatives |
 
-# Workflow Rules
-*Execution patterns*
+## Workflow
 
-## Read-Before-Edit [BLOCKER]
+### Uncertainty
 
-**BLOCK**: Any edit to file not yet read.
+When uncertain, surface it. State confidence level ("~90% sure", "uncertain about X") and ask before proceeding on ambiguous tasks.
 
-Verify functions/APIs exist before calling.
+### Error Recovery
 
-## Task Completion [BLOCKER]
+On tool error: diagnose why, then use a different approach on the second attempt.
 
-**BLOCK**: Stopping early due to perceived limits.
-
-Checkpoints: Every 20 steps progress, every 5 steps goal check.
-
-## Incremental Verification [BLOCKER]
-
-After every edit: verify the change has expected effect (lint/test/manual). Do not proceed to next edit until verified.
-
-## Context Staleness [BLOCKER]
-
-File not read in 20+ steps → re-read before editing. Don't rely on stale context.
-
-## Error Recovery [BLOCKER]
-
-Tool error → diagnose first (why?), then change strategy. Never repeat the same failing command twice.
-
-## Partial Output Guard [BLOCKER]
-
-If output contains missing sections, placeholders, or TODOs → it is NOT complete. Finish before reporting done.
-
-## Severity Levels [CHECK]
+### Severity Levels
 
 | Level | Criteria |
 |-------|----------|
@@ -141,13 +89,19 @@ If output contains missing sections, placeholders, or TODOs → it is NOT comple
 | MEDIUM | Suboptimal but works |
 | LOW | Style only |
 
-**When uncertain → lower severity.**
+When uncertain, choose lower severity.
 
-## Scope Creep Detection [CHECK]
+### Scope Creep Detection
 
-If finding count exceeds 2x initial estimate → stop, inform user, narrow scope.
+If finding count exceeds 2x initial estimate, stop and ask the user before continuing.
 
-## Agent Delegation [CHECK]
+## CCO Operations
+
+### Version Awareness
+
+If `last_update_check` is >24 hours old, run `/cco-update --check` at the start of any CCO command (skip silently in --auto mode).
+
+### Agent Delegation
 
 | Need | Tool |
 |------|------|
@@ -158,13 +112,13 @@ If finding count exceeds 2x initial estimate → stop, inform user, narrow scope
 | 1-2 file edits | Edit/Write |
 | 3+ file edits | cco-agent-apply |
 
-## Efficiency
+### Efficiency
 
-- Independent tool calls → parallel in single message
-- Long Bash → `run_in_background: true`, collect via TaskOutput before output
-- Multiple agents → parallel Task calls in single message
+- Independent tool calls: parallel in single message
+- Long Bash: `run_in_background: true`, collect via TaskOutput before output
+- Multiple agents: parallel Task calls in single message
 
-## No Deferrals [BLOCKER - Auto Mode]
+### No Deferrals (Auto Mode)
 
 When `--auto` active:
 
@@ -172,40 +126,36 @@ When `--auto` active:
 |-----------|------------|
 | "Too complex" | Fix it |
 | "Might break" | Fix it, user reviews |
-| "Consider later" | Do it NOW |
+| "Consider later" | Do it now |
 
-## Accounting [BLOCKER]
+### Accounting
 
 `applied + failed + needs_approval = total`
 
 No declined category. Fix, flag for approval (architectural), or fail with technical reason.
 
-## Skip Patterns [STANDARD]
+### Skip Patterns
 
 Never flag intentionally marked code: `# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks, platform guards, test fixtures.
 
-# Tool Rules
-*Reusable execution patterns for CCO commands*
+### Execution Flow
 
-## Execution Flow [STANDARD]
+All analysis commands: Setup → Analyze → Gate → [Plan] → Apply → Summary. Skip questions in --auto. Display plan before asking user. Single-line summary in --auto.
 
-All analysis commands: Setup → Analyze → Gate → [Plan] → Apply → Summary.
-Skip questions in --auto. Display plan BEFORE asking user. Single-line summary in --auto.
-
-## Plan Review [MANDATORY]
+### Plan Review
 
 When findings > 0 and not --auto:
-1. Display full plan table with rationale BEFORE asking
+1. Display full plan table with rationale before asking
 2. Action: Fix All / By Severity / Review Each / Report Only
 3. Severity filter (multiselect): CRITICAL / HIGH / MEDIUM / LOW
 
-## Needs-Approval Flow [STANDARD]
+### Needs-Approval Flow
 
 After apply, if needs_approval > 0 and not --auto:
 1. Display items table (ID, severity, issue, location, reason)
 2. Ask: Fix All / Skip / Review Each
 
-## Confidence Scoring [STANDARD]
+### Confidence Scoring
 
 | Score | Action |
 |-------|--------|
