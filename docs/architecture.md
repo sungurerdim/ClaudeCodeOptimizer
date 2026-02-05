@@ -1,6 +1,6 @@
 # Architecture
 
-How CCO works internally: hooks, rules, agents, and command flow.
+How CCO works internally: rules, agents, and command flow.
 
 ---
 
@@ -22,8 +22,6 @@ How CCO works internally: hooks, rules, agents, and command flow.
                     |           |
             cco-agent-analyze  cco-agent-apply
 ```
-
----
 
 ## Repository Structure
 
@@ -62,63 +60,21 @@ ClaudeCodeOptimizer/
 
 ---
 
-## Rule Loading Architecture
+## Rule Loading
 
-Rules are loaded automatically at session start via Claude Code's native mechanisms. Core rules are auto-loaded from `~/.claude/rules/cco-rules.md`, and project-specific rules are auto-loaded from `.claude/rules/*.md`. See [Rules Reference](rules.md) for the complete mechanism.
+Rules are loaded automatically at session start via Claude Code's native mechanisms:
+- Core rules: `~/.claude/rules/cco-rules.md` (auto-loaded)
+- Project rules: `.claude/rules/*.md` (auto-loaded)
 
 ---
 
 ## Agent System
 
-### cco-agent-analyze
-
-**Purpose:** Read-only analysis. Finds issues, calculates metrics.
-
-| Capability | Output |
-|------------|--------|
-| Security scan | SEC-01 to SEC-12 findings |
-| Quality metrics | Coupling, cohesion, complexity |
-| Documentation scan | 50+ file patterns |
-
-**Execution pattern:**
-
-```
-1. Linters (parallel)    → Bash(lint), Bash(type), Bash(format)
-2. Grep patterns        → All scopes in single batch
-3. Context reads        → Parallel Read() for matched files
-4. Structured output    → JSON with findings, scores, metrics
-```
-
-### cco-agent-apply
-
-**Purpose:** Write operations. Applies fixes, writes configs.
-
-| Capability | Output |
-|------------|--------|
-| Code fixes | Edit files with verification |
-| Cascade fixes | Fix errors caused by fixes |
-| Accounting | applied + failed + needs_approval = total |
-
-**Execution pattern:**
-
-```
-1. Pre-check           → git status (dirty state warning)
-2. Read affected files → Parallel Read()
-3. Apply edits         → Parallel Edit() (different files)
-4. Verify              → Run lint/type/test after
-5. Cascade             → Fix new errors, repeat verify
-```
-
-### cco-agent-research
-
-**Purpose:** Information gathering with reliability scoring.
-
-| Capability | Output |
-|------------|--------|
-| Multi-source search | T1-T6 tiered sources |
-| CRAAP+ scoring | Currency, Authority, Accuracy |
-| Contradiction handling | Detect, log, resolve |
-| Synthesis | Recommendations with confidence |
+| Agent | Purpose | Model | Pattern |
+|-------|---------|-------|---------|
+| analyze | Read-only analysis, metrics, findings | Haiku | Linters → Grep → Context reads → JSON |
+| apply | Write operations with verification | Opus | Pre-check → Read → Apply → Verify → Cascade |
+| research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
 
 ---
 
@@ -127,104 +83,13 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 ### /cco-optimize
 
 ```
-User: /cco-optimize
-          |
-    ┌─────┴─────┐
-    │ Q1: Scope  │  ← Areas + Intensity
-    │ Q2: Git    │  ← If dirty
-    └─────┬─────┘
-          |
-    ┌─────┴─────┐
-    │  Analyze  │  ← cco-agent-analyze (97 checks)
-    └─────┬─────┘
-          |
-    ┌─────┴─────┐
-    │Plan Review│  ← If findings > 0 (mandatory)
-    └─────┬─────┘
-          |
-    ┌─────┴─────┐
-    │  Apply    │  ← cco-agent-apply (fixes)
-    └─────┬─────┘
-          |
-    Applied: N | Failed: M
+User: /cco-optimize → Setup → Analyze (parallel) → Plan Review → Apply → Summary
 ```
 
 ### /cco-preflight
 
 ```
-User: /cco-preflight
-          |
-    ┌─────┴─────┐
-    │ Q1: All   │  ← Checks + Intensity + Release mode
-    └─────┬─────┘
-          |
-    ┌─────┴─────────────────┬────────────────────┐
-    │                       │                    │
-Pre-flight checks    /cco-optimize      Verification
-(parallel)           (background)       (background)
-    │                       │                    │
-    └───────────┬───────────┴────────────────────┘
-                |
-          ┌─────┴─────┐
-          │ Changelog │
-          └─────┬─────┘
-                |
-          ┌─────┴─────┐
-          │Plan Review│  ← If blockers or findings > 0
-          └─────┬─────┘
-                |
-          Go/No-Go Decision
-```
-
----
-
-## Rule Injection
-
-### Core Rules (Always Active)
-
-Auto-loaded from `~/.claude/rules/cco-rules.md`. Cannot be overridden.
-
-| Rule | Type | Effect |
-|------|------|--------|
-| Complexity Limits | BLOCKER | Method ≤50 lines, CC ≤15 |
-| Change Scope | BLOCKER | Only requested changes |
-| Read-Before-Edit | BLOCKER | Must read before edit |
-| Security Violations | BLOCKER | Fix before continuing |
-| Accounting | BLOCKER | applied + failed + needs_approval = total |
-
----
-
-## Parallelization Strategy
-
-### Independent Tool Calls
-
-Multiple tool calls in a single message execute in parallel:
-
-```javascript
-// These execute in parallel (same message)
-Read("file1.py")
-Read("file2.py")
-Read("file3.py")
-```
-
-### Background Execution
-
-Long-running Bash commands use background mode. Collect results via `TaskOutput` before any output.
-
-```javascript
-// Launch in background
-testTask = Bash("pytest", { run_in_background: true })
-// ... other work ...
-// Collect before reporting
-testResult = await TaskOutput(testTask.id)
-```
-
-### Agent Calls
-
-Task (agent) calls are always synchronous. `run_in_background` is not supported for Task.
-
-```javascript
-results = Task("cco-agent-analyze", prompt)
+User: /cco-preflight → Setup → Pre-checks ‖ Optimize ‖ Align ‖ Verify → Changelog → Plan → Execute
 ```
 
 ---
@@ -235,24 +100,16 @@ results = Task("cco-agent-analyze", prompt)
 
 ```json
 {
-  "id": "SEC-01",
-  "scope": "security",
-  "severity": "CRITICAL",
-  "title": "Hardcoded API key",
-  "location": "src/config.py:42",
-  "fixable": true,
-  "fix": "Move to environment variable"
+  "id": "SEC-01", "scope": "security", "severity": "CRITICAL",
+  "title": "Hardcoded API key", "location": "src/config.py:42",
+  "fixable": true, "fix": "Move to environment variable"
 }
 ```
 
 ### Accounting Schema
 
 ```json
-{
-  "applied": 12,
-  "failed": 1,
-  "total": 13
-}
+{ "applied": 12, "failed": 1, "needs_approval": 0, "total": 13 }
 ```
 
 Invariant: `applied + failed + needs_approval = total`
@@ -263,10 +120,8 @@ Invariant: `applied + failed + needs_approval = total`
 
 | Task | Model | Reason |
 |------|-------|--------|
-| Detection | Haiku | Fast, read-only |
-| Analysis | Haiku | Pattern matching |
-| Code fixes | Opus | Fewer errors on edits |
-| Synthesis | Opus | Complex reasoning |
+| Detection & Analysis | Haiku | Fast, read-only |
+| Code fixes & Synthesis | Opus | Fewer errors on edits |
 | Research | Haiku + Opus | Haiku search, Opus synthesis |
 
 ---

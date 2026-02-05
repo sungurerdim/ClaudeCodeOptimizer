@@ -11,11 +11,11 @@ model: opus
 
 **Philosophy:** "What docs does this project need?" → "What exists?" → "Fill the gap."
 
-## Output Constraints [CRITICAL]
+## Output Constraints
 
 Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/tables for scanning. Copy-pasteable commands.
 
-Do NOT generate: filler, marketing language, obvious statements, duplicate content.
+Avoid: filler, marketing language, obvious statements, duplicate content.
 
 ## Args
 
@@ -30,15 +30,6 @@ Do NOT generate: filler, marketing language, obvious statements, duplicate conte
 
 - Git status: !`git status --short 2>/dev/null || echo ""`
 - Args: $ARGS
-
-**DO NOT re-run these commands. Use the pre-collected values above.**
-
-## Update Check
-
-1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
-2. If last check >24 hours ago → `/cco-update --check`
-3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
-4. In --auto mode: skip silently
 
 ## Scopes
 
@@ -110,11 +101,3 @@ Delegate to cco-agent-apply:
 Gap summary (before/after), files generated, applied/failed/total accounting.
 
 --auto: `cco-docs: {OK|WARN|FAIL} | Applied: N | Failed: N | Total: N`
-
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Generated doc wrong | `git checkout -- {file}` |
-| Review first | Use `--preview` |
-| Update existing | Use `--update` |

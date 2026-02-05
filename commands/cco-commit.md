@@ -19,15 +19,7 @@ model: opus
 - Staged only: !`git diff --cached --shortstat 2>/dev/null || echo ""`
 - Untracked files: !`git ls-files --others --exclude-standard 2>/dev/null | wc -l`
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
-
-**[CRITICAL] Scope:** ALL uncommitted changes included by default (staged + unstaged + untracked). Use `--staged-only` for staged changes only.
-
-## Update Check
-
-1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
-2. If last check >24 hours ago → `/cco-update --check`
-3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
+**Scope:** All uncommitted changes included by default (staged + unstaged + untracked). Use `--staged-only` for staged changes only.
 
 ## Flags
 
@@ -43,7 +35,7 @@ Pre-checks → Analyze → Execute → Verify → Summary
 
 ### Phase 1: Pre-checks + Quality Gates [PARALLEL]
 
-**1.1 Conflict check [BLOCKER]:** If `UU`/`AA`/`DD` in git status → stop immediately.
+**1.1 Conflict check:** If `UU`/`AA`/`DD` in git status → stop immediately.
 
 **1.2 File type detection:** Categorize changed files as code, test, tested-content (commands/, agents/, rules/), docs, config.
 
@@ -71,10 +63,10 @@ No approval question — table was shown, commit directly. Skip in `--preview` m
 
 For each commit: stage files → build conventional commit message → create commit.
 
-**Title Rules [CRITICAL]:**
+**Title Rules:**
 - Format: `type(scope): title` or `type!: title` for breaking
-- MUST be ≤50 characters total
-- If >50 chars → STOP and ask user
+- Must be ≤50 characters total
+- If >50 chars → stop and ask user
 
 **Scope detection:** Directory where >50% of files changed. No majority → omit scope.
 
@@ -89,8 +81,8 @@ For each commit: stage files → build conventional commit message → create co
 | `perf`/`test`/`docs`/`ci`/`chore` | none | Internal changes |
 
 **Message rules:**
-1. ONLY analyze git diff content — NEVER use session memory
-2. Describe WHAT changed, not WHY
+1. Analyze git diff content only — not session memory
+2. Describe what changed, not why
 3. Breaking changes: append `!` to type, add `BREAKING CHANGE:` footer
 4. Append signature: `Generated with [Claude Code]` + `Co-Authored-By: {model} <noreply@anthropic.com>`
 
@@ -101,11 +93,3 @@ Check commits created successfully via `git log`. Verify working tree clean (unl
 ### Phase 5: Summary
 
 Show: commit count, file count, branch, status, commit list, next steps (`git push`). Stash reminder if applicable.
-
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Wrong files | `git reset --soft HEAD~1` |
-| Bad message | `git commit --amend` (if not pushed) |
-| Gate broke something | `git checkout -- {file}` |

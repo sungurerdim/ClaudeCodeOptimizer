@@ -66,13 +66,9 @@ rm ~/.claude/agents/cco-agent-*.md
 /cco-optimize
 ```
 
-Auto-fixes safe issues:
-- Unused imports
-- Missing type hints
-- Simple security fixes
-- Formatting issues
+Auto-fixes safe issues: unused imports, missing type hints, simple security fixes, formatting.
 
-**Risky changes** (auth, schema, API) will ask for approval. Use `--auto` for unattended mode or `--scope=security` for a specific scope.
+Risky changes (auth, schema, API) ask for approval. Use `--auto` for unattended mode or `--scope=security` for a specific scope.
 
 ### Step 2: Architecture Check (Optional)
 
@@ -92,25 +88,25 @@ CCO rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Claude Code autom
 
 ## Understanding the Rules
 
-### Core Rules (Always Active, BLOCKER)
-
-Auto-loaded at session start from `~/.claude/rules/cco-rules.md`. These are **enforceable constraints**, not suggestions:
+### Rule Categories
 
 | Category | Key Rules |
 |----------|-----------|
-| **Foundation** | Uncertainty Protocol (stop & ask), Complexity Limits (method ≤50 lines), Change Scope (only requested changes) |
-| **Safety** | Security Violations (no secrets in source, no bare except, no eval), Validation Boundaries |
-| **Workflow** | Read-Before-Edit (must read before editing), Accounting (applied + failed + needs_approval = total) |
+| **Focus and Discipline** | Decision Commitment, Exploration Restraint, Change Scope, File Discipline |
+| **Code Quality** | Complexity Limits (method ≤50 lines, nesting ≤3), Code Volume, Anti-Overengineering Guard |
+| **Security** | Security Patterns (no secrets in source, no bare except, no eval) |
+| **Workflow** | Uncertainty (stop & ask), Error Recovery, Scope Creep Detection |
+| **CCO Operations** | Agent Delegation, Accounting, No Deferrals, Confidence Scoring |
 
-**Hard Limits (exceeding = STOP):**
-- Cyclomatic complexity ≤ 15
-- Method lines ≤ 50
-- File lines ≤ 500
-- Nesting depth ≤ 3
-- Parameters ≤ 4
+### Hard Limits
 
-These apply to **all projects** automatically and cannot be overridden.
-
+| Metric | Limit |
+|--------|-------|
+| Cyclomatic Complexity | ≤ 15 |
+| Method Lines | ≤ 50 |
+| File Lines | ≤ 500 |
+| Nesting Depth | ≤ 3 |
+| Parameters | ≤ 4 |
 
 ---
 
