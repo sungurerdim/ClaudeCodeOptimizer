@@ -224,11 +224,12 @@ After each change:
 
 | Command          | Analyze Scope                                      | Apply          | Research     |
 |------------------|----------------------------------------------------|----------------|--------------|
-| `/cco:optimize`  | security, hygiene, types, performance, etc.        | Yes            | dependency   |
-| `/cco:align`     | architecture, patterns, testing, maintainability   | Yes            | dependency   |
-| `/cco:commit`    | (quality gates only)                               | No             | No           |
-| `/cco:research`  | -                                                  | No             | full         |
-| `/cco:preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
+| `/cco-optimize`  | security, hygiene, types, performance, etc.        | Yes            | dependency   |
+| `/cco-align`     | architecture, patterns, testing, maintainability   | Yes            | dependency   |
+| `/cco-commit`    | (quality gates only)                               | No             | No           |
+| `/cco-research`  | -                                                  | No             | full         |
+| `/cco-preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
+| `/cco-update`    | -                                                  | No             | No           |
 
 ---
 

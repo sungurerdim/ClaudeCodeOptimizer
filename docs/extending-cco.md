@@ -39,7 +39,7 @@ Description of what the rule enforces.
 
 ## Core Rules
 
-All CCO rules are in `hooks/core-rules.json` — injected via SessionStart hook.
+All CCO rules are in `rules/cco-rules.md` -- auto-loaded from `~/.claude/rules/cco-rules.md`.
 
 **Categories:**
 - **Foundation** - Uncertainty, Complexity, Change Scope, Validation
@@ -175,7 +175,7 @@ allowed-tools: Read(*), Grep(*), Edit(*), Task(*)
 model: opus
 ---
 
-# /cco:commandname
+# /cco-commandname
 
 Description and flow.
 
@@ -213,9 +213,9 @@ Implementation details...
 
 | Type | Pattern | Location |
 |------|---------|----------|
-| Commands | `{name}.md` | `commands/` |
+| Commands | `cco-{name}.md` | `commands/` |
 | Agents | `cco-agent-{name}.md` | `agents/` |
-| Core Rules | `core-rules.json` | `hooks/` |
+| Core Rules | `cco-rules.md` | `rules/` |
 
 ### Validation
 
@@ -225,12 +225,8 @@ Before submitting:
 # Run tests
 python -m pytest tests/ -v
 
-# Verify JSON schemas
-python -c "import json; json.load(open('.claude-plugin/plugin.json'))"
-python -c "import json; json.load(open('hooks/core-rules.json'))"
-
 # Check counts
-ls commands/*.md | wc -l       # Commands: 6
+ls commands/cco-*.md | wc -l   # Commands: 7
 ls agents/*.md | wc -l         # Agents: 3
 ```
 
@@ -253,7 +249,7 @@ Files in `.claude/rules/` are user rules loaded by Claude Code:
 └── project-patterns.md  ← User (preserved)
 ```
 
-CCO core rules are injected via SessionStart hook, not copied to project.
+CCO core rules are installed to `~/.claude/rules/cco-rules.md`, not copied to your project.
 
 ---
 

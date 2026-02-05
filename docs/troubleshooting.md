@@ -8,7 +8,7 @@ Common issues and solutions.
 
 ### Commands not appearing
 
-**Symptoms:** `/cco:` commands don't show in autocomplete.
+**Symptoms:** `/cco-` commands don't show in autocomplete.
 
 **Solutions:**
 
@@ -17,37 +17,33 @@ Common issues and solutions.
    Close and reopen Claude Code
    ```
 
-2. **Verify plugin is installed:**
-   ```
-   /plugin
-   ```
-   Check **Installed** tab for `cco@ClaudeCodeOptimizer`
-
-3. **Reinstall:**
-   ```
-   /plugin uninstall cco@ClaudeCodeOptimizer
-   /plugin install cco@ClaudeCodeOptimizer
+2. **Verify files are installed:**
+   ```bash
+   ls ~/.claude/commands/cco-*.md
+   ls ~/.claude/rules/cco-rules.md
    ```
 
-4. **Check marketplace:**
-   ```
-   /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+3. **Re-run the install script:**
+
+   macOS / Linux:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
    ```
 
-### Plugin install fails
+   Windows (PowerShell):
+   ```powershell
+   irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+   ```
 
-**Symptoms:** Error during `/plugin install`.
+### Install script fails
+
+**Symptoms:** Error during install script execution.
 
 **Solutions:**
 
-1. Remove and re-add from marketplace:
-   ```
-   /plugin marketplace remove ClaudeCodeOptimizer
-   /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-   /plugin install cco@ClaudeCodeOptimizer
-   ```
-
+1. Check that `~/.claude/` directory exists (Claude Code creates it on first run)
 2. Check network connectivity to GitHub
+3. Try manual download from the repository
 
 ---
 
@@ -62,11 +58,11 @@ Common issues and solutions.
 1. **Check project size** - Large projects take longer
 2. **Use scope flags:**
    ```
-   /cco:optimize --scope=security  # Single scope faster
+   /cco-optimize --scope=security  # Single scope faster
    ```
 3. **Use quick mode:**
    ```
-   /cco:align --preview
+   /cco-align --preview
    ```
 
 ### "Applied: 0" when issues exist
@@ -77,14 +73,14 @@ Common issues and solutions.
 
 1. **Check intensity level:**
    ```
-   /cco:optimize --auto  # All severities, unattended
+   /cco-optimize --auto  # All severities, unattended
    ```
 
 2. **Check scope selection** - Issues might be in unselected scope
 
 3. **Use report mode to see findings:**
    ```
-   /cco:optimize --preview
+   /cco-optimize --preview
    ```
 
 ### Git state warnings
@@ -126,7 +122,7 @@ Common issues and solutions.
 
 ### Tests fail during commit
 
-**Symptoms:** `/cco:commit` blocked by test failures.
+**Symptoms:** `/cco-commit` blocked by test failures.
 
 **Solutions:**
 
@@ -137,7 +133,7 @@ Common issues and solutions.
 
 2. **Commit only staged changes:**
    ```
-   /cco:commit --staged-only
+   /cco-commit --staged-only
    ```
 
 3. **Run tests manually to see errors:**
@@ -202,14 +198,17 @@ Common issues and solutions.
 | Review changes | `git diff` |
 | Undo last commit | `git reset --soft HEAD~1` |
 
-### Remove CCO from project
+### Remove CCO
 
-**Uninstall plugin:**
-```
-/plugin uninstall cco@ClaudeCodeOptimizer
+Remove the CCO files from `~/.claude/`:
+
+```bash
+rm ~/.claude/rules/cco-rules.md
+rm ~/.claude/commands/cco-*.md
+rm ~/.claude/agents/cco-agent-*.md
 ```
 
-CCO doesn't write files to your project, so no cleanup needed.
+CCO doesn't write files to your project, so no project cleanup is needed.
 
 ---
 
@@ -220,14 +219,14 @@ CCO doesn't write files to your project, so no cleanup needed.
 Most commands support `--preview` for dry-run:
 
 ```
-/cco:optimize --preview   # Show findings without fixing
-/cco:commit --preview     # Show plan without committing
-/cco:preflight --preview  # Check without releasing
+/cco-optimize --preview   # Show findings without fixing
+/cco-commit --preview     # Show plan without committing
+/cco-preflight --preview  # Check without releasing
 ```
 
 ### View loaded rules
 
-Core rules are injected via SessionStart hook automatically. Check your project's `.claude/rules/` for any custom rules you've added.
+Core rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Check your project's `.claude/rules/` for any custom rules you've added.
 
 ---
 
@@ -235,11 +234,11 @@ Core rules are injected via SessionStart hook automatically. Check your project'
 
 ### "How do I see what rules are active?"
 
-Core rules are injected via SessionStart hook. Any `.md` files in your project's `.claude/rules/` are also loaded by Claude Code.
+Core rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Any `.md` files in your project's `.claude/rules/` are also loaded by Claude Code.
 
 ### "Will CCO break my existing Claude rules?"
 
-No. CCO core rules are injected via hook, not written to your project. Your custom rules in `.claude/rules/` are never touched.
+No. CCO core rules are installed to `~/.claude/rules/`, separate from your project. Your custom rules in `.claude/rules/` are never touched.
 
 ### "Why does optimize report 0 applied?"
 
@@ -253,7 +252,7 @@ Check:
 Yes. Use `--auto` flag:
 
 ```bash
-claude code run "/cco:optimize --auto"
+claude code run "/cco-optimize --auto"
 ```
 
 Exit codes: 0=OK, 1=WARN, 2=FAIL

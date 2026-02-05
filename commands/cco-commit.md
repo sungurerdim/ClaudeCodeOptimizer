@@ -5,7 +5,7 @@ allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 model: opus
 ---
 
-# /cco:commit
+# /cco-commit
 
 **Smart Commits** — Fast quality gates + atomic grouping, no unnecessary questions.
 
@@ -23,6 +23,12 @@ model: opus
 
 **[CRITICAL] Scope:** ALL uncommitted changes included by default (staged + unstaged + untracked). Use `--staged-only` for staged changes only.
 
+## Update Check
+
+1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
+2. If last check >24 hours ago → `/cco-update --check`
+3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
+
 ## Flags
 
 | Flag | Effect |
@@ -39,7 +45,7 @@ Pre-checks → Analyze → Execute → Verify → Summary
 
 **1.1 Conflict check [BLOCKER]:** If `UU`/`AA`/`DD` in git status → stop immediately.
 
-**1.2 File type detection:** Categorize changed files as code, test, tested-content (commands/, agents/, hooks/, rules/), docs, config.
+**1.2 File type detection:** Categorize changed files as code, test, tested-content (commands/, agents/, rules/), docs, config.
 
 **1.3 Quality Gates [PARALLEL + CONDITIONAL]:**
 

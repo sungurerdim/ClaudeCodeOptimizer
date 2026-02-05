@@ -8,11 +8,12 @@ How to integrate CCO into your development workflow.
 
 | I want to... | Command |
 |--------------|---------|
-| Fix issues | `/cco:optimize` |
-| Review architecture | `/cco:align` |
-| Commit with quality gates | `/cco:commit` |
-| Prepare for release | `/cco:preflight` |
-| Research a topic | `/cco:research` |
+| Fix issues | `/cco-optimize` |
+| Review architecture | `/cco-align` |
+| Commit with quality gates | `/cco-commit` |
+| Prepare for release | `/cco-preflight` |
+| Research a topic | `/cco-research` |
+| Update CCO | `/cco-update` |
 
 ---
 
@@ -26,7 +27,7 @@ Start session
      │
      ▼
 ┌────────────────┐
-│  /cco:commit   │  Quality-gated commit
+│  /cco-commit   │  Quality-gated commit
 └───────┬────────┘
      │
 [More changes?] ──yes──► [Write code]
@@ -39,9 +40,9 @@ Start session
 
 | Situation | Command |
 |-----------|---------|
-| Ready to commit | `/cco:commit` |
-| Quick cleanup | `/cco:optimize --quick` |
-| Full optimization | `/cco:optimize` |
+| Ready to commit | `/cco-commit` |
+| Quick cleanup | `/cco-optimize --quick` |
+| Full optimization | `/cco-optimize` |
 
 ---
 
@@ -52,7 +53,7 @@ Feature complete
      │
      ▼
 ┌────────────────┐
-│  /cco:align    │  Architecture check
+│  /cco-align    │  Architecture check
 └───────┬────────┘
      │
 [Issues?] ──yes──► Fix issues
@@ -61,12 +62,12 @@ Feature complete
      │
      ▼
 ┌────────────────┐
-│ /cco:optimize  │  Full quality pass
+│ /cco-optimize  │  Full quality pass
 └───────┬────────┘
      │
      ▼
 ┌────────────────┐
-│  /cco:commit   │  Final commit
+│  /cco-commit   │  Final commit
 └───────┬────────┘
      │
      ▼
@@ -75,10 +76,10 @@ Feature complete
 
 | Goal | Command |
 |------|---------|
-| Quick architecture check | `/cco:align --quick` |
-| Full architecture review | `/cco:align` |
-| Security focus | `/cco:optimize --scope=security` |
-| Full optimization | `/cco:optimize` |
+| Quick architecture check | `/cco-align --quick` |
+| Full architecture review | `/cco-align` |
+| Security focus | `/cco-optimize --scope=security` |
+| Full optimization | `/cco-optimize` |
 
 ---
 
@@ -89,7 +90,7 @@ Release candidate
      │
      ▼
 ┌────────────────┐
-│ /cco:preflight │  Full release check
+│ /cco-preflight │  Full release check
 └───────┬────────┘
      │
 [Blockers?] ──yes──► Fix blockers
@@ -118,33 +119,33 @@ Release candidate
 
 | Frequency | Use Case | Command |
 |-----------|----------|---------|
-| Daily | Before important commits | `/cco:commit` |
-| Weekly | Active development | `/cco:optimize` |
-| Before PR | Quality gate | `/cco:align` + `/cco:optimize` |
-| Monthly | Stable projects | `/cco:align --focus=dependencies` |
-| Before release | Full validation | `/cco:preflight` |
+| Daily | Before important commits | `/cco-commit` |
+| Weekly | Active development | `/cco-optimize` |
+| Before PR | Quality gate | `/cco-align` + `/cco-optimize` |
+| Monthly | Stable projects | `/cco-align --focus=dependencies` |
+| Before release | Full validation | `/cco-preflight` |
 
 ---
 
 ## Command Relationships
 
 ```
-                   /cco:preflight
+                   /cco-preflight
                   (release workflow)
                          │
          ┌───────────────┴───────────────┐
          ▼                               ▼
-   /cco:optimize                   /cco:align
+   /cco-optimize                   /cco-align
    (fix issues)                    (architecture)
          │                               │
          └───────────────┬───────────────┘
                          ▼
-                   /cco:commit
+                   /cco-commit
                   (quality gates)
 ```
 
 **Orchestration:**
-- `/cco:preflight` runs optimize + align + verification in parallel
+- `/cco-preflight` runs optimize + align + verification in parallel
 
 ---
 
@@ -153,14 +154,14 @@ Release candidate
 When you need to make a decision:
 
 ```
-/cco:research "Which ORM should I use?"
+/cco-research "Which ORM should I use?"
 ```
 
 | Mode | Use Case |
 |------|----------|
-| Standard | `/cco:research "query"` |
-| Quick | `/cco:research "query" --quick` |
-| Deep | `/cco:research "query" --deep` |
+| Standard | `/cco-research "query"` |
+| Quick | `/cco-research "query" --quick` |
+| Deep | `/cco-research "query" --deep` |
 
 ---
 

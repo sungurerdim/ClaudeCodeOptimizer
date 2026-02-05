@@ -8,16 +8,17 @@ Complete parameter and flag documentation for all CCO commands.
 
 | Command | Purpose | Model | Flags |
 |---------|---------|-------|-------|
-| `/cco:optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X` |
-| `/cco:align` | Architecture gaps | Opus | `--auto`, `--preview` |
-| `/cco:commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
-| `/cco:research` | Multi-source research | Opus | `--quick`, `--deep` |
-| `/cco:preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
-| `/cco:docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
+| `/cco-optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X` |
+| `/cco-align` | Architecture gaps | Opus | `--auto`, `--preview` |
+| `/cco-commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
+| `/cco-research` | Multi-source research | Opus | `--quick`, `--deep` |
+| `/cco-preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
+| `/cco-docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
+| `/cco-update` | Update CCO | Opus | *(none)* |
 
 ---
 
-## /cco:optimize
+## /cco-optimize
 
 Fix security, quality, and hygiene issues.
 
@@ -55,15 +56,15 @@ Fix security, quality, and hygiene issues.
 ### Examples
 
 ```bash
-/cco:optimize                    # Interactive selection
-/cco:optimize --auto             # Silent full optimization
-/cco:optimize --scope=security   # Security only
-/cco:optimize --preview          # Analyze and show quality score
+/cco-optimize                    # Interactive selection
+/cco-optimize --auto             # Silent full optimization
+/cco-optimize --scope=security   # Security only
+/cco-optimize --preview          # Analyze and show quality score
 ```
 
 ---
 
-## /cco:align
+## /cco-align
 
 Architecture and pattern analysis. Compare current state to ideal.
 
@@ -97,14 +98,14 @@ Architecture and pattern analysis. Compare current state to ideal.
 ### Examples
 
 ```bash
-/cco:align                       # Interactive review
-/cco:align --auto                # Full review, no questions
-/cco:align --preview             # Analysis only
+/cco-align                       # Interactive review
+/cco-align --auto                # Full review, no questions
+/cco-align --preview             # Analysis only
 ```
 
 ---
 
-## /cco:commit
+## /cco-commit
 
 Quality-gated atomic commits.
 
@@ -142,15 +143,15 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ### Examples
 
 ```bash
-/cco:commit                 # Full flow
-/cco:commit --preview       # Preview only
-/cco:commit --single        # One commit for all
-/cco:commit --staged-only   # Only staged changes
+/cco-commit                 # Full flow
+/cco-commit --preview       # Preview only
+/cco-commit --single        # One commit for all
+/cco-commit --staged-only   # Only staged changes
 ```
 
 ---
 
-## /cco:research
+## /cco-research
 
 Multi-source research with reliability scoring.
 
@@ -183,15 +184,15 @@ Multi-source research with reliability scoring.
 ### Examples
 
 ```bash
-/cco:research "best auth library for Node"
-/cco:research "Flask vs FastAPI"
-/cco:research "best auth library for Node" --quick
-/cco:research "Flask vs FastAPI" --deep
+/cco-research "best auth library for Node"
+/cco-research "Flask vs FastAPI"
+/cco-research "best auth library for Node" --quick
+/cco-research "Flask vs FastAPI" --deep
 ```
 
 ---
 
-## /cco:preflight
+## /cco-preflight
 
 Pre-release verification gate.
 
@@ -227,14 +228,14 @@ Pre-release verification gate.
 ### Examples
 
 ```bash
-/cco:preflight              # Full release workflow
-/cco:preflight --auto       # Unattended checks
-/cco:preflight --preview    # Check without releasing
+/cco-preflight              # Full release workflow
+/cco-preflight --auto       # Unattended checks
+/cco-preflight --preview    # Check without releasing
 ```
 
 ---
 
-## /cco:docs
+## /cco-docs
 
 Documentation gap analysis and generation.
 
@@ -270,10 +271,26 @@ Documentation gap analysis and generation.
 ### Examples
 
 ```bash
-/cco:docs                   # Interactive selection
-/cco:docs --auto            # Generate all missing
-/cco:docs --preview         # Show gaps only
-/cco:docs --scope=readme    # README only
+/cco-docs                   # Interactive selection
+/cco-docs --auto            # Generate all missing
+/cco-docs --preview         # Show gaps only
+/cco-docs --scope=readme    # README only
+```
+
+---
+
+## /cco-update
+
+Update CCO to the latest version.
+
+### Parameters
+
+No flags. Runs the appropriate install script for the current platform.
+
+### Examples
+
+```bash
+/cco-update
 ```
 
 ---
@@ -285,9 +302,9 @@ Documentation gap analysis and generation.
 All commands support `--auto` for CI/CD:
 
 ```bash
-/cco:optimize --auto    # Exit 0=OK, 1=WARN, 2=FAIL
-/cco:align --auto       # Same exit codes
-/cco:preflight --auto   # Same exit codes
+/cco-optimize --auto    # Exit 0=OK, 1=WARN, 2=FAIL
+/cco-align --auto       # Same exit codes
+/cco-preflight --auto   # Same exit codes
 ```
 
 ### Accounting Invariant

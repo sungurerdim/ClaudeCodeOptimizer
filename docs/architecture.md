@@ -9,18 +9,14 @@ How CCO works internally: hooks, rules, agents, and command flow.
 ```
                      Claude Code
                           |
-    ┌─────────────────────┴─────────────────────┐
-    |                                           |
-SessionStart Hook                    .claude/rules/*.md
-(core rules injected)                (project rules loaded)
-    |                                           |
-    └─────────────────────┬─────────────────────┘
+              ~/.claude/rules/cco-rules.md
+                  (auto-loaded at start)
                           |
                     Rules Active
                           |
               ┌───────────┼───────────┐
               |           |           |
-        /cco:optimize  /cco:align  /cco:commit
+        /cco-optimize  /cco-align  /cco-commit  ...
               |           |           |
               └─────┬─────┴─────┬─────┘
                     |           |
@@ -29,32 +25,46 @@ SessionStart Hook                    .claude/rules/*.md
 
 ---
 
-## Plugin Structure
+## Repository Structure
 
 ```
 ClaudeCodeOptimizer/
-├── .claude-plugin/
-│   └── plugin.json           # Plugin manifest
-├── commands/                  # Slash commands (6 files)
-│   ├── optimize.md
-│   ├── align.md
-│   ├── commit.md
-│   ├── research.md
-│   ├── preflight.md
-│   └── docs.md
-├── agents/                    # Subagents (3 files)
+├── rules/
+│   └── cco-rules.md            # Core rules (single source of truth)
+├── commands/                    # Slash commands (7 files)
+│   ├── cco-optimize.md
+│   ├── cco-align.md
+│   ├── cco-commit.md
+│   ├── cco-research.md
+│   ├── cco-preflight.md
+│   ├── cco-docs.md
+│   └── cco-update.md
+├── agents/                      # Subagents (3 files)
 │   ├── cco-agent-analyze.md
 │   ├── cco-agent-apply.md
 │   └── cco-agent-research.md
-└── hooks/
-    └── core-rules.json        # Core rules + SessionStart hook (single source)
+├── install.sh                   # macOS/Linux installer
+├── install.ps1                  # Windows installer
+└── version.txt                  # Current version
+```
+
+### Installed Structure
+
+```
+~/.claude/
+├── rules/
+│   └── cco-rules.md            # Auto-loaded by Claude Code
+├── commands/
+│   ├── cco-optimize.md ... cco-update.md
+└── agents/
+    ├── cco-agent-analyze.md ... cco-agent-research.md
 ```
 
 ---
 
 ## Rule Loading Architecture
 
-Rules are loaded automatically at session start via Claude Code's native mechanisms. Core rules are injected through the SessionStart hook, and project-specific rules are auto-loaded from `.claude/rules/*.md`. See [Rules Reference](rules.md#zero-config-loading-mechanism) for the complete mechanism.
+Rules are loaded automatically at session start via Claude Code's native mechanisms. Core rules are auto-loaded from `~/.claude/rules/cco-rules.md`, and project-specific rules are auto-loaded from `.claude/rules/*.md`. See [Rules Reference](rules.md) for the complete mechanism.
 
 ---
 
@@ -114,10 +124,10 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 ## Command Flow
 
-### /cco:optimize
+### /cco-optimize
 
 ```
-User: /cco:optimize
+User: /cco-optimize
           |
     ┌─────┴─────┐
     │ Q1: Scope  │  ← Areas + Intensity
@@ -139,10 +149,10 @@ User: /cco:optimize
     Applied: N | Failed: M
 ```
 
-### /cco:preflight
+### /cco-preflight
 
 ```
-User: /cco:preflight
+User: /cco-preflight
           |
     ┌─────┴─────┐
     │ Q1: All   │  ← Checks + Intensity + Release mode
@@ -150,7 +160,7 @@ User: /cco:preflight
           |
     ┌─────┴─────────────────┬────────────────────┐
     │                       │                    │
-Pre-flight checks    /cco:optimize      Verification
+Pre-flight checks    /cco-optimize      Verification
 (parallel)           (background)       (background)
     │                       │                    │
     └───────────┬───────────┴────────────────────┘
@@ -172,7 +182,7 @@ Pre-flight checks    /cco:optimize      Verification
 
 ### Core Rules (Always Active)
 
-Injected via SessionStart hook. Cannot be overridden.
+Auto-loaded from `~/.claude/rules/cco-rules.md`. Cannot be overridden.
 
 | Rule | Type | Effect |
 |------|------|--------|

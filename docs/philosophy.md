@@ -137,11 +137,11 @@ CCO only touches:
 
 | Location | Content |
 |----------|---------|
-| `commands/` | 6 slash commands |
+| `commands/` | 7 slash commands |
 | `agents/` | 3 specialized agents |
-| `hooks/` | Core rules (SessionStart hook) |
+| `rules/` | Core rules (auto-loaded) |
 
-**Your project files are never modified.** Core rules are injected via SessionStart hook.
+**Your project files are never modified.** Core rules are auto-loaded from `~/.claude/rules/cco-rules.md`.
 
 ---
 
@@ -164,7 +164,7 @@ See [Rules](rules.md) for complete rule definitions.
 These principles are applied consistently across all CCO commands:
 
 - **Standard Execution Flow** (Setup → Analyze → Gate → Plan → Apply → Summary)
-  - Used in: `/cco:optimize`, `/cco:align`, `/cco:preflight`, `/cco:docs`
+  - Used in: `/cco-optimize`, `/cco-align`, `/cco-preflight`, `/cco-docs`
   - Ensures consistent user experience and reliable checkpoint validation
 
 - **No Deferrals Policy** (Fix everything that can be fixed)

@@ -5,7 +5,7 @@ allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 model: opus
 ---
 
-# /cco:research
+# /cco-research
 
 **Smart Research** — Parallel search → tier → synthesize → recommend.
 
@@ -16,6 +16,12 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research).
 - Current date: !`date +%Y-%m-%d`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
+
+## Update Check
+
+1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
+2. If last check >24 hours ago → `/cco-update --check`
+3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
 
 ## Args
 
