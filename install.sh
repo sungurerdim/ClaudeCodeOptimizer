@@ -1,13 +1,25 @@
 #!/usr/bin/env bash
 # CCO — Claude Code Optimizer Installer (Unix/Mac)
-# Usage: curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+#
+# Stable (latest release):
+#   curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+#
+# Dev (latest dev branch):
+#   curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash -s -- --dev
 
 set -euo pipefail
 
 REPO="sungurerdim/ClaudeCodeOptimizer"
-BRANCH="main"
-BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 CLAUDE_DIR="${HOME}/.claude"
+CHANNEL="${CCO_CHANNEL:-stable}"
+
+# Parse args
+for arg in "$@"; do
+  case "$arg" in
+    --dev)    CHANNEL="dev" ;;
+    --stable) CHANNEL="stable" ;;
+  esac
+done
 
 # Files to install
 RULES_FILES="rules/cco-rules.md"
@@ -32,6 +44,27 @@ err()   { printf "\033[0;31m%s\033[0m\n" "$1" >&2; }
 
 info "CCO Installer"
 info "============="
+
+# Resolve channel to a git ref
+if [ "$CHANNEL" = "dev" ]; then
+  REF="dev"
+  info "Channel: dev (latest commit)"
+else
+  # Fetch latest tag from GitHub API
+  LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/tags?per_page=1" 2>/dev/null \
+    | grep -m1 '"name"' \
+    | sed 's/.*"name": *"\([^"]*\)".*/\1/' 2>/dev/null) || true
+
+  if [ -n "${LATEST_TAG:-}" ]; then
+    REF="$LATEST_TAG"
+    info "Channel: stable ($LATEST_TAG)"
+  else
+    REF="main"
+    info "Channel: stable (main — no tags found)"
+  fi
+fi
+
+BASE_URL="https://raw.githubusercontent.com/${REPO}/${REF}"
 
 # Create directories
 for dir in rules commands agents; do
@@ -81,7 +114,7 @@ fi
 
 info ""
 if [ "${failed}" -eq 0 ]; then
-  ok "CCO installed successfully!"
+  ok "CCO installed successfully! (${REF})"
   info ""
   info "Installed to: ${CLAUDE_DIR}/"
   info "  rules/cco-rules.md"

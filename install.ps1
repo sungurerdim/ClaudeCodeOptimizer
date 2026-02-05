@@ -1,12 +1,27 @@
 # CCO — Claude Code Optimizer Installer (Windows)
-# Usage: irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+#
+# Stable (latest release):
+#   irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+#
+# Dev (latest dev branch):
+#   iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1) } --dev"
 
 $ErrorActionPreference = "Stop"
 
 $Repo = "sungurerdim/ClaudeCodeOptimizer"
-$Branch = "main"
-$BaseUrl = "https://raw.githubusercontent.com/$Repo/$Branch"
 $ClaudeDir = Join-Path $env:USERPROFILE ".claude"
+$Channel = "stable"
+
+# Parse args (--dev / --stable)
+foreach ($a in $args) {
+    switch ($a) {
+        "--dev"    { $Channel = "dev" }
+        "--stable" { $Channel = "stable" }
+    }
+}
+
+# Also honor environment variable (fallback for piped execution)
+if ($env:CCO_CHANNEL -and $Channel -eq "stable") { $Channel = $env:CCO_CHANNEL }
 
 $RulesFiles = @("rules/cco-rules.md")
 $CommandFiles = @(
@@ -30,6 +45,28 @@ function Write-Err   { param($Msg) Write-Host $Msg -ForegroundColor Red }
 
 Write-Info "CCO Installer"
 Write-Info "============="
+
+# Resolve channel to a git ref
+if ($Channel -eq "dev") {
+    $Ref = "dev"
+    Write-Info "Channel: dev (latest commit)"
+} else {
+    try {
+        $Tags = Invoke-RestMethod "https://api.github.com/repos/$Repo/tags?per_page=1" -UseBasicParsing
+        if ($Tags -and $Tags.Count -gt 0) {
+            $Ref = $Tags[0].name
+            Write-Info "Channel: stable ($Ref)"
+        } else {
+            $Ref = "main"
+            Write-Info "Channel: stable (main - no tags found)"
+        }
+    } catch {
+        $Ref = "main"
+        Write-Info "Channel: stable (main - API unavailable)"
+    }
+}
+
+$BaseUrl = "https://raw.githubusercontent.com/$Repo/$Ref"
 
 # Create directories
 foreach ($Dir in @("rules", "commands", "agents")) {
@@ -82,9 +119,12 @@ if (Test-Path $RulesPath) {
     Set-Content -Path $RulesPath -Value $Content -NoNewline
 }
 
+# Clean up env var
+if ($env:CCO_CHANNEL) { Remove-Item Env:CCO_CHANNEL -ErrorAction SilentlyContinue }
+
 Write-Info ""
 if ($Failed -eq 0) {
-    Write-Ok "CCO installed successfully!"
+    Write-Ok "CCO installed successfully! ($Ref)"
     Write-Info ""
     Write-Info "Installed to: $ClaudeDir\"
     Write-Info "  rules\cco-rules.md"
