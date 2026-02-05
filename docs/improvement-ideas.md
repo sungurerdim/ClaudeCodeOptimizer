@@ -3,11 +3,11 @@
 Kaynak: Boris Cherny (Claude Code creator) Twitter thread analizi
 Tarih: 2026-02-01
 
-## 1. `/cco:techdebt` komutu
+## 1. `/cco-techdebt` komutu
 Teknik borç odaklı tarama: duplikasyon, dead code, TODO/FIXME/HACK takibi.
 Mevcut `cco-agent-analyze`'a `scope=techdebt` eklenerek uygulanabilir.
 
-## 2. `/cco:learn` komutu
+## 2. `/cco-learn` komutu
 Codebase'i tarayıp mimari diagram + modül açıklamaları üreten komut.
 Yeni kullanıcılar için onboarding aracı. Mermaid/ASCII output.
 

@@ -1,17 +1,17 @@
 ---
 description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
 argument-hint: "[--auto] [--preview] [--scope=<name>]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 
-# /cco:optimize
+# /cco-optimize
 
 **Incremental Code Improvement** — Quality gates + parallel analysis + background fixes.
 
 **Philosophy:** "This code works. How can it work better?"
 
-**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco:align`.
+**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco-align`.
 
 ## Args
 
@@ -27,6 +27,13 @@ model: opus
 - Args: $ARGS
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
+
+## Update Check
+
+1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
+2. If last check >24 hours ago → `/cco-update --check`
+3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
+4. In --auto mode: skip silently
 
 ## Core Principle [CRITICAL]
 

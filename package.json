@@ -1,6 +1,0 @@
-{
-  "name": "claude-code-optimizer",
-  "version": "2.0.0",
-  "private": true,
-  "description": "Quality standards and adaptive rules for Claude Code."
-}

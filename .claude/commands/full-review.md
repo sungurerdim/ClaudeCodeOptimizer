@@ -26,7 +26,7 @@ At start, verify CCO repo using Claude's native tools:
 | Context | Detection Method |
 |---------|------------------|
 | CCO repo root | `git rev-parse --show-toplevel` |
-| Is CCO repo | Glob for `.claude-plugin/plugin.json` → Read and check `"name": "cco"` |
+| Is CCO repo | Glob for `rules/cco-rules.md` → Read and check frontmatter `cco_version` |
 | Args | $ARGS |
 
 **Use Glob/Read for file detection. Git commands are cross-platform.**
@@ -77,14 +77,14 @@ if (!isUnattended && !isReportOnly) {
 
 ```javascript
 // Cross-platform detection using Claude's native tools
-commands = Glob("commands/*.md").length        // Expected: 6
+commands = Glob("commands/cco-*.md").length     // Expected: 7
 agents = Glob("agents/cco-agent-*.md").length  // Expected: 3
-version = Read(".claude-plugin/plugin.json").version
+version = Read("rules/cco-rules.md").frontmatter.cco_version
 
 inventory = { commands, agents, version }
 ```
 
-**Note:** Rules are in `hooks/core-rules.json` (single source of truth).
+**Note:** Rules are in `rules/cco-rules.md` (single source of truth).
 
 ---
 
@@ -95,15 +95,15 @@ Launch 4 parallel Explore agents covering 8 categories:
 ### Group A: Structure & Release (Cat 1 + Cat 7)
 
 **CATEGORY 1 - Inventory & Sync (12 checks):**
-- Count files: commands/*.md (expected: 6), agents/cco-agent-*.md (expected: 3)
+- Count files: commands/cco-*.md (expected: 7), agents/cco-agent-*.md (expected: 3)
 - Compare counts against README.md, docs/commands.md, docs/agents.md
 - SSOT: grep for orphan refs (.cco/, principles.md, projects.json)
 - Terminology: CRITICAL/HIGH/MEDIUM/LOW consistent (not P0/P1)
 
 **CATEGORY 7 - Release Readiness (8 checks):**
-- Plugin manifest valid JSON with required fields
-- Hooks directory contains core-rules.json
-- Version in plugin.json matches CHANGELOG
+- Rules file exists with valid frontmatter
+- Version in cco-rules.md matches version.txt
+- Install scripts exist and reference correct files
 - Cross-platform: no hardcoded paths (C:\, /home/)
 
 ### Group B: Commands & Agents (Cat 2 + Cat 3)
@@ -113,7 +113,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 - AskUserQuestion standards (max 4 questions × 4 options)
 - --auto mode: zero AskUserQuestion calls
 - --preview mode: zero Edit/Write calls
-- All 6 commands support --auto and --preview
+- All 7 commands support --auto and --preview (where applicable)
 
 **CATEGORY 3 - Agent Quality (10 checks):**
 - cco-agent-analyze: 9 OPTIMIZE scopes + 6 REVIEW scopes
@@ -148,10 +148,10 @@ Launch 4 parallel Explore agents covering 8 categories:
 ### Group D: Documentation & Safety (Cat 6)
 
 **CATEGORY 6 - Documentation & Safety (15 checks):**
-- README accuracy: command count (6), agent count (3)
+- README accuracy: command count (7), agent count (3)
 - docs/commands.md: entry for each command
 - docs/agents.md: entry for each agent, all scopes documented
-- docs/rules.md: reflects hooks/core-rules.json content
+- docs/rules.md: reflects rules/cco-rules.md content
 - Zero API keys, passwords, secrets
 - Edit/Write commands check git status first
 
@@ -239,7 +239,7 @@ if (toApply.length > 0) {
 ═══════════════════════════════════════════════════════════
 
 Detected:
-  Commands: 6  Agents: 3  Rules: hooks/core-rules.json
+  Commands: 7  Agents: 3  Rules: rules/cco-rules.md
 
 ┌─────────────────────────┬────────┬────────┬────────┐
 │ Category                │ Passed │ Failed │ Status │

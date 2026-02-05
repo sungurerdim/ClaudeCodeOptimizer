@@ -1,7 +1,6 @@
 # Claude Code Optimizer (CCO)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-00A67E.svg)](https://github.com/anthropics/claude-code)
 
 **Enforceable constraints for Claude Code.** Stops over-engineering, scope creep, and silent assumptions.
 
@@ -18,47 +17,40 @@ These are **BLOCKER** rules — execution stops, not suggestions to ignore.
 
 ## Install
 
-```
-/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+**Mac / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
 ```
 
-```
-/plugin install cco@ClaudeCodeOptimizer
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
 ```
 
 Restart Claude Code. Done.
-
-<details>
-<summary>Alternative: Terminal</summary>
-
-```bash
-claude plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-```
-
-```bash
-claude plugin install cco@ClaudeCodeOptimizer
-```
-</details>
 
 ---
 
 ## Quick Start
 
 ```
-/cco:optimize   # Fix issues
-/cco:align      # Architecture gaps
-/cco:commit     # Quality-gated commits
+/cco-optimize   # Fix issues
+/cco-align      # Architecture gaps
+/cco-commit     # Quality-gated commits
 ```
 
 ---
 
 ## How It Works
 
-1. **Install** → SessionStart hook injects core rules every session, automatically
-2. **Use commands** → `/cco:optimize`, `/cco:align`, etc.
-3. Core rules always active via hook — no configuration needed
+1. **Install** → Rules, commands, and agents are placed in `~/.claude/`
+2. **Rules auto-load** → `~/.claude/rules/cco-rules.md` is loaded into every session automatically
+3. **Use commands** → `/cco-optimize`, `/cco-align`, etc.
+4. **Update** → `/cco-update` checks for new versions
 
-Your project files are never modified by CCO. Rules are injected via hook, not written to disk.
+No hooks, no plugins, no dependencies. Just markdown files.
 
 ---
 
@@ -66,14 +58,15 @@ Your project files are never modified by CCO. Rules are injected via hook, not w
 
 | Command | Purpose |
 |---------|---------|
-| [`/cco:optimize`](docs/commands.md#ccooptimize) | Fix security, types, performance issues |
-| [`/cco:align`](docs/commands.md#ccoalign) | Architecture and pattern analysis |
-| [`/cco:commit`](docs/commands.md#ccocommit) | Atomic commits with quality gates |
-| [`/cco:research`](docs/commands.md#ccoresearch) | Multi-source research with scoring |
-| [`/cco:preflight`](docs/commands.md#ccopreflight) | Pre-release verification |
-| [`/cco:docs`](docs/commands.md#ccodocs) | Documentation gap analysis |
+| [`/cco-optimize`](docs/commands.md#cco-optimize) | Fix security, types, performance issues |
+| [`/cco-align`](docs/commands.md#cco-align) | Architecture and pattern analysis |
+| [`/cco-commit`](docs/commands.md#cco-commit) | Atomic commits with quality gates |
+| [`/cco-research`](docs/commands.md#cco-research) | Multi-source research with scoring |
+| [`/cco-preflight`](docs/commands.md#cco-preflight) | Pre-release verification |
+| [`/cco-docs`](docs/commands.md#cco-docs) | Documentation gap analysis |
+| [`/cco-update`](docs/commands.md#cco-update) | Check and install updates |
 
-6 commands · 3 [specialized agents](docs/agents.md) · Core rules via [SessionStart hook](docs/rules.md)
+7 commands · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
 
 ---
 
@@ -81,6 +74,7 @@ Your project files are never modified by CCO. Rules are injected via hook, not w
 
 - [Getting Started](docs/getting-started.md) — First 10 minutes
 - [Commands](docs/commands.md) — Flags and examples
+- [Commands Reference](docs/commands-reference.md) — Full parameter docs
 - [Agents](docs/agents.md) — Specialized agents
 - [Rules](docs/rules.md) — Full rules reference
 
@@ -89,51 +83,79 @@ Your project files are never modified by CCO. Rules are injected via hook, not w
 ## Update
 
 ```
-/plugin marketplace update ClaudeCodeOptimizer
+/cco-update
 ```
 
-```
-/plugin update cco@ClaudeCodeOptimizer
-```
+Or re-run the installer:
 
-<details>
-<summary>Alternative: Terminal</summary>
-
+**Mac / Linux:**
 ```bash
-claude plugin marketplace update ClaudeCodeOptimizer
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
 ```
 
-```bash
-claude plugin update cco@ClaudeCodeOptimizer
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
 ```
-</details>
 
 ## Uninstall
 
-```
-/plugin uninstall cco@ClaudeCodeOptimizer
-```
-
-```
-/plugin marketplace remove ClaudeCodeOptimizer
-```
-
-<details>
-<summary>Alternative: Terminal</summary>
+**Mac / Linux:**
 
 ```bash
-claude plugin uninstall cco@ClaudeCodeOptimizer
+rm -f ~/.claude/rules/cco-rules.md
+rm -f ~/.claude/commands/cco-*.md
+rm -f ~/.claude/agents/cco-agent-*.md
 ```
 
-```bash
-claude plugin marketplace remove ClaudeCodeOptimizer
+**Windows (PowerShell):**
+
+```powershell
+Remove-Item ~\.claude\rules\cco-rules.md -ErrorAction SilentlyContinue
+Remove-Item ~\.claude\commands\cco-*.md -ErrorAction SilentlyContinue
+Remove-Item ~\.claude\agents\cco-agent-*.md -ErrorAction SilentlyContinue
 ```
-</details>
 
 ---
 
 <details>
-<summary>Migrating from v1</summary>
+<summary>Migrating from v2 (plugin)</summary>
+
+### 1. Uninstall plugin
+
+```
+/plugin uninstall cco@ClaudeCodeOptimizer
+/plugin marketplace remove ClaudeCodeOptimizer
+```
+
+### 2. Install v3
+
+**Mac / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+```
+
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+```
+
+### Command mapping
+
+| v2 | v3 |
+|----|-----|
+| `/cco:optimize` | `/cco-optimize` |
+| `/cco:align` | `/cco-align` |
+| `/cco:commit` | `/cco-commit` |
+| `/cco:research` | `/cco-research` |
+| `/cco:preflight` | `/cco-preflight` |
+| `/cco:docs` | `/cco-docs` |
+| — | `/cco-update` (new) |
+
+</details>
+
+<details>
+<summary>Migrating from v1 (pip)</summary>
 
 ### 1. Uninstall pip package
 
@@ -141,46 +163,30 @@ claude plugin marketplace remove ClaudeCodeOptimizer
 pip uninstall claude-code-optimizer
 ```
 
-### 2. Remove global rules
+### 2. Remove old files
 
 ```bash
-# Linux / macOS
 rm -f ~/.claude/rules/cco-*.md
-
-# Windows (PowerShell)
-Remove-Item ~\.claude\rules\cco-*.md -ErrorAction SilentlyContinue
-```
-
-### 3. Remove old project files
-
-```bash
 rm -f .claude/rules/cco-*.md
 rm -f .claude/commands/cco-*.md
 ```
 
-### 4. Clean up CLAUDE.md
+### 3. Install v3
 
-Remove any `@import` lines referencing CCO rules — v2 uses SessionStart hooks instead.
-
-### 5. Install v2
-
-```
-/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-/plugin install cco@ClaudeCodeOptimizer
+```bash
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
 ```
 
-### Command mapping
+</details>
 
-| v1 | v2 |
-|----|-----|
-| `/cco-tune` | removed (rules now injected via hook) |
-| `/cco-health` | removed |
-| `/cco-generate` | removed |
-| — | `/cco:research` (new) |
-| `/cco-audit` | `/cco:optimize` |
-| `/cco-optimize` | `/cco:optimize` |
-| `/cco-review` | `/cco:align` |
-| `/cco-refactor` | `/cco:align` |
+<details>
+<summary>Version history</summary>
+
+| Version | Distribution | Mechanism |
+|---------|-------------|-----------|
+| v1.x | pip package | Python dependency |
+| v2.x | Claude Code plugin | Marketplace + hooks |
+| **v3.x** | **Install script** | **curl/irm + rules/commands/agents** |
 
 </details>
 

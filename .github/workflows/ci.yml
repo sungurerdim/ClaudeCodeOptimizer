@@ -11,19 +11,14 @@ permissions:
 
 jobs:
   validate:
-    name: Validate Plugin Structure
+    name: Validate Structure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate plugin.json
-        run: |
-          python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
-          echo "plugin.json is valid"
-
       - name: Validate directories
         run: |
-          for dir in commands agents hooks; do
+          for dir in rules commands agents; do
             if [ ! -d "$dir" ]; then
               echo "Error: $dir not found"
               exit 1
@@ -31,55 +26,81 @@ jobs:
           done
           echo "All directories exist"
 
-      - name: Validate hooks
+      - name: Validate rules
         run: |
-          for file in hooks/hooks.json hooks/core-rules.json hooks/load-core-rules.py; do
-            if [ ! -f "$file" ]; then
-              echo "Error: $file not found"
+          if [ ! -f "rules/cco-rules.md" ]; then
+            echo "Error: rules/cco-rules.md not found"
+            exit 1
+          fi
+          echo "Rules file exists"
+
+      - name: Validate commands
+        run: |
+          expected="cco-optimize cco-align cco-commit cco-research cco-preflight cco-docs cco-update"
+          for cmd in $expected; do
+            if [ ! -f "commands/${cmd}.md" ]; then
+              echo "Error: commands/${cmd}.md not found"
               exit 1
             fi
           done
-          python3 -c "import json; json.load(open('hooks/core-rules.json'))"
-          echo "Hooks validated"
+          echo "All 7 command files exist"
+
+      - name: Validate agents
+        run: |
+          expected="cco-agent-analyze cco-agent-apply cco-agent-research"
+          for agent in $expected; do
+            if [ ! -f "agents/${agent}.md" ]; then
+              echo "Error: agents/${agent}.md not found"
+              exit 1
+            fi
+          done
+          echo "All 3 agent files exist"
+
+      - name: Validate install scripts
+        run: |
+          for script in install.sh install.ps1; do
+            if [ ! -f "$script" ]; then
+              echo "Error: $script not found"
+              exit 1
+            fi
+          done
+          echo "Install scripts exist"
+
+      - name: Validate version consistency
+        run: |
+          VERSION=$(cat version.txt | tr -d '[:space:]')
+          RULES_VERSION=$(grep 'cco_version:' rules/cco-rules.md | head -1 | sed 's/.*: *//')
+          if [ "$VERSION" != "$RULES_VERSION" ]; then
+            echo "Error: version.txt ($VERSION) != cco-rules.md ($RULES_VERSION)"
+            exit 1
+          fi
+          echo "Version consistent: $VERSION"
 
   lint:
-    name: Lint & Type Check
+    name: Lint Markdown
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Check frontmatter in commands
+        run: |
+          for file in commands/cco-*.md; do
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "Error: $file missing YAML frontmatter"
+              exit 1
+            fi
+          done
+          echo "All commands have frontmatter"
 
-      - name: Install dependencies
-        run: pip install ruff pyright pytest pyyaml
-
-      - name: Ruff lint
-        run: ruff check .
-
-      - name: Ruff format check
-        run: ruff format --check .
-
-      - name: Type check
-        run: pyright tests/
-        continue-on-error: true
-
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install pytest pyyaml
-
-      - name: Run tests
-        run: pytest tests/ -v
+      - name: Check frontmatter in agents
+        run: |
+          for file in agents/cco-agent-*.md; do
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "Error: $file missing YAML frontmatter"
+              exit 1
+            fi
+          done
+          echo "All agents have frontmatter"
 
   security:
     name: Security Scan

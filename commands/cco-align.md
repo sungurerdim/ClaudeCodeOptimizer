@@ -1,17 +1,17 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
 argument-hint: "[--auto] [--preview]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 
-# /cco:align
+# /cco-align
 
 **Align with Ideal Architecture** — "If I designed from scratch, what would be best?"
 
 **Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Compare current state to that ideal.
 
-**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco:optimize`.
+**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco-optimize`.
 
 ## Args
 
@@ -25,6 +25,13 @@ model: opus
 - Git status: !`git status --short 2>/dev/null || echo ""`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
+
+## Update Check
+
+1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
+2. If last check >24 hours ago → `/cco-update --check`
+3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
+4. In --auto mode: skip silently
 
 ## Skip Patterns
 

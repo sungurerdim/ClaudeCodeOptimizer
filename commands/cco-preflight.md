@@ -5,11 +5,11 @@ allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
 model: opus
 ---
 
-# /cco:preflight
+# /cco-preflight
 
 **Release Verification Gate** — Comprehensive pre-release checks with parallel orchestration.
 
-Meta command orchestrating `/cco:optimize` and `/cco:align` with maximum parallelism.
+Meta command orchestrating `/cco-optimize` and `/cco-align` with maximum parallelism.
 
 ## Args
 
@@ -31,6 +31,13 @@ At start, detect project context using Claude's native tools:
 | Last tag | `git describe --tags --abbrev=0` |
 
 **Use Glob/Read for file detection. Git commands are cross-platform.**
+
+## Update Check
+
+1. Read `cco_version` and `last_update_check` from context (cco-rules.md frontmatter, already loaded)
+2. If last check >24 hours ago → `/cco-update --check`
+3. New version available → display: `CCO vX.Y.Z available. Run /cco-update to upgrade.`
+4. In --auto mode: skip silently
 
 ## Execution Flow
 
@@ -59,7 +66,7 @@ Dependency audit via cco-agent-research (scope: dependency).
 
 Run concurrently:
 - Background Bash: format, lint, type, test, build commands
-- Skill calls: `Skill("cco:optimize", "--auto")` and `Skill("cco:align", "--auto")`
+- Skill calls: `Skill("cco-optimize", "--auto")` and `Skill("cco-align", "--auto")`
 
 Collect ALL background results via TaskOutput before any output.
 

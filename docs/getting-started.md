@@ -6,45 +6,54 @@ Your first 10 minutes with CCO.
 
 ## Installation
 
-**In Claude Code:**
-```
-/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-```
-
-```
-/plugin install cco@ClaudeCodeOptimizer
-```
-
-<details>
-<summary>Alternative: From terminal</summary>
-
+**macOS / Linux:**
 ```bash
-claude plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-claude plugin install cco@ClaudeCodeOptimizer
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
 ```
 
-</details>
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+```
 
 **Restart Claude Code** after installation.
+
+### What Gets Installed
+
+```
+~/.claude/
+├── rules/
+│   └── cco-rules.md          # Core rules (auto-loaded)
+├── commands/
+│   ├── cco-optimize.md        # 7 slash commands
+│   ├── cco-align.md
+│   ├── cco-commit.md
+│   ├── cco-research.md
+│   ├── cco-preflight.md
+│   ├── cco-docs.md
+│   └── cco-update.md
+└── agents/
+    ├── cco-agent-analyze.md   # 3 subagents
+    ├── cco-agent-apply.md
+    └── cco-agent-research.md
+```
 
 ### Update
 
 ```
-/plugin marketplace update ClaudeCodeOptimizer
+/cco-update
 ```
 
-```
-/plugin update cco@ClaudeCodeOptimizer
-```
+Or re-run the install script.
 
 ### Uninstall
 
-```
-/plugin uninstall cco@ClaudeCodeOptimizer
-```
+Remove the CCO files from `~/.claude/`:
 
-```
-/plugin marketplace remove ClaudeCodeOptimizer
+```bash
+rm ~/.claude/rules/cco-rules.md
+rm ~/.claude/commands/cco-*.md
+rm ~/.claude/agents/cco-agent-*.md
 ```
 
 ---
@@ -54,7 +63,7 @@ claude plugin install cco@ClaudeCodeOptimizer
 ### Step 1: Quick Wins
 
 ```
-/cco:optimize
+/cco-optimize
 ```
 
 Auto-fixes safe issues:
@@ -68,7 +77,7 @@ Auto-fixes safe issues:
 ### Step 2: Architecture Check (Optional)
 
 ```
-/cco:align
+/cco-align
 ```
 
 Shows gap analysis between current state and ideal architecture. Use `--preview` for analysis without changes.
@@ -77,7 +86,7 @@ Shows gap analysis between current state and ideal architecture. Use `--preview`
 
 ## Rule Loading
 
-CCO rules are injected automatically via the SessionStart hook from `hooks/core-rules.json`. See [Rules](rules.md) for full documentation.
+CCO rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Claude Code automatically reads all `.md` files in `~/.claude/rules/` at session start. See [Rules](rules.md) for full documentation.
 
 ---
 
@@ -85,7 +94,7 @@ CCO rules are injected automatically via the SessionStart hook from `hooks/core-
 
 ### Core Rules (Always Active, BLOCKER)
 
-Injected automatically at session start via hook. These are **enforceable constraints**, not suggestions:
+Auto-loaded at session start from `~/.claude/rules/cco-rules.md`. These are **enforceable constraints**, not suggestions:
 
 | Category | Key Rules |
 |----------|-----------|
@@ -122,12 +131,8 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 ### Commands not appearing
 
 1. **Restart Claude Code** after installation
-2. Verify plugin is installed: `/plugin` → **Installed** tab
-3. Try reinstalling:
-   ```
-   /plugin uninstall cco@ClaudeCodeOptimizer
-   /plugin install cco@ClaudeCodeOptimizer
-   ```
+2. Verify files are installed: `ls ~/.claude/commands/cco-*.md`
+3. Try re-running the install script (see [Installation](#installation))
 
 ---
 
@@ -135,11 +140,12 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 
 | Goal | Command |
 |------|---------|
-| Full security audit | `/cco:optimize --scope=security` |
-| Architecture review | `/cco:align` |
-| Quality-gated commit | `/cco:commit` |
-| Pre-release check | `/cco:preflight` |
-| Research a topic | `/cco:research "your question"` |
+| Full security audit | `/cco-optimize --scope=security` |
+| Architecture review | `/cco-align` |
+| Quality-gated commit | `/cco-commit` |
+| Pre-release check | `/cco-preflight` |
+| Research a topic | `/cco-research "your question"` |
+| Update CCO | `/cco-update` |
 
 See [Commands](commands.md) for full documentation.
 
