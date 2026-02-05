@@ -16,6 +16,7 @@ def main() -> None:
     try:
         with open(rules_path, encoding="utf-8") as f:
             sys.stdout.write(f.read())
+            sys.stdout.flush()
     except FileNotFoundError:
         print(f"core-rules.json not found at {rules_path}", file=sys.stderr)
         sys.exit(1)
