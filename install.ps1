@@ -4,7 +4,7 @@
 #   irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
 #
 # Dev (latest dev branch):
-#   iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1) } --dev"
+#   iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.ps1) } --dev"
 
 $ErrorActionPreference = "Stop"
 

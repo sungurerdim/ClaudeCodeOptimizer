@@ -36,12 +36,12 @@ Restart Claude Code. Done.
 
 **Mac / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash -s -- --dev
+curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.sh | bash -s -- --dev
 ```
 
 **Windows (PowerShell):**
 ```powershell
-iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1) } --dev"
+iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.ps1) } --dev"
 ```
 
 </details>
