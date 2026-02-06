@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.0.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v2.0.1...v3.0.0) (2026-02-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* rule structure reorganized into 5 categories
+* CCO is no longer distributed as a Claude Code plugin. Install via `curl -fsSL .../install.sh | bash` (Unix) or `irm .../install.ps1 | iex` (Windows). Commands renamed from `/cco:*` to `/cco-*` format.
+
+### Features
+
+* add stable/dev channel support to install scripts ([e735f83](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/e735f83360ea80f04426ef506539cae05cc404dd))
+* optimize all files for Opus 4.6 ([d6b2dbc](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/d6b2dbc1c99ddddba0acfe2c2fe35d22e7848ce6))
+* switch from plugin to install script distribution model ([33cffe6](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/33cffe63556a1bc84b4cd1ada0f809536dd7398a))
+
+
+### Bug Fixes
+
+* **ci:** add version consistency validation across all release-please managed files ([0f85b90](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/0f85b90218158c3ea041268f42314f4e670dea85))
+* **commands:** add channel support to cco-update and fix cco-commit parsing ([daa8e39](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/daa8e39e707d7eee7e4a1ea9c1278fd47df84ca6))
+* **hooks:** flush stdout to prevent buffering issues ([475bff1](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/475bff19184d5e542b85703c1717f0337b88bd91))
+* **install:** add preflight validation, content checks, and legacy cleanup ([1f3c6fb](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/1f3c6fb958bc979027262545ab1dc64474f9361d))
+* **install:** use dev branch URL for dev channel installer ([a77fdb4](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/a77fdb468ed36248f52960d28c6207cc22e26b65))
+
 ## [2.0.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v2.0.0...v2.0.1) (2026-02-04)
 
 
