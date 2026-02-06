@@ -5,11 +5,11 @@ allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
 model: opus
 ---
 
-# /cco:preflight
+# /cco-preflight
 
 **Release Verification Gate** — Comprehensive pre-release checks with parallel orchestration.
 
-Meta command orchestrating `/cco:optimize` and `/cco:align` with maximum parallelism.
+Meta command orchestrating `/cco-optimize` and `/cco-align` with maximum parallelism.
 
 ## Args
 
@@ -20,7 +20,7 @@ Meta command orchestrating `/cco:optimize` and `/cco:align` with maximum paralle
 
 ## Context Detection
 
-At start, detect project context using Claude's native tools:
+At start, detect project context:
 
 | Context | Detection Method |
 |---------|------------------|
@@ -29,8 +29,6 @@ At start, detect project context using Claude's native tools:
 | Changelog | Read first 20 lines of `CHANGELOG.md` if exists |
 | Git status | `git status --short` |
 | Last tag | `git describe --tags --abbrev=0` |
-
-**Use Glob/Read for file detection. Git commands are cross-platform.**
 
 ## Execution Flow
 
@@ -59,9 +57,9 @@ Dependency audit via cco-agent-research (scope: dependency).
 
 Run concurrently:
 - Background Bash: format, lint, type, test, build commands
-- Skill calls: `Skill("cco:optimize", "--auto")` and `Skill("cco:align", "--auto")`
+- Skill calls: `Skill("cco-optimize", "--auto")` and `Skill("cco-align", "--auto")`
 
-Collect ALL background results via TaskOutput before any output.
+Collect all background results via TaskOutput before any output.
 
 ### Phase 4: Changelog
 
@@ -69,7 +67,7 @@ Classify commits since last tag by conventional commit type. Suggest version bum
 
 ### Phase 5: Plan Review [CONDITIONAL]
 
-Triggers when: findings > 0 OR blockers detected. Skip in --auto.
+Triggers when: findings > 0 or blockers detected. Skip in --auto.
 
 Display release plan: pre-flight status, sub-command results, verification results, breaking changes, blockers, changelog preview, release checklist.
 
@@ -92,14 +90,6 @@ Status: OK (blockers=0, tests pass, build pass), WARN (warnings only), BLOCKED (
 
 ## Release Checks (14 total)
 
-**BLOCKERS:** PRE-01 (dirty git), PRE-03 (version mismatch), VER-01 (tests fail), VER-02 (build fail), VER-03 (type errors), DEP-SEC (CVE), OPT-CRIT (optimize critical), REV-CRIT (align critical)
+**Blockers:** PRE-01 (dirty git), PRE-03 (version mismatch), VER-01 (tests fail), VER-02 (build fail), VER-03 (type errors), DEP-SEC (CVE), OPT-CRIT (optimize critical), REV-CRIT (align critical)
 
-**WARNINGS:** PRE-02 (branch), PRE-04 (markers), VER-04 (lint), VER-05 (format changes), DEP-OUT (outdated), SEM-01 (semver mismatch)
-
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Wrong version | Edit version before tagging |
-| Changelog wrong | Edit CHANGELOG.md before commit |
-| Tests/build failed | Fix and re-run preflight |
+**Warnings:** PRE-02 (branch), PRE-04 (markers), VER-04 (lint), VER-05 (format changes), DEP-OUT (outdated), SEM-01 (semver mismatch)
