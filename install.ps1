@@ -38,9 +38,19 @@ $AgentFiles = @(
     "agents/cco-agent-apply.md"
     "agents/cco-agent-research.md"
 )
+# Old file names from previous CCO versions (for cleanup)
+$LegacyCommandFiles = @(
+    "commands/optimize.md"
+    "commands/align.md"
+    "commands/commit.md"
+    "commands/research.md"
+    "commands/preflight.md"
+    "commands/docs.md"
+)
 
 function Write-Info  { param($Msg) Write-Host $Msg -ForegroundColor Cyan }
 function Write-Ok    { param($Msg) Write-Host $Msg -ForegroundColor Green }
+function Write-Warn  { param($Msg) Write-Host $Msg -ForegroundColor Yellow }
 function Write-Err   { param($Msg) Write-Host $Msg -ForegroundColor Red }
 
 Write-Info "CCO Installer"
@@ -68,6 +78,33 @@ if ($Channel -eq "dev") {
 
 $BaseUrl = "https://raw.githubusercontent.com/$Repo/$Ref"
 
+# Preflight: verify the resolved ref has the expected file structure
+Write-Info ""
+Write-Info "Verifying source..."
+try {
+    $TestUrl = "$BaseUrl/rules/cco-rules.md"
+    $TestContent = Invoke-WebRequest -Uri $TestUrl -UseBasicParsing -ErrorAction Stop
+    $TestBody = $TestContent.Content
+    if (-not $TestBody -or -not $TestBody.StartsWith("---")) {
+        throw "Invalid content"
+    }
+    Write-Ok "  Source verified ($Ref)"
+} catch {
+    Write-Err "  Source verification failed: $Ref does not contain CCO files."
+    Write-Err ""
+    if ($Channel -eq "stable") {
+        Write-Err "  The latest release tag ($Ref) predates the install-script distribution model."
+        Write-Err "  Use the dev channel until a new release is published:"
+        Write-Err ""
+        Write-Err "    iex ""& { `$(irm https://raw.githubusercontent.com/$Repo/dev/install.ps1) } --dev"""
+        Write-Err ""
+    } else {
+        Write-Err "  Could not download files from the '$Ref' ref."
+        Write-Err "  Check the repository URL and try again."
+    }
+    exit 1
+}
+
 # Create directories
 foreach ($Dir in @("rules", "commands", "agents")) {
     $Path = Join-Path $ClaudeDir $Dir
@@ -81,7 +118,17 @@ function Install-File {
     $Url = "$BaseUrl/$File"
     $Dest = Join-Path $ClaudeDir $File
     try {
-        Invoke-WebRequest -Uri $Url -OutFile $Dest -UseBasicParsing
+        $Response = Invoke-WebRequest -Uri $Url -UseBasicParsing -ErrorAction Stop
+        $Body = $Response.Content
+
+        # Validate: CCO markdown files must start with YAML frontmatter
+        if (-not $Body -or -not $Body.StartsWith("---")) {
+            Write-Err "  ! $File (invalid content - not a CCO file)"
+            return $false
+        }
+
+        # Write validated content to disk
+        [System.IO.File]::WriteAllText($Dest, $Body)
         Write-Ok "  + $File"
         return $true
     } catch {
@@ -110,13 +157,29 @@ foreach ($File in $AgentFiles) {
     if (-not (Install-File $File)) { $Failed++ }
 }
 
+# Clean up legacy files from previous CCO versions
+$LegacyCleaned = 0
+foreach ($File in $LegacyCommandFiles) {
+    $LegacyPath = Join-Path $ClaudeDir $File
+    if (Test-Path $LegacyPath) {
+        Remove-Item -Path $LegacyPath -Force -ErrorAction SilentlyContinue
+        $LegacyCleaned++
+    }
+}
+# Legacy schema files
+$SchemaDir = Join-Path $ClaudeDir "commands\schemas"
+if (Test-Path $SchemaDir) {
+    Remove-Item -Path $SchemaDir -Recurse -Force -ErrorAction SilentlyContinue
+    $LegacyCleaned++
+}
+
 # Update version frontmatter with current timestamp
 $RulesPath = Join-Path $ClaudeDir "rules\cco-rules.md"
 if (Test-Path $RulesPath) {
     $Timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-    $Content = Get-Content $RulesPath -Raw
+    $Content = Get-Content $RulesPath -Raw -Encoding UTF8
     $Content = $Content -replace "last_update_check:.*", "last_update_check: $Timestamp"
-    Set-Content -Path $RulesPath -Value $Content -NoNewline
+    [System.IO.File]::WriteAllText($RulesPath, $Content)
 }
 
 # Clean up env var
@@ -130,6 +193,10 @@ if ($Failed -eq 0) {
     Write-Info "  rules\cco-rules.md"
     Write-Info "  commands\cco-*.md (7 commands)"
     Write-Info "  agents\cco-agent-*.md (3 agents)"
+    if ($LegacyCleaned -gt 0) {
+        Write-Info ""
+        Write-Warn "Cleaned up $LegacyCleaned legacy file(s) from previous CCO version."
+    }
     Write-Info ""
     Write-Info "Restart Claude Code to activate."
     Write-Info "Run /cco-optimize to get started."
