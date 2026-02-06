@@ -5,7 +5,7 @@ allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 model: opus
 ---
 
-# /cco:research
+# /cco-research
 
 **Smart Research** — Parallel search → tier → synthesize → recommend.
 
@@ -14,8 +14,6 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research).
 ## Context
 
 - Current date: !`date +%Y-%m-%d`
-
-**DO NOT re-run these commands. Use the pre-collected values above.**
 
 ## Args
 
@@ -42,7 +40,7 @@ Extract from $ARGS: concepts, date context, tech domain, comparison mode, search
 
 ### Phase 3: Research [PARALLEL]
 
-Launch ALL search agents in single message via parallel Task calls to cco-agent-research:
+Launch all search agents in single message via parallel Task calls to cco-agent-research:
 
 | Track | Scope | When |
 |-------|-------|------|

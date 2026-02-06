@@ -1,17 +1,17 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
 argument-hint: "[--auto] [--preview]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 
-# /cco:align
+# /cco-align
 
 **Align with Ideal Architecture** — "If I designed from scratch, what would be best?"
 
 **Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Compare current state to that ideal.
 
-**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco:optimize`.
+**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco-optimize`.
 
 ## Args
 
@@ -23,12 +23,6 @@ model: opus
 ## Context
 
 - Git status: !`git status --short 2>/dev/null || echo ""`
-
-**DO NOT re-run these commands. Use the pre-collected values above.**
-
-## Skip Patterns
-
-Don't flag: simple CRUD appropriate for scale, single-implementation interfaces in prototyping, framework-mandated patterns, ADR-documented trade-offs, legacy code in maintenance mode.
 
 ## Scopes (6 scopes, 77 checks)
 
@@ -74,15 +68,15 @@ Define ideal metrics by project type:
 
 Calculate gaps: current vs ideal for coupling, cohesion, complexity, coverage. Display Current vs Ideal table.
 
-Technology assessment: if agent found alternatives, show current vs ideal technology choices with migration cost. NEVER recommend tech changes without evidence (file:line), migration cost, and team familiarity consideration.
+Technology assessment: if agent found alternatives, show current vs ideal technology choices with migration cost. Recommend tech changes only with evidence (file:line), migration cost, and team familiarity consideration.
 
 ### Phase 4: Recommendations [80/20 PRIORITIZED]
 
 Categorize by effort/impact: Quick Win (high impact, low effort) → Moderate → Complex → Major.
 
-### Phase 5: Plan Review [MANDATORY when findings > 0, SKIP if --auto]
+### Phase 5: Plan Review [when findings > 0, SKIP if --auto]
 
-Per Core Rules: Plan Review. Display architectural plan BEFORE asking.
+Display architectural plan before asking.
 
 **Post-analysis Q2:**
 - Action: Fix All (Recommended) / By Severity / Review Each / Report Only
@@ -92,11 +86,11 @@ Per Core Rules: Plan Review. Display architectural plan BEFORE asking.
 
 Send recommendations to cco-agent-apply. Verify changes don't break functionality.
 
-Count FINDINGS, not locations. Accounting per Core Rules.
+Count findings, not locations.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per Core Rules: Needs-Approval Flow.
+Per CCO Rules: Needs-Approval Flow.
 
 ### Phase 7: Summary
 
@@ -105,11 +99,3 @@ Gap summary (before/after for coupling, cohesion, complexity, coverage), applied
 --auto mode: `cco-align: {OK|WARN|FAIL} | Gaps: N | Applied: N | Failed: N | Needs Approval: N | Total: N`
 
 Status: OK (failed=0, no gap>20%), WARN (failed>0 or gap>20%), FAIL (CRITICAL gap or error).
-
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Fix broke something | `git checkout -- {file}` |
-| Multiple files | `git checkout .` |
-| Want to review | `git diff` |

@@ -1,21 +1,21 @@
 ---
 description: Documentation gap analysis - compare ideal vs current docs, generate missing content
 argument-hint: "[--auto] [--preview] [--scope=<name>] [--update]"
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, Skill, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 model: opus
 ---
 
-# /cco:docs
+# /cco-docs
 
 **Documentation Gap Analysis** — Identify missing docs, generate what's needed.
 
 **Philosophy:** "What docs does this project need?" → "What exists?" → "Fill the gap."
 
-## Output Constraints [CRITICAL]
+## Output Constraints
 
 Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/tables for scanning. Copy-pasteable commands.
 
-Do NOT generate: filler, marketing language, obvious statements, duplicate content.
+Avoid: filler, marketing language, obvious statements, duplicate content.
 
 ## Args
 
@@ -30,8 +30,6 @@ Do NOT generate: filler, marketing language, obvious statements, duplicate conte
 
 - Git status: !`git status --short 2>/dev/null || echo ""`
 - Args: $ARGS
-
-**DO NOT re-run these commands. Use the pre-collected values above.**
 
 ## Scopes
 
@@ -103,11 +101,3 @@ Delegate to cco-agent-apply:
 Gap summary (before/after), files generated, applied/failed/total accounting.
 
 --auto: `cco-docs: {OK|WARN|FAIL} | Applied: N | Failed: N | Total: N`
-
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Generated doc wrong | `git checkout -- {file}` |
-| Review first | Use `--preview` |
-| Update existing | Use `--update` |
