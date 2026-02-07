@@ -1,0 +1,24 @@
+{
+  "_comment": "Choose ONE command below based on your setup",
+
+  "_binary (recommended)": "No runtime dependency, fastest startup",
+  "statusLine_binary_mac_linux": {
+    "type": "command",
+    "command": "~/.claude/cco-statusline",
+    "padding": 1
+  },
+
+  "_binary_windows": "Windows binary variant",
+  "statusLine_binary_windows": {
+    "type": "command",
+    "command": "%USERPROFILE%\\.claude\\cco-statusline.exe",
+    "padding": 1
+  },
+
+  "_node_fallback": "If you have Node.js installed",
+  "statusLine_node": {
+    "type": "command",
+    "command": "node ~/.claude/cco-statusline.js",
+    "padding": 1
+  }
+}
