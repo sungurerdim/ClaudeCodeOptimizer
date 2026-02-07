@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.0.0...v3.1.0) (2026-02-07)
+
+
+### Features
+
+* **extras:** add statusline for Claude Code ([6a7afa9](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/6a7afa940da6978e18479571e90eb64e2bfdd45e))
+
+
+### Bug Fixes
+
+* **install:** add full v1+v2 legacy cleanup ([5010517](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/50105177911f397e1f2a785ac8b00e076f011e12))
+
 ## [3.0.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v2.0.1...v3.0.0) (2026-02-06)
 
 
