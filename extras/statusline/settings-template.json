@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy the matching statusLine block into your ~/.claude/settings.json",
+
+  "_mac_linux": "Mac / Linux",
+  "statusLine_mac_linux": {
+    "type": "command",
+    "command": "~/.claude/cco-statusline",
+    "padding": 1
+  },
+
+  "_windows": "Windows",
+  "statusLine_windows": {
+    "type": "command",
+    "command": "%USERPROFILE%\\.claude\\cco-statusline.exe",
+    "padding": 1
+  }
+}

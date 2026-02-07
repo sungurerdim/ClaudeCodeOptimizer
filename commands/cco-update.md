@@ -101,9 +101,22 @@ Before downloading, verify the resolved ref has the expected file structure:
 4. Write validated content to local path
 5. Update `last_update_check` timestamp in cco-rules.md frontmatter
 
-**Legacy cleanup:** Remove old files from previous CCO versions if present:
-- `commands/{optimize,align,commit,research,preflight,docs}.md` (without `cco-` prefix)
-- `commands/schemas/` directory
+**Legacy cleanup:** Remove old CCO installations and files (v1.x + v2.x) if present:
+
+Uninstall previous distribution models:
+- v2.x plugin: `claude plugin uninstall cco@ClaudeCodeOptimizer` + `claude plugin marketplace remove ClaudeCodeOptimizer`
+- v1.x pip: `pip uninstall claude-code-optimizer -y`
+
+Pattern-based (scan directory, keep only current v3 files, remove rest):
+- `commands/cco-*.md` — keep only: cco-optimize, cco-align, cco-commit, cco-research, cco-preflight, cco-docs, cco-update
+- `agents/cco-*.md` — keep only: cco-agent-analyze, cco-agent-apply, cco-agent-research
+- `rules/cco-*.md` — keep only: cco-rules.md
+
+Hardcoded (v2.x commands without cco- prefix, no distinguishing pattern):
+- `commands/{optimize,align,commit,research,preflight,docs,tune}.md`
+
+Directories:
+- `commands/schemas/`, `rules/{core,frameworks,languages,operations}/`, `hooks/`
 
 ### Phase 5: Verify
 

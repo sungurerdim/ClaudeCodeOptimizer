@@ -84,7 +84,7 @@ For each commit: stage files → build conventional commit message → create co
 1. Analyze git diff content only — not session memory
 2. Describe what changed, not why
 3. Breaking changes: append exclamation mark to type (e.g., feat!), add BREAKING CHANGE footer
-4. Append signature: `Generated with [Claude Code]` + `Co-Authored-By: {model} <noreply@anthropic.com>`
+4. Append trailer only: `Co-Authored-By: {model} <noreply@anthropic.com>` — no other non-trailer lines after the body (GitHub ignores trailers if non-trailer content is mixed in)
 
 ### Phase 4: Verify
 
