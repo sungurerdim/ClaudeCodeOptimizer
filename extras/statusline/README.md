@@ -18,19 +18,37 @@ Sungur  ·  CC 1.0.80  ·  Opus 4.6  ·  45K 22%
 
 ## Setup
 
-### Option A: Binary (recommended)
+### Install
 
-Download the latest binary from [GitHub Releases](https://github.com/sungurerdim/ClaudeCodeOptimizer/releases) and place it in `~/.claude/`.
+Pre-built binaries are in the `bin/` directory. Copy the one matching your platform to `~/.claude/`.
 
-**Mac / Linux:**
+**Mac (Apple Silicon):**
 ```bash
-chmod +x cco-statusline
-mv cco-statusline ~/.claude/cco-statusline
+cp extras/statusline/bin/cco-statusline-darwin-arm64 ~/.claude/cco-statusline
+chmod +x ~/.claude/cco-statusline
+```
+
+**Mac (Intel):**
+```bash
+cp extras/statusline/bin/cco-statusline-darwin-amd64 ~/.claude/cco-statusline
+chmod +x ~/.claude/cco-statusline
+```
+
+**Linux (x64):**
+```bash
+cp extras/statusline/bin/cco-statusline-linux-amd64 ~/.claude/cco-statusline
+chmod +x ~/.claude/cco-statusline
+```
+
+**Linux (ARM64):**
+```bash
+cp extras/statusline/bin/cco-statusline-linux-arm64 ~/.claude/cco-statusline
+chmod +x ~/.claude/cco-statusline
 ```
 
 **Windows:**
 ```powershell
-Move-Item cco-statusline.exe ~\.claude\cco-statusline.exe
+Copy-Item extras\statusline\bin\cco-statusline-windows-amd64.exe ~\.claude\cco-statusline.exe
 ```
 
 Add to `~/.claude/settings.json`:
@@ -52,25 +70,6 @@ Add to `~/.claude/settings.json`:
   "statusLine": {
     "type": "command",
     "command": "%USERPROFILE%\\.claude\\cco-statusline.exe",
-    "padding": 1
-  }
-}
-```
-
-### Option B: Node.js script
-
-If you have Node.js installed:
-
-```bash
-cp extras/statusline/cco-statusline.js ~/.claude/cco-statusline.js
-```
-
-Add to `~/.claude/settings.json`:
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "node ~/.claude/cco-statusline.js",
     "padding": 1
   }
 }

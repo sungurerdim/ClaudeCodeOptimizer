@@ -8,7 +8,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "node -e \"require('child_process').spawnSync('node',[require('path').join(process.env.HOME || process.env.USERPROFILE,'.claude','cco-statusline.js')],{stdio:'inherit'})\"",
+    "command": "%USERPROFILE%\\.claude\\cco-statusline.exe",
     "padding": 1
   },
   "alwaysThinkingEnabled": true
