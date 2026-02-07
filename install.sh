@@ -39,15 +39,31 @@ AGENT_FILES=(
   "agents/cco-agent-apply.md"
   "agents/cco-agent-research.md"
 )
-# Old file names from previous CCO versions (for cleanup)
-LEGACY_COMMAND_FILES=(
+# v2.x commands without cco- prefix (must be hardcoded, no distinguishing pattern)
+LEGACY_NON_PREFIXED_FILES=(
   "commands/optimize.md"
   "commands/align.md"
   "commands/commit.md"
   "commands/research.md"
   "commands/preflight.md"
   "commands/docs.md"
+  "commands/tune.md"
 )
+# v2.x directories to remove entirely
+LEGACY_DIRS=(
+  "commands/schemas"
+  "rules/core"
+  "rules/frameworks"
+  "rules/languages"
+  "rules/operations"
+  "hooks"
+)
+# Current v3 files to keep (everything else matching cco-* gets removed)
+CURRENT_COMMANDS=()
+for f in "${COMMAND_FILES[@]}"; do CURRENT_COMMANDS+=("$(basename "$f")"); done
+CURRENT_AGENTS=()
+for f in "${AGENT_FILES[@]}"; do CURRENT_AGENTS+=("$(basename "$f")"); done
+CURRENT_RULES=("cco-rules.md")
 
 info()  { printf "\033[0;34m%s\033[0m\n" "$1"; }
 ok()    { printf "\033[0;32m%s\033[0m\n" "$1"; }
@@ -146,21 +162,71 @@ for file in "${AGENT_FILES[@]}"; do
   download "${file}" || failed=$((failed + 1))
 done
 
-# Clean up legacy files from previous CCO versions
+# Clean up legacy files from previous CCO versions (v1.x + v2.x)
 legacy_cleaned=0
-for file in "${LEGACY_COMMAND_FILES[@]}"; do
+
+# Uninstall v2.x plugin if present (files managed by Claude Code plugin system)
+if command -v claude >/dev/null 2>&1; then
+  claude plugin uninstall "cco@ClaudeCodeOptimizer" >/dev/null 2>&1 || true
+  claude plugin marketplace remove "ClaudeCodeOptimizer" >/dev/null 2>&1 || true
+fi
+
+# Uninstall v1.x pip package if present
+if command -v pip >/dev/null 2>&1; then
+  pip uninstall claude-code-optimizer -y >/dev/null 2>&1 || true
+fi
+
+# Helper: check if value is in array
+is_current() {
+  local needle="$1"; shift
+  for item in "$@"; do [ "$item" = "$needle" ] && return 0; done
+  return 1
+}
+
+# Remove v2.x non-prefixed command files
+for file in "${LEGACY_NON_PREFIXED_FILES[@]}"; do
   legacy_path="${CLAUDE_DIR}/${file}"
   if [ -f "$legacy_path" ]; then
     rm -f "$legacy_path"
     legacy_cleaned=$((legacy_cleaned + 1))
   fi
 done
-# Legacy schema files
-schema_dir="${CLAUDE_DIR}/commands/schemas"
-if [ -d "$schema_dir" ]; then
-  rm -rf "$schema_dir"
-  legacy_cleaned=$((legacy_cleaned + 1))
-fi
+
+# Remove any cco-*.md in commands/ that is NOT a current v3 command
+for file in "${CLAUDE_DIR}"/commands/cco-*.md; do
+  [ -f "$file" ] || continue
+  is_current "$(basename "$file")" "${CURRENT_COMMANDS[@]}" || {
+    rm -f "$file"
+    legacy_cleaned=$((legacy_cleaned + 1))
+  }
+done
+
+# Remove any cco-*.md in agents/ that is NOT a current v3 agent
+for file in "${CLAUDE_DIR}"/agents/cco-*.md; do
+  [ -f "$file" ] || continue
+  is_current "$(basename "$file")" "${CURRENT_AGENTS[@]}" || {
+    rm -f "$file"
+    legacy_cleaned=$((legacy_cleaned + 1))
+  }
+done
+
+# Remove any cco-*.md in rules/ that is NOT cco-rules.md
+for file in "${CLAUDE_DIR}"/rules/cco-*.md; do
+  [ -f "$file" ] || continue
+  is_current "$(basename "$file")" "${CURRENT_RULES[@]}" || {
+    rm -f "$file"
+    legacy_cleaned=$((legacy_cleaned + 1))
+  }
+done
+
+# Remove legacy directories
+for dir in "${LEGACY_DIRS[@]}"; do
+  legacy_path="${CLAUDE_DIR}/${dir}"
+  if [ -d "$legacy_path" ]; then
+    rm -rf "$legacy_path"
+    legacy_cleaned=$((legacy_cleaned + 1))
+  fi
+done
 
 # Update version frontmatter with current timestamp
 RULES_PATH="${CLAUDE_DIR}/rules/cco-rules.md"

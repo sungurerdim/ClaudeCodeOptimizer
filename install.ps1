@@ -38,15 +38,29 @@ $AgentFiles = @(
     "agents/cco-agent-apply.md"
     "agents/cco-agent-research.md"
 )
-# Old file names from previous CCO versions (for cleanup)
-$LegacyCommandFiles = @(
+# v2.x commands without cco- prefix (must be hardcoded, no distinguishing pattern)
+$LegacyNonPrefixedFiles = @(
     "commands/optimize.md"
     "commands/align.md"
     "commands/commit.md"
     "commands/research.md"
     "commands/preflight.md"
     "commands/docs.md"
+    "commands/tune.md"
 )
+# v2.x directories to remove entirely
+$LegacyDirs = @(
+    "commands/schemas"
+    "rules/core"
+    "rules/frameworks"
+    "rules/languages"
+    "rules/operations"
+    "hooks"
+)
+# Current v3 files to keep (everything else matching cco-* gets removed)
+$CurrentCommands = $CommandFiles | ForEach-Object { Split-Path $_ -Leaf }
+$CurrentAgents = $AgentFiles | ForEach-Object { Split-Path $_ -Leaf }
+$CurrentRules = @("cco-rules.md")
 
 function Write-Info  { param($Msg) Write-Host $Msg -ForegroundColor Cyan }
 function Write-Ok    { param($Msg) Write-Host $Msg -ForegroundColor Green }
@@ -157,20 +171,65 @@ foreach ($File in $AgentFiles) {
     if (-not (Install-File $File)) { $Failed++ }
 }
 
-# Clean up legacy files from previous CCO versions
+# Clean up legacy files from previous CCO versions (v1.x + v2.x)
 $LegacyCleaned = 0
-foreach ($File in $LegacyCommandFiles) {
+
+# Uninstall v2.x plugin if present (files managed by Claude Code plugin system)
+$ClaudeCli = Get-Command claude -ErrorAction SilentlyContinue
+if ($ClaudeCli) {
+    & claude plugin uninstall "cco@ClaudeCodeOptimizer" 2>$null | Out-Null
+    & claude plugin marketplace remove "ClaudeCodeOptimizer" 2>$null | Out-Null
+}
+
+# Uninstall v1.x pip package if present
+$PipCmd = Get-Command pip -ErrorAction SilentlyContinue
+if ($PipCmd) {
+    & pip uninstall claude-code-optimizer -y 2>$null | Out-Null
+}
+
+# Remove v2.x non-prefixed command files
+foreach ($File in $LegacyNonPrefixedFiles) {
     $LegacyPath = Join-Path $ClaudeDir $File
     if (Test-Path $LegacyPath) {
         Remove-Item -Path $LegacyPath -Force -ErrorAction SilentlyContinue
         $LegacyCleaned++
     }
 }
-# Legacy schema files
-$SchemaDir = Join-Path $ClaudeDir "commands\schemas"
-if (Test-Path $SchemaDir) {
-    Remove-Item -Path $SchemaDir -Recurse -Force -ErrorAction SilentlyContinue
-    $LegacyCleaned++
+
+# Remove any cco-*.md in commands/ that is NOT a current v3 command
+$CmdDir = Join-Path $ClaudeDir "commands"
+if (Test-Path $CmdDir) {
+    Get-ChildItem -Path $CmdDir -Filter "cco-*.md" | Where-Object { $CurrentCommands -notcontains $_.Name } | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+        $LegacyCleaned++
+    }
+}
+
+# Remove any cco-*.md in agents/ that is NOT a current v3 agent
+$AgentDir = Join-Path $ClaudeDir "agents"
+if (Test-Path $AgentDir) {
+    Get-ChildItem -Path $AgentDir -Filter "cco-*.md" | Where-Object { $CurrentAgents -notcontains $_.Name } | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+        $LegacyCleaned++
+    }
+}
+
+# Remove any cco-*.md in rules/ that is NOT cco-rules.md
+$RulesDir = Join-Path $ClaudeDir "rules"
+if (Test-Path $RulesDir) {
+    Get-ChildItem -Path $RulesDir -Filter "cco-*.md" | Where-Object { $CurrentRules -notcontains $_.Name } | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+        $LegacyCleaned++
+    }
+}
+
+# Remove legacy directories
+foreach ($Dir in $LegacyDirs) {
+    $LegacyPath = Join-Path $ClaudeDir $Dir
+    if (Test-Path $LegacyPath) {
+        Remove-Item -Path $LegacyPath -Recurse -Force -ErrorAction SilentlyContinue
+        $LegacyCleaned++
+    }
 }
 
 # Update version frontmatter with current timestamp

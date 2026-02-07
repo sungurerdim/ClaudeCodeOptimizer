@@ -41,5 +41,10 @@ htmlcov/
 # Node (legacy)
 node_modules/
 
+# Go local build artifacts (bin/ is committed with pre-built binaries)
+extras/statusline/cco-statusline
+extras/statusline/cco-statusline.exe
+extras/statusline/dist/
+
 # Windows artifacts
 nul

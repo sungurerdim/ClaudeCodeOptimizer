@@ -94,7 +94,19 @@ No hooks, no plugins, no dependencies. Just markdown files.
 
 ---
 
-## Update
+## Extras
+
+Optional add-ons that complement CCO.
+
+| Extra | Description |
+|-------|-------------|
+| [Statusline](extras/statusline/) | Git, model, and context info in your Claude Code status bar |
+
+---
+
+## Maintenance
+
+### Update
 
 ```
 /cco-update
@@ -112,7 +124,7 @@ curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/mai
 irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
 ```
 
-## Uninstall
+### Uninstall
 
 **Mac / Linux:**
 
@@ -130,19 +142,19 @@ Remove-Item ~\.claude\commands\cco-*.md -ErrorAction SilentlyContinue
 Remove-Item ~\.claude\agents\cco-agent-*.md -ErrorAction SilentlyContinue
 ```
 
----
+### Migrate
 
 <details>
-<summary>Migrating from v2 (plugin)</summary>
+<summary>From v2 (plugin)</summary>
 
-### 1. Uninstall plugin
+#### 1. Uninstall plugin
 
 ```
 /plugin uninstall cco@ClaudeCodeOptimizer
 /plugin marketplace remove ClaudeCodeOptimizer
 ```
 
-### 2. Install v3
+#### 2. Install v3
 
 **Mac / Linux:**
 ```bash
@@ -154,7 +166,7 @@ curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/mai
 irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
 ```
 
-### Command mapping
+#### Command mapping
 
 | v2 | v3 |
 |----|-----|
@@ -169,15 +181,15 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 </details>
 
 <details>
-<summary>Migrating from v1 (pip)</summary>
+<summary>From v1 (pip)</summary>
 
-### 1. Uninstall pip package
+#### 1. Uninstall pip package
 
 ```bash
 pip uninstall claude-code-optimizer
 ```
 
-### 2. Remove old files
+#### 2. Remove old files
 
 ```bash
 rm -f ~/.claude/rules/cco-*.md
@@ -185,7 +197,7 @@ rm -f .claude/rules/cco-*.md
 rm -f .claude/commands/cco-*.md
 ```
 
-### 3. Install v3
+#### 3. Install v3
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
