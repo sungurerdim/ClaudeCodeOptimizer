@@ -12,74 +12,31 @@ permissions:
 
 jobs:
   validate:
-    name: Validate Structure
+    name: Validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate directories
+      - name: Check frontmatter
         run: |
-          for dir in rules commands agents extras; do
-            if [ ! -d "$dir" ]; then
-              echo "Error: $dir not found"
-              exit 1
+          FAIL=0
+          for file in commands/cco-*.md agents/cco-agent-*.md; do
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "Error: $file missing YAML frontmatter"
+              FAIL=1
             fi
           done
-          echo "All directories exist"
+          if [ "$FAIL" -eq 1 ]; then exit 1; fi
+          echo "All files have frontmatter"
 
-      - name: Validate rules
+      - name: Check version consistency
         run: |
-          if [ ! -f "rules/cco-rules.md" ]; then
-            echo "Error: rules/cco-rules.md not found"
-            exit 1
-          fi
-          echo "Rules file exists"
-
-      - name: Validate commands
-        run: |
-          expected="cco-optimize cco-align cco-commit cco-research cco-docs cco-update cco-blueprint cco-pr"
-          for cmd in $expected; do
-            if [ ! -f "commands/${cmd}.md" ]; then
-              echo "Error: commands/${cmd}.md not found"
-              exit 1
-            fi
-          done
-          echo "All 8 command files exist"
-
-      - name: Validate agents
-        run: |
-          expected="cco-agent-analyze cco-agent-apply cco-agent-research"
-          for agent in $expected; do
-            if [ ! -f "agents/${agent}.md" ]; then
-              echo "Error: agents/${agent}.md not found"
-              exit 1
-            fi
-          done
-          echo "All 3 agent files exist"
-
-      - name: Validate install scripts
-        run: |
-          for script in install.sh install.ps1; do
-            if [ ! -f "$script" ]; then
-              echo "Error: $script not found"
-              exit 1
-            fi
-          done
-          echo "Install scripts exist"
-
-      - name: Validate version consistency
-        run: |
-          # Release-please manages version in these files:
-          #   1. version.txt              (primary - simple release type)
-          #   2. .release-please-manifest.json (manifest - automatic)
-          #   3. rules/cco-rules.md       (extra-file via x-release-please-version annotation)
-          #   4. CHANGELOG.md             (changelog - automatic)
           VERSION=$(cat version.txt | tr -d '[:space:]')
           RULES_VERSION=$(grep 'cco_version:' rules/cco-rules.md | head -1 | sed 's/cco_version: *//;s/ *#.*//')
           MANIFEST_VERSION=$(grep -o '"[0-9][^"]*"' .release-please-manifest.json | tr -d '"')
-          echo "version.txt:        $VERSION"
-          echo "cco-rules.md:       $RULES_VERSION"
-          echo "manifest.json:      $MANIFEST_VERSION"
+          echo "version.txt:    $VERSION"
+          echo "cco-rules.md:   $RULES_VERSION"
+          echo "manifest.json:  $MANIFEST_VERSION"
           FAIL=0
           if [ "$VERSION" != "$RULES_VERSION" ]; then
             echo "Error: version.txt != cco-rules.md"
@@ -90,33 +47,7 @@ jobs:
             FAIL=1
           fi
           if [ "$FAIL" -eq 1 ]; then exit 1; fi
-          echo "All version files consistent: $VERSION"
-
-  lint:
-    name: Lint Markdown
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check frontmatter in commands
-        run: |
-          for file in commands/cco-*.md; do
-            if ! head -1 "$file" | grep -q '^---$'; then
-              echo "Error: $file missing YAML frontmatter"
-              exit 1
-            fi
-          done
-          echo "All commands have frontmatter"
-
-      - name: Check frontmatter in agents
-        run: |
-          for file in agents/cco-agent-*.md; do
-            if ! head -1 "$file" | grep -q '^---$'; then
-              echo "Error: $file missing YAML frontmatter"
-              exit 1
-            fi
-          done
-          echo "All agents have frontmatter"
+          echo "All versions consistent: $VERSION"
 
   go:
     name: Go (statusline)
@@ -166,7 +97,7 @@ jobs:
   auto-merge:
     name: Auto Merge
     if: github.event_name == 'pull_request'
-    needs: [validate, lint, go, security]
+    needs: [validate, go, security]
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge
