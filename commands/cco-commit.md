@@ -14,11 +14,9 @@ model: opus
 - Git status: !`git status --short 2>/dev/null || echo ""`
 - Branch: !`git branch --show-current 2>/dev/null || echo ""`
 - Recent commits: !`git log --oneline -5 2>/dev/null || echo ""`
-- Stash list: !`git stash list --oneline 2>/dev/null | head -3`
 - All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null || echo ""`
 - Staged only: !`git diff --cached --shortstat 2>/dev/null || echo ""`
-- Untracked files: !`git ls-files --others --exclude-standard 2>/dev/null | wc -l`
-- Unpushed commits: !`git log @{upstream}..HEAD --oneline 2>/dev/null || git log origin/$(git branch --show-current 2>/dev/null)..HEAD --oneline 2>/dev/null || echo ""`
+- Unpushed commits: !`git log @{upstream}..HEAD --oneline 2>/dev/null || echo ""`
 
 **Scope:** All uncommitted changes included by default (staged + unstaged + untracked). Use `--staged-only` for staged changes only.
 

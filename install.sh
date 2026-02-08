@@ -138,7 +138,7 @@ for file in "${AGENT_FILES[@]}"; do
 done
 
 # Clean up legacy files from previous CCO versions (v1.x + v2.x)
-legacy_cleaned=0
+legacy_removed=()
 
 # Uninstall v2.x plugin if present (files managed by Claude Code plugin system)
 if command -v claude >/dev/null 2>&1; then
@@ -163,7 +163,7 @@ for file in "${LEGACY_NON_PREFIXED_FILES[@]}"; do
   legacy_path="${CLAUDE_DIR}/${file}"
   if [ -f "$legacy_path" ]; then
     rm -f "$legacy_path"
-    legacy_cleaned=$((legacy_cleaned + 1))
+    legacy_removed+=("$file")
   fi
 done
 
@@ -172,7 +172,7 @@ for file in "${CLAUDE_DIR}"/commands/cco-*.md; do
   [ -f "$file" ] || continue
   is_current "$(basename "$file")" "${CURRENT_COMMANDS[@]}" || {
     rm -f "$file"
-    legacy_cleaned=$((legacy_cleaned + 1))
+    legacy_removed+=("commands/$(basename "$file")")
   }
 done
 
@@ -181,7 +181,7 @@ for file in "${CLAUDE_DIR}"/agents/cco-*.md; do
   [ -f "$file" ] || continue
   is_current "$(basename "$file")" "${CURRENT_AGENTS[@]}" || {
     rm -f "$file"
-    legacy_cleaned=$((legacy_cleaned + 1))
+    legacy_removed+=("agents/$(basename "$file")")
   }
 done
 
@@ -190,7 +190,7 @@ for file in "${CLAUDE_DIR}"/rules/cco-*.md; do
   [ -f "$file" ] || continue
   is_current "$(basename "$file")" "${CURRENT_RULES[@]}" || {
     rm -f "$file"
-    legacy_cleaned=$((legacy_cleaned + 1))
+    legacy_removed+=("rules/$(basename "$file")")
   }
 done
 
@@ -199,7 +199,7 @@ for dir in "${LEGACY_DIRS[@]}"; do
   legacy_path="${CLAUDE_DIR}/${dir}"
   if [ -d "$legacy_path" ]; then
     rm -rf "$legacy_path"
-    legacy_cleaned=$((legacy_cleaned + 1))
+    legacy_removed+=("$dir/")
   fi
 done
 
@@ -223,9 +223,12 @@ if [ "${failed}" -eq 0 ]; then
   info "  rules/cco-rules.md"
   info "  commands/cco-*.md (8 commands)"
   info "  agents/cco-agent-*.md (3 agents)"
-  if [ "${legacy_cleaned}" -gt 0 ]; then
+  if [ "${#legacy_removed[@]}" -gt 0 ]; then
     info ""
-    warn "Cleaned up ${legacy_cleaned} legacy file(s) from previous CCO version."
+    warn "Cleaned up ${#legacy_removed[@]} legacy file(s) from previous CCO version:"
+    for item in "${legacy_removed[@]}"; do
+      warn "  - ${item}"
+    done
   fi
   info ""
   info "Restart Claude Code to activate."

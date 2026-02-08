@@ -14,10 +14,8 @@ model: opus
 ## Context
 
 - Branch: !`git branch --show-current 2>/dev/null || echo ""`
-- Base branch: !`git log --oneline main..HEAD 2>/dev/null | wc -l` commits ahead of main
-- Remote: !`git remote -v 2>/dev/null | head -1`
-- Recent commits on branch: !`git log --oneline main..HEAD 2>/dev/null | head -20`
-- PR status: !`gh pr status --json number,title,state 2>/dev/null || echo "gh not available"`
+- Commits on branch: !`git log --oneline main..HEAD 2>/dev/null || echo ""`
+- Existing PR: !`gh pr view --json number,title,state,url 2>/dev/null || echo "none"`
 
 ## Flags
 
@@ -59,12 +57,12 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
    }])
    ```
    In `--auto` mode: rebase automatically. On conflict → `git rebase --abort`, warn, continue with PR.
-8. Verify repo settings (first run per repo, cached):
+8. Verify repo settings (single API call, first run per repo):
    ```bash
-   gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge}'
+   gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'
    ```
    Expected: `squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true`
-   If mismatch found and not `--auto`:
+   If any mismatch and not `--auto`:
    ```javascript
    AskUserQuestion([{
      question: "Repo settings need adjustment for release-please compatibility. Fix now?",
@@ -78,16 +76,6 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
    ```
    Fix via: `gh api repos/{owner}/{repo} -X PATCH -f allow_squash_merge=true -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY -f delete_branch_on_merge=true -f allow_auto_merge=true`
    In `--auto` mode: fix automatically, log changes.
-9. Verify required status checks for auto-merge support:
-   ```bash
-   gh api repos/{owner}/{repo}/branches/main/protection/required_status_checks --jq '.checks[].context' 2>/dev/null
-   ```
-   If empty or missing (auto-merge needs required checks to know when to merge):
-   - Detect available checks from latest CI run: `gh api repos/{owner}/{repo}/commits/main/check-runs --jq '[.check_runs[].name] | unique | .[]'`
-   - If checks found and not `--auto`: ask to add them as required
-   - In `--auto` mode: add all detected checks automatically
-   - Fix via: `gh api repos/{owner}/{repo}/branches/main/protection/required_status_checks -X PATCH` with detected check names
-   - If no checks found or no branch protection: warn, continue without auto-merge support
 
 On error: Display clear message with fix instructions.
 
@@ -213,16 +201,14 @@ On error: If `gh pr create` fails, display the title and body for manual creatio
 Triggers by default. Skip only when: user explicitly selected "Create PR only" or "Create as draft" in Phase 3, or `--draft` flag.
 
 ```bash
-gh pr merge {number} --auto --squash --delete-branch
+gh pr merge {number} --auto --squash
 ```
 
-This tells GitHub to:
-1. Squash merge the PR when all required checks pass (or immediately if no checks)
-2. Delete the remote branch after merge
+This tells GitHub to squash merge the PR when all required checks pass. Remote branch is auto-deleted by repo setting (`delete_branch_on_merge: true`, verified in Phase 1).
 
 If auto-merge is not supported (no branch protection rules), fall back to immediate merge:
 ```bash
-gh pr merge {number} --squash --delete-branch
+gh pr merge {number} --squash
 ```
 
 On error: If merge setup fails, warn but don't fail. PR is already created. Display manual merge instructions.
