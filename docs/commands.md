@@ -8,14 +8,13 @@ All CCO slash commands with flags, scopes, and examples.
 
 | Command | Purpose | Model | Key Flags |
 |---------|---------|-------|-----------|
-| `/cco-optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X` |
+| `/cco-optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X`, `--loop` |
 | `/cco-align` | Architecture gaps | Opus | `--auto`, `--preview` |
 | `/cco-commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
 | `/cco-research` | Multi-source research | Opus | `--quick`, `--deep` |
-| `/cco-preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
 | `/cco-docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
 | `/cco-blueprint` | Project health system | Opus | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
-| `/cco-pr` | Release-please PRs | Opus | `--auto`, `--preview`, `--draft` |
+| `/cco-pr` | Release-please PRs | Opus | `--auto`, `--auto-merge`, `--preview`, `--draft` |
 | `/cco-update` | Update CCO | Opus | `--auto`, `--check` |
 
 **Model Rationale:** Opus for coding commands (fewer errors), Haiku for analysis agents (fast).
@@ -145,24 +144,6 @@ Multi-source research with reliability scoring.
 
 ---
 
-## /cco-preflight
-
-Pre-release verification gate.
-
-```bash
-/cco-preflight              # Full release workflow
-/cco-preflight --auto       # Unattended checks
-/cco-preflight --preview    # Check without releasing
-```
-
-### Checks (14 total)
-
-**Blockers:** Dirty git, version mismatch, tests fail, build fail, type errors, security CVE
-
-**Warnings:** Wrong branch, TODO markers, lint warnings, outdated deps
-
----
-
 ## /cco-docs
 
 Documentation gap analysis and generation.
@@ -279,7 +260,7 @@ Update CCO to the latest version.
 ```bash
 /cco-optimize --auto    # Exit 0=OK, 1=WARN, 2=FAIL
 /cco-align --auto       # Same exit codes
-/cco-preflight --auto   # Same exit codes
+/cco-blueprint --auto   # Same exit codes
 ```
 
 ### Accounting

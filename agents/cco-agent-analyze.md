@@ -57,7 +57,7 @@ Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# inte
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
-| security | SEC-01 to SEC-12 | Secrets, injection, unsafe deserialization, eval, debug endpoints, weak crypto |
+| security | SEC-01 to SEC-12 | Secrets, injection, unsafe deserialization, eval, debug endpoints, weak crypto, CORS misconfiguration, path traversal, SSRF, auth bypass |
 | hygiene | HYG-01 to HYG-20 | Unused imports/vars/functions, dead code, orphan files, duplicates, stale TODOs, comment quality |
 | types | TYP-01 to TYP-10 | Type errors, missing annotations, untyped args, type:ignore without reason, Any in API |
 | performance | PRF-01 to PRF-10 | N+1 queries, blocking in async, large file reads, missing pagination/cache/pool |
@@ -83,7 +83,7 @@ Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# inte
 | Scope | ID Range | Focus |
 |-------|----------|-------|
 | stack-assessment | STK-01 to STK-10 | Framework fitness, runtime currency, build tool match, redundant deps, dep weight, SDK alignment |
-| dependency-health | DEP-01 to DEP-10 | Abandoned packages, license conflicts, pinning strategy, dev/prod boundary, duplicate versions |
+| dependency-health | DEP-01 to DEP-10 | Abandoned packages, license conflicts, pinning strategy, dev/prod boundary, duplicate versions, known CVEs, supply chain risk, outdated major versions |
 | dx-quality | DXQ-01 to DXQ-10 | Setup friction, env docs, script discoverability, CI/local parity, error message quality, IDE support |
 | project-structure | PST-01 to PST-10 | Directory conventions, naming consistency, feature isolation, config sprawl, gitignore completeness |
 

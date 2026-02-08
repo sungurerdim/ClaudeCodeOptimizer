@@ -29,13 +29,14 @@ How CCO works internally: rules, agents, and command flow.
 ClaudeCodeOptimizer/
 ├── rules/
 │   └── cco-rules.md            # Core rules (single source of truth)
-├── commands/                    # Slash commands (7 files)
+├── commands/                    # Slash commands (8 files)
 │   ├── cco-optimize.md
 │   ├── cco-align.md
 │   ├── cco-commit.md
 │   ├── cco-research.md
-│   ├── cco-preflight.md
 │   ├── cco-docs.md
+│   ├── cco-blueprint.md
+│   ├── cco-pr.md
 │   └── cco-update.md
 ├── agents/                      # Subagents (3 files)
 │   ├── cco-agent-analyze.md
@@ -43,7 +44,7 @@ ClaudeCodeOptimizer/
 │   └── cco-agent-research.md
 ├── install.sh                   # macOS/Linux installer
 ├── install.ps1                  # Windows installer
-└── version.txt                  # Current version
+└── version.txt                  # Current version (SSOT, managed by release-please)
 ```
 
 ### Installed Structure
@@ -84,12 +85,6 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 ```
 User: /cco-optimize → Setup → Analyze (parallel) → Plan Review → Apply → Summary
-```
-
-### /cco-preflight
-
-```
-User: /cco-preflight → Setup → Pre-checks ‖ Optimize ‖ Align ‖ Verify → Changelog → Plan → Execute
 ```
 
 ---
