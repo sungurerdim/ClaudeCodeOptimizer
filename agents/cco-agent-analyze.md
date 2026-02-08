@@ -94,6 +94,6 @@ Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# inte
 | Evidence | Every finding cites `file:line`. Read actual code before reporting. |
 | Conservative | Uncertain → lower severity. Style → max LOW. Single occurrence → max MEDIUM (except security). |
 | Pattern threshold | 3+ examples before concluding systemic pattern |
-| Confidence ≥80 | Only report findings with confidence ≥80. Quality over quantity. |
+| Confidence | Report all findings with confidence score. Do not filter by confidence. |
 | False positives | Skip: pre-existing issues, platform-guarded code, intentional markers, linter domain, test fixtures, single occurrences |
 | CRITICAL validation | Analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |
