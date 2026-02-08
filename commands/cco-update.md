@@ -39,6 +39,7 @@ commands/cco-preflight.md
 commands/cco-docs.md
 commands/cco-update.md
 commands/cco-blueprint.md
+commands/cco-pr.md
 agents/cco-agent-analyze.md
 agents/cco-agent-apply.md
 agents/cco-agent-research.md
@@ -120,7 +121,7 @@ Uninstall previous distribution models:
 - v1.x pip: `pip uninstall claude-code-optimizer -y`
 
 Pattern-based (scan directory, keep only current v3 files, remove rest):
-- `commands/cco-*.md` — keep only: cco-optimize, cco-align, cco-commit, cco-research, cco-preflight, cco-docs, cco-update, cco-blueprint
+- `commands/cco-*.md` — keep only: cco-optimize, cco-align, cco-commit, cco-research, cco-preflight, cco-docs, cco-update, cco-blueprint, cco-pr
 - `agents/cco-*.md` — keep only: cco-agent-analyze, cco-agent-apply, cco-agent-research
 - `rules/cco-*.md` — keep only: cco-rules.md
 

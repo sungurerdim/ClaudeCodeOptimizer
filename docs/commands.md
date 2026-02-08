@@ -15,6 +15,7 @@ All CCO slash commands with flags, scopes, and examples.
 | `/cco-preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
 | `/cco-docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
 | `/cco-blueprint` | Project health system | Opus | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
+| `/cco-pr` | Release-please PRs | Opus | `--auto`, `--preview`, `--draft` |
 | `/cco-update` | Update CCO | Opus | `--auto`, `--check` |
 
 **Model Rationale:** Opus for coding commands (fewer errors), Haiku for analysis agents (fast).
@@ -226,6 +227,36 @@ Profile-based project health assessment, transformation, and progress tracking.
 Two rounds: Project Identity (type, quality target, data sensitivity) → Strategy (priorities, constraints, audience).
 
 In --auto mode: all questions use auto-detected defaults.
+
+---
+
+## /cco-pr
+
+Create pull requests with conventional commit titles for clean release-please changelogs.
+
+```bash
+/cco-pr                 # Interactive PR creation
+/cco-pr --auto          # Auto-detect everything, create PR directly
+/cco-pr --preview       # Show PR plan without creating
+/cco-pr --draft         # Create as draft PR
+```
+
+### How It Works
+
+1. Analyzes ALL commits on the branch (not just latest)
+2. Determines conventional commit type from commit history (`feat` → minor, `fix` → patch, others → no bump)
+3. Generates PR title in conventional commit format (≤70 chars)
+4. Creates clean body with summary, changes, and test plan
+5. Single Co-Authored-By trailer (not per-commit duplication)
+
+### Release-Please Integration
+
+Designed for squash merge workflows:
+- PR title becomes the squash commit message on main
+- Release-please reads that one clean commit
+- Result: 1 changelog entry per PR, no co-author duplication
+
+**Required repo setting:** Settings → Pull Requests → Squash merge → "Default to PR title and description"
 
 ---
 

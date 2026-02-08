@@ -34,6 +34,7 @@ COMMAND_FILES=(
   "commands/cco-docs.md"
   "commands/cco-update.md"
   "commands/cco-blueprint.md"
+  "commands/cco-pr.md"
 )
 AGENT_FILES=(
   "agents/cco-agent-analyze.md"
@@ -247,7 +248,7 @@ if [ "${failed}" -eq 0 ]; then
   info ""
   info "Installed to: ${CLAUDE_DIR}/"
   info "  rules/cco-rules.md"
-  info "  commands/cco-*.md (8 commands)"
+  info "  commands/cco-*.md (9 commands)"
   info "  agents/cco-agent-*.md (3 agents)"
   if [ "${legacy_cleaned}" -gt 0 ]; then
     info ""
