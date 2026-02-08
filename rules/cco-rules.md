@@ -192,16 +192,16 @@ When findings > 0 and not --auto:
 
 After apply, if needs_approval > 0 and not --auto:
 1. Display items table (ID, severity, issue, location, reason)
-2. Ask: Fix All / Skip / Review Each
+2. Ask: Fix All / Review Each
 
 ### Confidence Scoring
 
-| Score | Action |
-|-------|--------|
-| ≥90 | Auto-fix |
-| 80-89 | Auto-fix, visible in diff |
-| 70-79 | Recommend in plan |
-| 60-69 | Ask approval |
-| <60 | Report only |
+All findings are presented to the user regardless of confidence score. Confidence is shown as metadata to help the user decide.
 
-Threshold: ≥80 for "Apply Safe Only". CRITICAL bypasses confidence.
+| Score | Display | --auto Behavior |
+|-------|---------|-----------------|
+| ≥80 | High confidence | Auto-fix |
+| 60-79 | Medium confidence | Auto-fix |
+| <60 | Low confidence | Auto-fix (except architectural changes requiring structural redesign) |
+
+In interactive mode: user always decides. In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign).

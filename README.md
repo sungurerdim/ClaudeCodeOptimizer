@@ -173,7 +173,7 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 #### 1. Uninstall pip package
 
 ```bash
-pip uninstall claude-code-optimizer
+pip uninstall claudecodeoptimizer
 ```
 
 #### 2. Remove old files

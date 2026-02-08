@@ -72,8 +72,6 @@ Toolchain: {tools} | {CI} | {container}
 ### Run History
 - {date}: Applied {n} | Failed {n} | Overall {before}→{after}
 
-### Decisions
-- {ID}: SKIP "{description}" ({reason})
 <!-- cco-blueprint-end -->
 ```
 
@@ -111,7 +109,7 @@ Verify `git` is available (`git --version`). If missing → warn: "Git not found
 1. Profile exists AND not --init/--refresh → Phase 3 (incremental mode)
 2. Profile exists AND --refresh → Phase 2 (re-ask questions, preserve history/decisions)
 3. No profile AND --init → Phase 2 (create profile, stop after)
-4. No profile AND not --init → Phase 2 (create profile, continue to Phase 3)
+4. No profile AND not --init → Phase 2 (create profile, ask user to continue)
 
 On error: If CLAUDE.md is unreadable or corrupt, create fresh profile. Log warning.
 
@@ -232,24 +230,36 @@ Quality target adjustment: prototype 30% relaxed, mvp 15% relaxed, production st
 
 Sensitive data handling: security weight 25%→35%, privacy scope escalates to CRITICAL.
 
-Write profile to CLAUDE.md. If `--init`, stop here.
+Write profile to CLAUDE.md. If `--init`, stop here. If first-time profile creation (not --init, not --refresh), ask user whether to continue with assessment:
+
+```javascript
+AskUserQuestion([{
+  question: "Profile created. Continue with assessment and fixes?",
+  header: "Continue",
+  options: [
+    { label: "Continue (Recommended)", description: "Run full assessment and apply fixes now" },
+    { label: "Stop here", description: "Profile saved. Run /cco-blueprint again to assess later" }
+  ],
+  multiSelect: false
+}])
+```
+
+If user selects "Stop here", display profile summary and exit.
 
 On error: If CLAUDE.md write fails, display profile in output and instruct user to add manually.
 
 ### Phase 3: Assess [PARALLEL]
 
-Incremental logic: skip tracks where current score >= ideal target (5% tolerance).
+Always run all tracks regardless of current scores.
 
-| Track | Tool | Condition |
-|-------|------|-----------|
-| A: Code Quality | `Skill("cco-optimize", "--auto --preview")` | code score < ideal |
-| B: Architecture | `Skill("cco-align", "--auto --preview")` | architecture score < ideal |
-| C: Documentation | `Skill("cco-docs", "--auto --preview")` | docs score < ideal |
-| D: Audit | `Task(cco-agent-analyze, {scopes: audit scopes, mode: "audit"})` | stack/dx score < ideal |
+| Track | Tool |
+|-------|------|
+| A: Code Quality | `Skill("cco-optimize", "--auto --preview")` |
+| B: Architecture | `Skill("cco-align", "--auto --preview")` |
+| C: Documentation | `Skill("cco-docs", "--auto --preview")` |
+| D: Audit | `Task(cco-agent-analyze, {scopes: audit scopes, mode: "audit"})` |
 
 All tracks run with `--preview`: analyze only, no changes applied.
-
-Profile SKIP decisions filter out matching finding IDs from results.
 
 On error: If a track fails, log error, continue with remaining tracks. Score that dimension as "N/A".
 
@@ -367,14 +377,13 @@ On error: If a Skill call fails, log error with details, continue with next. Cou
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: Needs-Approval Flow. SKIP items are recorded in profile Decisions section.
+Per CCO Rules: Needs-Approval Flow.
 
 ### Phase 7: Update Profile
 
 Update CLAUDE.md blueprint section:
 - Current Scores → new scores
 - Run History → append new line (`{date}: Applied {n} | Failed {n} | Overall {before}→{after}`)
-- Decisions → append new SKIP decisions
 
 On error: If CLAUDE.md update fails, display updated profile in output.
 

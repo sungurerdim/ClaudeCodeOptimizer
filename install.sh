@@ -148,7 +148,7 @@ fi
 
 # Uninstall v1.x pip package if present
 if command -v pip >/dev/null 2>&1; then
-  pip uninstall claude-code-optimizer -y >/dev/null 2>&1 || true
+  pip uninstall claudecodeoptimizer -y >/dev/null 2>&1 || true
 fi
 
 # Helper: check if value is in array
