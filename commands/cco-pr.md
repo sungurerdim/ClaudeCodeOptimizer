@@ -63,21 +63,31 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
    ```bash
    gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge}'
    ```
-   Expected: `squash=true, title=PR_TITLE, msg=PR_BODY, delete=true`
+   Expected: `squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true`
    If mismatch found and not `--auto`:
    ```javascript
    AskUserQuestion([{
      question: "Repo settings need adjustment for release-please compatibility. Fix now?",
      header: "Settings",
      options: [
-       { label: "Fix all (Recommended)", description: "Enable squash merge with PR_TITLE format, auto-delete branches" },
+       { label: "Fix all (Recommended)", description: "Enable squash merge, PR_TITLE format, auto-delete branches, auto-merge" },
        { label: "Skip", description: "Continue without fixing (changelog entries may be affected)" }
      ],
      multiSelect: false
    }])
    ```
-   Fix via: `gh api repos/{owner}/{repo} -X PATCH -f allow_squash_merge=true -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY -f delete_branch_on_merge=true`
+   Fix via: `gh api repos/{owner}/{repo} -X PATCH -f allow_squash_merge=true -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY -f delete_branch_on_merge=true -f allow_auto_merge=true`
    In `--auto` mode: fix automatically, log changes.
+9. Verify required status checks for auto-merge support:
+   ```bash
+   gh api repos/{owner}/{repo}/branches/main/protection/required_status_checks --jq '.checks[].context' 2>/dev/null
+   ```
+   If empty or missing (auto-merge needs required checks to know when to merge):
+   - Detect available checks from latest CI run: `gh api repos/{owner}/{repo}/commits/main/check-runs --jq '[.check_runs[].name] | unique | .[]'`
+   - If checks found and not `--auto`: ask to add them as required
+   - In `--auto` mode: add all detected checks automatically
+   - Fix via: `gh api repos/{owner}/{repo}/branches/main/protection/required_status_checks -X PATCH` with detected check names
+   - If no checks found or no branch protection: warn, continue without auto-merge support
 
 On error: Display clear message with fix instructions.
 
@@ -100,16 +110,16 @@ git diff main...HEAD --stat
 | Any `feat` commit | `feat` (minor bump) |
 | `fix` only (no feat) | `fix` (patch bump) |
 | Only `chore`/`docs`/`ci`/`refactor`/`test`/`perf` | Use dominant type (no bump) |
-| Any breaking change (`!` or `BREAKING CHANGE`) | Add `!` to type (major bump) |
+| Any breaking change (exclamation or `BREAKING CHANGE`) | Append exclamation to type (major bump) |
 
 **Breaking change detection:**
 
 Scan all branch commits for:
-- `!` suffix in commit type (e.g., `feat!:`, `fix!:`)
+- Exclamation suffix in commit type (e.g., `feat!:`, `fix!:`)
 - `BREAKING CHANGE:` or `BREAKING-CHANGE:` in commit body (`git log main..HEAD --format="%B"`)
 
 If any found:
-- PR title: add `!` to type (e.g., `feat!(scope): summary`)
+- PR title: append exclamation to type (e.g., `feat!(scope): summary`)
 - Body: add `## Breaking Changes` section (see body template below)
 - Collect all breaking change descriptions from commit footers
 
@@ -198,9 +208,9 @@ If `--draft` flag or user selected draft → add `--draft`.
 
 On error: If `gh pr create` fails, display the title and body for manual creation.
 
-### Phase 5: Merge Setup [CONDITIONAL]
+### Phase 5: Merge Setup [DEFAULT]
 
-Triggers when: user selected "Create + Auto-merge", or `--auto-merge` flag, or `--auto` flag.
+Triggers by default. Skip only when: user explicitly selected "Create PR only" or "Create as draft" in Phase 3, or `--draft` flag.
 
 ```bash
 gh pr merge {number} --auto --squash --delete-branch
@@ -225,7 +235,7 @@ After enabling auto-merge, switch to main and prepare for next work:
 git checkout main && git pull origin main
 ```
 
-If the branch was a feature branch (not `dev` or long-lived), delete local copy:
+If the branch was a feature branch (not long-lived), delete local copy:
 ```bash
 git branch -d {branch}
 ```
