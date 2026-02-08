@@ -33,13 +33,80 @@ model: opus
 
 Pre-checks → Analyze → Execute → Verify → Summary
 
-### Phase 1: Pre-checks + Quality Gates [PARALLEL]
+### Phase 1: Pre-checks + Quality Gates [PARALLEL: 5 checks]
+
+**1.0 Prerequisites:** Verify `git` is available (`git --version`). If missing → stop: "Install Git: https://git-scm.com"
+
+**1.0a Main branch guard:** If current branch is `main` or `master`:
+
+**Step 1: Check existing feature branches**
+
+```bash
+git branch --list 'feat/*' 'fix/*' 'chore/*' 'refactor/*' 'docs/*' 'ci/*' 'test/*' 'perf/*' --sort=-committerdate
+```
+
+Existing branches = work in progress. `/cco-pr --auto-merge` deletes merged branches, so remaining ones mean unfinished work.
+
+**Step 2: Early-analyze changes (Phase 2 logic, before branch decision)**
+
+Read `git diff` and `git status` to classify uncommitted changes. Apply smart grouping:
+- Single logical scope → one branch candidate (e.g., `feat/add-auth`)
+- Multiple scopes detected → list them separately for user choice
+
+**Step 3: Ask user**
+
+```javascript
+// When existing branches AND/OR multiple scopes detected:
+AskUserQuestion([{
+  question: "You're on main. Where should these changes go?",
+  header: "Branch",
+  options: [
+    // Existing branches (if any, most recent first, max 2):
+    { label: "{existing-branch}", description: "Continue on this branch ({n} commits ahead)" },
+    // New branch candidates from analysis:
+    { label: "New: {type}/{description}", description: "{n} files — {summary of changes}" },
+    // Always last:
+    { label: "Commit on main", description: "Not recommended for release-please repos" }
+  ],
+  multiSelect: false
+}])
+
+// When no existing branches AND single scope:
+AskUserQuestion([{
+  question: "You're on main. Create '{type}/{description}' for these changes?",
+  header: "Branch",
+  options: [
+    { label: "Create branch (Recommended)", description: "{type}/{description} — {summary}" },
+    { label: "Commit on main", description: "Not recommended for release-please repos" }
+  ],
+  multiSelect: false
+}])
+```
+
+Options are dynamic: up to 2 existing branches + up to 2 new branch candidates = max 4 options.
+
+**Step 4: Execute branch decision**
+
+| Decision | Action |
+|----------|--------|
+| Existing branch | `git checkout {branch}` — uncommitted changes carry over |
+| New branch | `git checkout -b {type}/{description}` — uncommitted changes carry over |
+| Multiple scopes, user picks one | `git stash` the rest, `git checkout -b {branch}`, commit selected files, `git stash pop` after commit |
+| Commit on main | Skip guard, proceed normally |
+
+After branch switch/creation: continue with Phase 2 (Analyze) on the branch. Subsequent `/cco-commit` calls see the feature branch → guard doesn't trigger → normal commit flow.
+
+**Branch naming rules:**
+- Format: `{type}/{short-description}` — all lowercase, hyphens for spaces
+- Max 50 chars total
+- Description from dominant change area, not individual files
+- Examples: `feat/add-auth`, `fix/login-validation`, `chore/update-deps`, `refactor/extract-services`
 
 **1.1 Conflict check:** If `UU`/`AA`/`DD` in git status → stop immediately.
 
 **1.2 File type detection:** Categorize changed files as code, test, tested-content (commands/, agents/, rules/), docs, config.
 
-**1.3 Quality Gates [PARALLEL + CONDITIONAL]:**
+**1.3 Quality Gates [PARALLEL, CONDITIONAL]:**
 
 Run on full project (not just changed files):
 - Always: secret scan + large file check on changed files
@@ -53,7 +120,7 @@ Run on full project (not just changed files):
 
 Collect all uncommitted changes. Read git diff for analysis.
 
-**Smart grouping:** ≤5 files or single logical change → single commit. Different features/scopes → split (only with `--split`). Default: single commit.
+**Smart grouping:** ≤5 files or single logical change → single commit. Multiple distinct logical changes → split into separate commits. Default: single commit.
 
 Display commit plan table: type, title, file count.
 
@@ -72,19 +139,32 @@ For each commit: stage files → build conventional commit message → create co
 
 **Type detection (release-please compatible):**
 
-| Type | Release Bump | When |
-|------|-------------|------|
-| `feat` | minor | New functionality |
-| `fix` | patch | Bug fixes |
-| `feat!`/`fix!` | major | Breaking changes |
-| `refactor` | none | Code restructuring |
-| `perf`/`test`/`docs`/`ci`/`chore` | none | Internal changes |
+| Type | Release Bump | When | Examples |
+|------|-------------|------|----------|
+| `feat` | **minor** | New user-facing capability that didn't exist before | New endpoint, new CLI flag, new UI component |
+| `fix` | **patch** | Corrects broken behavior users can observe | Bug fix, crash fix, incorrect output |
+| `feat!`/`fix!` | **major** | Change that breaks existing consumers | Removed endpoint, renamed export, changed return type |
+| `refactor` | none | Code restructuring with no behavior change | Extract function, rename internal var, reorganize files |
+| `chore` | none | Maintenance, dependencies, build config | Update deps, CI config, linter rules, internal tooling |
+| `docs` | none | Documentation only | README, comments, API docs, changelog |
+| `perf` | none | Performance improvement, no new behavior | Cache optimization, query tuning, lazy loading |
+| `test` | none | Test additions or fixes | New test cases, fix flaky test |
+| `ci` | none | CI/CD pipeline changes | Workflow files, deployment scripts |
+
+**Anti-bump rules (CRITICAL for release-please):**
+- `feat` = something a user/consumer can now DO that they couldn't before. If it's internal → `refactor` or `chore`
+- Improving existing behavior (faster, cleaner, more robust) is NOT `feat` → use `refactor`, `perf`, or `chore`
+- Adding/updating docs, tests, CI, config, or dev tooling is NEVER `feat` or `fix`
+- `fix` = something was BROKEN and now works. Preventive improvements are `refactor` or `chore`
+- When uncertain between `feat`/`fix` and a non-bumping type → prefer the non-bumping type
+- `BREAKING CHANGE` footer only for changes that break existing consumers (API, CLI, library users)
 
 **Message rules:**
 1. Analyze git diff content only — not session memory
 2. Describe what changed, not why
-3. Breaking changes: append exclamation mark to type (e.g., feat!), add BREAKING CHANGE footer
+3. Breaking changes: append exclamation mark to type (e.g., feat!), add BREAKING CHANGE footer with description of what breaks
 4. Append trailer only: `Co-Authored-By: {model} <noreply@anthropic.com>` — no other non-trailer lines after the body (GitHub ignores trailers if non-trailer content is mixed in)
+5. Title must be lowercase after the colon (e.g., `feat(api): add user endpoint` not `feat(api): Add user endpoint`)
 
 ### Phase 4: Verify
 
