@@ -18,3 +18,14 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      - name: Auto-merge release PR
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "release-please--branches--main" --json number --jq '.[0].number')
+          if [ -n "$PR" ]; then
+            gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --delete-branch || \
+              echo "::warning::Release PR #$PR created but auto-merge failed. Merge manually: https://github.com/$GITHUB_REPOSITORY/pull/$PR"
+          fi
