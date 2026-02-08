@@ -105,7 +105,7 @@ AskUserQuestion([{
 
 Uninstall previous distribution models:
 - v2.x plugin: `claude plugin uninstall cco@ClaudeCodeOptimizer` + `claude plugin marketplace remove ClaudeCodeOptimizer`
-- v1.x pip: `pip uninstall claude-code-optimizer -y`
+- v1.x pip: `pip uninstall claudecodeoptimizer -y`
 
 Pattern-based (scan directory, keep only current v3 files, remove rest):
 - `commands/cco-*.md` — keep only: cco-optimize, cco-align, cco-commit, cco-research, cco-docs, cco-update, cco-blueprint, cco-pr
