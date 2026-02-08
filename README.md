@@ -31,21 +31,6 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 
 Restart Claude Code. Done.
 
-<details>
-<summary>Dev channel (latest commit)</summary>
-
-**Mac / Linux:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.sh | bash -s -- --dev
-```
-
-**Windows (PowerShell):**
-```powershell
-iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.ps1) } --dev"
-```
-
-</details>
-
 ---
 
 ## Quick Start

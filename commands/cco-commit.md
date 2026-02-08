@@ -18,6 +18,7 @@ model: opus
 - All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null || echo ""`
 - Staged only: !`git diff --cached --shortstat 2>/dev/null || echo ""`
 - Untracked files: !`git ls-files --others --exclude-standard 2>/dev/null | wc -l`
+- Unpushed commits: !`git log @{upstream}..HEAD --oneline 2>/dev/null || git log origin/$(git branch --show-current 2>/dev/null)..HEAD --oneline 2>/dev/null || echo ""`
 
 **Scope:** All uncommitted changes included by default (staged + unstaged + untracked). Use `--staged-only` for staged changes only.
 
@@ -120,9 +121,25 @@ Run on full project (not just changed files):
 
 Collect all uncommitted changes. Read git diff for analysis.
 
+**Amend detection (unpushed commits):**
+
+If there are unpushed commits on the current branch, check whether new changes should amend an existing commit instead of creating a new one:
+
+| Condition | Action |
+|-----------|--------|
+| Change is trivial (≤3 lines or single-line fix) | Amend to most recent unpushed commit |
+| Changed file(s) overlap with files in an unpushed commit | Amend to that commit (most relevant match) |
+| Change is in the same logical scope as an unpushed commit | Amend to that commit |
+| Multiple unpushed commits match | Prefer the most recent one |
+| No overlap and non-trivial | Create new commit (normal flow) |
+
+**Amend execution:** `git add {files} && git commit --amend --no-edit` (preserves original message). If the amended commit's message no longer accurately describes the changes, update it.
+
+**Safety:** Only amend commits that have NOT been pushed. Never amend if `git log @{upstream}..HEAD` is empty or upstream tracking fails with no `origin/{branch}` match (means branch was already pushed or is tracking).
+
 **Smart grouping:** ≤5 files or single logical change → single commit. Multiple distinct logical changes → split into separate commits. Default: single commit.
 
-Display commit plan table: type, title, file count.
+Display commit plan table: type, title, file count. If amending, show `(amend → {short-hash})` next to the entry.
 
 ### Phase 3: Execute Commits [DIRECT]
 

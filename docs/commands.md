@@ -13,7 +13,7 @@ All CCO slash commands with flags, scopes, and examples.
 | `/cco-commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
 | `/cco-research` | Multi-source research | Opus | `--quick`, `--deep` |
 | `/cco-docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
-| `/cco-blueprint` | Project health system | Opus | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
+| `/cco-blueprint` | Project health + memory cleanup | Opus | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
 | `/cco-pr` | Release-please PRs | Opus | `--auto`, `--auto-merge`, `--preview`, `--draft` |
 | `/cco-update` | Update CCO | Opus | `--auto`, `--check` |
 
@@ -190,7 +190,8 @@ Profile-based project health assessment, transformation, and progress tracking.
 2. **Assess** — Runs optimize, align, docs, and audit scopes in parallel (preview mode)
 3. **Dashboard** — Shows Project Map + health scores with current vs target gaps
 4. **Transform** — Applies fixes based on priorities and constraints from profile
-5. **Track** — Updates scores and run history in profile for incremental improvement
+5. **Memory** — Cleans stale auto-memory entries using project context (deleted file refs, outdated commands, contradictions)
+6. **Track** — Updates scores and run history in profile for incremental improvement
 
 ### Health Dimensions (6)
 

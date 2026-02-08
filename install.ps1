@@ -1,27 +1,12 @@
 # CCO — Claude Code Optimizer Installer (Windows)
 #
-# Stable (latest release):
+# Usage:
 #   irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
-#
-# Dev (latest dev branch):
-#   iex "& { $(irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.ps1) } --dev"
 
 $ErrorActionPreference = "Stop"
 
 $Repo = "sungurerdim/ClaudeCodeOptimizer"
 $ClaudeDir = Join-Path $env:USERPROFILE ".claude"
-$Channel = "stable"
-
-# Parse args (--dev / --stable)
-foreach ($a in $args) {
-    switch ($a) {
-        "--dev"    { $Channel = "dev" }
-        "--stable" { $Channel = "stable" }
-    }
-}
-
-# Also honor environment variable (fallback for piped execution)
-if ($env:CCO_CHANNEL -and $Channel -eq "stable") { $Channel = $env:CCO_CHANNEL }
 
 $RulesFiles = @("rules/cco-rules.md")
 $CommandFiles = @(
@@ -71,24 +56,19 @@ function Write-Err   { param($Msg) Write-Host $Msg -ForegroundColor Red }
 Write-Info "CCO Installer"
 Write-Info "============="
 
-# Resolve channel to a git ref
-if ($Channel -eq "dev") {
-    $Ref = "dev"
-    Write-Info "Channel: dev (latest commit)"
-} else {
-    try {
-        $Tags = Invoke-RestMethod "https://api.github.com/repos/$Repo/tags?per_page=1" -UseBasicParsing
-        if ($Tags -and $Tags.Count -gt 0) {
-            $Ref = $Tags[0].name
-            Write-Info "Channel: stable ($Ref)"
-        } else {
-            $Ref = "main"
-            Write-Info "Channel: stable (main - no tags found)"
-        }
-    } catch {
+# Resolve latest release tag
+try {
+    $Tags = Invoke-RestMethod "https://api.github.com/repos/$Repo/tags?per_page=1" -UseBasicParsing
+    if ($Tags -and $Tags.Count -gt 0) {
+        $Ref = $Tags[0].name
+        Write-Info "Channel: stable ($Ref)"
+    } else {
         $Ref = "main"
-        Write-Info "Channel: stable (main - API unavailable)"
+        Write-Info "Channel: stable (main - no tags found)"
     }
+} catch {
+    $Ref = "main"
+    Write-Info "Channel: stable (main - API unavailable)"
 }
 
 $BaseUrl = "https://raw.githubusercontent.com/$Repo/$Ref"
@@ -107,16 +87,8 @@ try {
 } catch {
     Write-Err "  Source verification failed: $Ref does not contain CCO files."
     Write-Err ""
-    if ($Channel -eq "stable") {
-        Write-Err "  The latest release tag ($Ref) predates the install-script distribution model."
-        Write-Err "  Use the dev channel until a new release is published:"
-        Write-Err ""
-        Write-Err "    iex ""& { `$(irm https://raw.githubusercontent.com/$Repo/dev/install.ps1) } --dev"""
-        Write-Err ""
-    } else {
-        Write-Err "  Could not download files from the '$Ref' ref."
-        Write-Err "  Check the repository URL and try again."
-    }
+    Write-Err "  The latest release tag ($Ref) may predate the install-script distribution model."
+    Write-Err "  Check the repository for updates: https://github.com/$Repo"
     exit 1
 }
 
@@ -178,8 +150,8 @@ $LegacyCleaned = 0
 # Uninstall v2.x plugin if present (files managed by Claude Code plugin system)
 $ClaudeCli = Get-Command claude -ErrorAction SilentlyContinue
 if ($ClaudeCli) {
-    & claude plugin uninstall "cco@ClaudeCodeOptimizer" 2>$null | Out-Null
-    & claude plugin marketplace remove "ClaudeCodeOptimizer" 2>$null | Out-Null
+    try { & claude plugin uninstall "cco@ClaudeCodeOptimizer" 2>&1 | Out-Null } catch {}
+    try { & claude plugin marketplace remove "ClaudeCodeOptimizer" 2>&1 | Out-Null } catch {}
 }
 
 # Uninstall v1.x pip package if present
@@ -241,9 +213,6 @@ if (Test-Path $RulesPath) {
     $Content = $Content -replace "last_update_check:.*", "last_update_check: $Timestamp"
     [System.IO.File]::WriteAllText($RulesPath, $Content)
 }
-
-# Clean up env var
-if ($env:CCO_CHANNEL) { Remove-Item Env:CCO_CHANNEL -ErrorAction SilentlyContinue }
 
 Write-Info ""
 if ($Failed -eq 0) {
