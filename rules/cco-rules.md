@@ -1,5 +1,5 @@
 ---
-cco_version: 3.1.0 # x-release-please-version
+cco_version: 3.2.0 # x-release-please-version
 last_update_check: 1970-01-01T00:00:00Z
 ---
 
