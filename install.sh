@@ -77,7 +77,7 @@ fi
 
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${REF}"
 
-# Preflight: verify the resolved ref has the expected file structure
+# Source verification: check that the resolved ref has expected CCO files
 info ""
 info "Verifying source..."
 TEST_CONTENT=$(curl -fsSL "${BASE_URL}/rules/cco-rules.md" 2>/dev/null) || true

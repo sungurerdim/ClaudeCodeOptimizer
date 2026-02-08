@@ -148,7 +148,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 ### Group D: Documentation & Safety (Cat 6)
 
 **CATEGORY 6 - Documentation & Safety (15 checks):**
-- README accuracy: command count (7), agent count (3)
+- README accuracy: command count (8), agent count (3)
 - docs/commands.md: entry for each command
 - docs/agents.md: entry for each agent, all scopes documented
 - docs/rules.md: reflects rules/cco-rules.md content

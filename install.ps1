@@ -73,7 +73,7 @@ try {
 
 $BaseUrl = "https://raw.githubusercontent.com/$Repo/$Ref"
 
-# Preflight: verify the resolved ref has the expected file structure
+# Source verification: check that the resolved ref has expected CCO files
 Write-Info ""
 Write-Info "Verifying source..."
 try {
