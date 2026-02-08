@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.1.0...v3.2.0) (2026-02-08)
+
+
+### Features
+
+* add blueprint, pr commands and feature branch workflow ([#11](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/11)) ([6243c7b](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/6243c7b65ec09d8dcdc56853f3404c36780aa298))
+
 ## [3.1.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.0.0...v3.1.0) (2026-02-07)
 
 
