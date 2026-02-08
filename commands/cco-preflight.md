@@ -34,13 +34,34 @@ At start, detect project context:
 
 Setup → Pre-checks → (Verify ‖ Optimize ‖ Align) → Changelog → [Plan] → Execute
 
-### Phase 1: Setup [SKIP IF --auto]
+### Phase 1: Setup [SKIP if --auto]
 
-**Q1:** Two questions:
-- Checks (multiselect): Security (Recommended), Code Quality (Recommended), Architecture, Tests + Build
-- Release mode: Fix Only (Recommended) / Fix + Commit + Tag
+```javascript
+AskUserQuestion([
+  {
+    question: "Which checks should be run?",
+    header: "Checks",
+    options: [
+      { label: "Security (Recommended)", description: "Vulnerability and secret scanning" },
+      { label: "Code Quality (Recommended)", description: "Lint, types, format" },
+      { label: "Architecture", description: "Structure and pattern analysis" },
+      { label: "Tests + Build", description: "Run test suite and build" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: "What release mode?",
+    header: "Mode",
+    options: [
+      { label: "Fix Only (Recommended)", description: "Apply fixes, suggest next steps" },
+      { label: "Fix + Commit + Tag", description: "Commit fixes and tag release" }
+    ],
+    multiSelect: false
+  }
+])
+```
 
-### Phase 2: Pre-flight Checks [PARALLEL]
+### Phase 2: Pre-flight Checks [PARALLEL: 6 checks]
 
 | Check | Type | Detail |
 |-------|------|--------|
@@ -53,7 +74,7 @@ Setup → Pre-checks → (Verify ‖ Optimize ‖ Align) → Changelog → [Plan
 
 Dependency audit via cco-agent-research (scope: dependency).
 
-### Phase 3: Verify + Optimize + Align [PARALLEL]
+### Phase 3: Verify + Optimize + Align [PARALLEL: 3 calls]
 
 Run concurrently:
 - Background Bash: format, lint, type, test, build commands
@@ -65,14 +86,29 @@ Collect all background results via TaskOutput before any output.
 
 Classify commits since last tag by conventional commit type. Suggest version bump: breaking → MAJOR, feat → MINOR, else → PATCH. Generate changelog entry.
 
-### Phase 5: Plan Review [CONDITIONAL]
+### Phase 5: Plan Review [CONDITIONAL, SKIP if --auto]
 
-Triggers when: findings > 0 or blockers detected. Skip in --auto.
+Triggers when: findings > 0 or blockers detected.
 
 Display release plan: pre-flight status, sub-command results, verification results, breaking changes, blockers, changelog preview, release checklist.
 
-If blockers: ask Fix and Retry / View Details / Abort.
-If no blockers: standard Action + Severity questions.
+1. If blockers detected:
+```javascript
+AskUserQuestion([{
+  question: "Blockers found. How to proceed?",
+  header: "Blockers",
+  options: [
+    { label: "Fix and Retry", description: "Attempt to fix blockers and re-run checks" },
+    { label: "View Details", description: "Show detailed blocker information" },
+    { label: "Abort", description: "Stop release process" }
+  ],
+  multiSelect: false
+}])
+```
+
+2. If no blockers: standard Action + Severity questions.
+
+On error: If fix-and-retry fails twice, abort with details.
 
 ### Phase 6: Execute
 

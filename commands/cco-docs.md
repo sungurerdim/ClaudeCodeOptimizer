@@ -48,18 +48,49 @@ Avoid: filler, marketing language, obvious statements, duplicate content.
 
 Mode Detection → (Q1 ‖ Analysis) → Gap Analysis → [Plan] → Generate → Summary
 
-### Phase 1: Setup [SKIP IF --auto]
+### Phase 1: Setup [SKIP if --auto]
 
-**Q1:** Three questions:
-- Areas (multiselect): Core (Recommended: readme+changelog), Technical (Recommended: api+dev), User-facing (user+ops)
-- Analysis: None (Recommended) / Refine / Verify
-- Mode: Fill Gaps (Recommended) / Update All
+```javascript
+AskUserQuestion([
+  {
+    question: "Which documentation areas should be covered?",
+    header: "Areas",
+    options: [
+      { label: "Core (Recommended)", description: "readme + changelog" },
+      { label: "Technical (Recommended)", description: "api + dev" },
+      { label: "User-facing", description: "user + ops" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: "Should existing docs be analyzed?",
+    header: "Analysis",
+    options: [
+      { label: "None (Recommended)", description: "Only generate missing docs" },
+      { label: "Refine", description: "Improve existing doc quality" },
+      { label: "Verify", description: "Check doc claims against source code" }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "How should existing docs be handled?",
+    header: "Mode",
+    options: [
+      { label: "Fill Gaps (Recommended)", description: "Only create what's missing" },
+      { label: "Update All", description: "Regenerate even if docs exist" }
+    ],
+    multiSelect: false
+  }
+])
+```
 
 In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
-### Phase 2: Analysis [PARALLEL with Q1]
+### Phase 2: Analysis [PARALLEL with Phase 1]
 
 Delegate to cco-agent-analyze (scope: docs): scan existing docs, detect project type, detect documentation needs.
+
+On error: If analysis fails, proceed with gap analysis using file existence checks only.
 
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
 
@@ -82,15 +113,30 @@ Analyze existing docs for: scannability, clarity, redundancy, overengineering, D
 
 Cross-reference doc claims against source: command flags, step counts, scope names, file paths, config keys, example commands. Mismatches become fix tasks.
 
-### Phase 4: Plan Review [CONDITIONAL]
+### Phase 4: Plan Review [CONDITIONAL, SKIP if --auto]
 
-Triggers: findings > 0, >3 docs to generate, or API scope. Skip in --auto.
+Triggers: findings > 0, >3 docs to generate, or API scope.
 
-Display plan: target files, sections, estimated lines, sources. Ask: Generate All (Recommended) / High Priority Only / Abort.
+Display plan: target files, sections, estimated lines, sources.
+
+```javascript
+AskUserQuestion([{
+  question: "How should documentation be generated?",
+  header: "Action",
+  options: [
+    { label: "Generate All (Recommended)", description: "Create all identified missing docs" },
+    { label: "High Priority Only", description: "Only HIGH priority gaps" },
+    { label: "Abort", description: "Don't generate anything" }
+  ],
+  multiSelect: false
+}])
+```
 
 ### Phase 5: Generate Documentation
 
 Delegate to cco-agent-apply:
+
+On error: If generation fails for a doc, count as failed, continue with next.
 - Extract from actual source files
 - Apply: brevity, examples, scannability, actionability
 - Follow format by scope (README, API, Dev, User, Ops, Changelog)

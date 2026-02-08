@@ -14,6 +14,7 @@ All CCO slash commands with flags, scopes, and examples.
 | `/cco-research` | Multi-source research | Opus | `--quick`, `--deep` |
 | `/cco-preflight` | Pre-release checks | Opus | `--auto`, `--preview` |
 | `/cco-docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
+| `/cco-blueprint` | Project health system | Opus | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
 | `/cco-update` | Update CCO | Opus | `--auto`, `--check` |
 
 **Model Rationale:** Opus for coding commands (fewer errors), Haiku for analysis agents (fast).
@@ -80,6 +81,9 @@ Strategic architecture analysis — current vs ideal state.
 | Library | <30% | >80% | <8 | 85%+ |
 | API | <50% | >70% | <12 | 80%+ |
 | Web | <60% | >65% | <15 | 70%+ |
+| Monorepo | <35% | >70% | <12 | 75%+ |
+| Mobile | <55% | >65% | <12 | 65%+ |
+| Infra/IaC | <45% | >70% | <10 | 60%+ |
 
 ---
 
@@ -182,6 +186,46 @@ Documentation gap analysis and generation.
 | changelog | Version history |
 | refine | Quality improvement |
 | verify | Claims vs source code |
+
+---
+
+## /cco-blueprint
+
+Profile-based project health assessment, transformation, and progress tracking.
+
+```bash
+/cco-blueprint                     # Full flow: profile + assess + transform
+/cco-blueprint --init              # Create/refresh profile only
+/cco-blueprint --preview           # Analyze and show dashboard, no changes
+/cco-blueprint --auto              # Unattended: all phases, no questions
+/cco-blueprint --refresh           # Re-scan profile (preserves history)
+/cco-blueprint --scope=security    # Focus on specific area
+```
+
+### How It Works
+
+1. **Profile** — Creates a profile in CLAUDE.md (between markers) with project config, ideal metrics, and scores
+2. **Assess** — Runs optimize, align, docs, and audit scopes in parallel (preview mode)
+3. **Dashboard** — Shows Project Map + health scores with current vs target gaps
+4. **Transform** — Applies fixes based on priorities and constraints from profile
+5. **Track** — Updates scores and run history in profile for incremental improvement
+
+### Health Dimensions (6)
+
+| Dimension | Weight | Source |
+|-----------|--------|--------|
+| Security | 25% | optimize: security + privacy + robustness |
+| Code Quality | 20% | optimize: hygiene + types + simplify + performance |
+| Architecture | 20% | align: architecture + patterns + maintainability |
+| Stack Health | 15% | audit: stack-assessment + dependency-health |
+| DX | 10% | audit: dx-quality + project-structure |
+| Documentation | 10% | docs results |
+
+### Profile Questions (6)
+
+Two rounds: Project Identity (type, quality target, data sensitivity) → Strategy (priorities, constraints, audience).
+
+In --auto mode: all questions use auto-detected defaults.
 
 ---
 

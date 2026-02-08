@@ -30,15 +30,37 @@ Setup → Parse Query → Research [PARALLEL] → Synthesize → Output
 
 ### Phase 1: Setup [SKIP with flags]
 
-**Q1:** Two questions:
-- Depth: Quick / Standard (Recommended) / Deep
-- Focus (multiselect): Local codebase / Security/CVE / Changelog/releases / Dependencies
+```javascript
+AskUserQuestion([
+  {
+    question: "How deep should the research go?",
+    header: "Depth",
+    options: [
+      { label: "Quick", description: "T1-T2 sources only, fast results" },
+      { label: "Standard (Recommended)", description: "T1-T4 sources, good balance" },
+      { label: "Deep", description: "All tiers, 20+ sources, resumable" }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "What areas should be searched?",
+    header: "Focus",
+    options: [
+      { label: "Local codebase", description: "Search project files for answers" },
+      { label: "Security/CVE", description: "Vulnerability databases and advisories" },
+      { label: "Changelog/releases", description: "Version history and breaking changes" },
+      { label: "Dependencies", description: "Package registry and compatibility info" }
+    ],
+    multiSelect: true
+  }
+])
+```
 
 ### Phase 2: Parse Query
 
 Extract from $ARGS: concepts, date context, tech domain, comparison mode, search mode (troubleshoot/changelog/security).
 
-### Phase 3: Research [PARALLEL]
+### Phase 3: Research [PARALLEL: up to 7 calls]
 
 Launch all search agents in single message via parallel Task calls to cco-agent-research:
 

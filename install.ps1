@@ -32,6 +32,7 @@ $CommandFiles = @(
     "commands/cco-preflight.md"
     "commands/cco-docs.md"
     "commands/cco-update.md"
+    "commands/cco-blueprint.md"
 )
 $AgentFiles = @(
     "agents/cco-agent-analyze.md"
@@ -250,7 +251,7 @@ if ($Failed -eq 0) {
     Write-Info ""
     Write-Info "Installed to: $ClaudeDir\"
     Write-Info "  rules\cco-rules.md"
-    Write-Info "  commands\cco-*.md (7 commands)"
+    Write-Info "  commands\cco-*.md (8 commands)"
     Write-Info "  agents\cco-agent-*.md (3 agents)"
     if ($LegacyCleaned -gt 0) {
         Write-Info ""

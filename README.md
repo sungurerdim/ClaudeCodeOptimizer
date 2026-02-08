@@ -79,9 +79,10 @@ No hooks, no plugins, no dependencies. Just markdown files.
 | [`/cco-research`](docs/commands.md#cco-research) | Multi-source research with scoring |
 | [`/cco-preflight`](docs/commands.md#cco-preflight) | Pre-release verification |
 | [`/cco-docs`](docs/commands.md#cco-docs) | Documentation gap analysis |
+| [`/cco-blueprint`](docs/commands.md#cco-blueprint) | Project health assessment and transformation |
 | [`/cco-update`](docs/commands.md#cco-update) | Check and install updates |
 
-7 commands · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
+8 commands · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
 
 ---
 

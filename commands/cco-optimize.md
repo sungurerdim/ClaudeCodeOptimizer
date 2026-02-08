@@ -30,20 +30,39 @@ model: opus
 
 Setup → Analyze → Gate → [Plan] → Apply → Summary
 
-### Step 1: Setup [SKIP IF --auto]
+### Phase 1: Setup [SKIP if --auto]
 
-**Q1 (multiselect):** "Which areas to check?"
-- Security & Privacy (Recommended): SEC + ROB + PRV
-- Code Quality (Recommended): HYG + TYP + SIM
-- Performance: PRF
-- AI Cleanup: AIH + DOC
+```javascript
+AskUserQuestion([
+  {
+    question: "Which areas should be checked?",
+    header: "Scopes",
+    options: [
+      { label: "Security & Privacy (Recommended)", description: "SEC + ROB + PRV" },
+      { label: "Code Quality (Recommended)", description: "HYG + TYP + SIM" },
+      { label: "Performance", description: "PRF" },
+      { label: "AI Cleanup", description: "AIH + DOC" }
+    ],
+    multiSelect: true
+  }
+])
 
-**Q2 (conditional, only if git dirty):** "Uncommitted changes detected. Proceed?"
-- Continue (Recommended) / Stash first / Cancel
+// Conditional: only if git dirty
+AskUserQuestion([{
+  question: "Uncommitted changes detected. Proceed?",
+  header: "Git status",
+  options: [
+    { label: "Continue (Recommended)", description: "Analyze with current changes" },
+    { label: "Stash first", description: "Stash changes, analyze clean tree" },
+    { label: "Cancel", description: "Stop and let me handle it" }
+  ],
+  multiSelect: false
+}])
+```
 
 In --auto mode: all 9 scopes, no stash, no questions.
 
-### Phase 2: Analyze [PARALLEL SCOPES]
+### Phase 2: Analyze [PARALLEL: 4 calls]
 
 Launch scope groups as parallel Task calls to cco-agent-analyze:
 - Security & Privacy: security, robustness, privacy
@@ -55,15 +74,40 @@ Merge all findings. Filter by user-selected scopes. Categorize: autoFixable vs a
 
 Analysis always scans all severities. Filtering happens post-analysis via Plan Review.
 
-### Phase 3: Plan Review [when findings > 0, SKIP if --auto]
+On error: If an agent call fails, log error, continue with remaining groups. Failed group scores as "N/A".
+
+### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 
 Display plan table before asking.
 
-**Post-analysis Q2:**
-- Action: Fix All (Recommended) / By Severity / Review Each / Report Only
-- Severity filter (multiselect): CRITICAL / HIGH / MEDIUM / LOW
+```javascript
+AskUserQuestion([
+  {
+    question: "What action should be taken?",
+    header: "Action",
+    options: [
+      { label: "Fix All (Recommended)", description: "Auto-fix everything possible" },
+      { label: "By Severity", description: "Choose which severity levels to fix" },
+      { label: "Review Each", description: "Approve each finding individually" },
+      { label: "Report Only", description: "Don't change anything" }
+    ],
+    multiSelect: false
+  }
+])
 
-Severity question only applies when Action = "By Severity".
+// Conditional: only when Action = "By Severity"
+AskUserQuestion([{
+  question: "Which severity levels should be fixed?",
+  header: "Severity",
+  options: [
+    { label: "CRITICAL", description: "Security, data loss, crash" },
+    { label: "HIGH", description: "Broken functionality" },
+    { label: "MEDIUM", description: "Suboptimal but works" },
+    { label: "LOW", description: "Style only" }
+  ],
+  multiSelect: true
+}])
+```
 
 ### Phase 4: Apply [SYNCHRONOUS]
 
@@ -71,11 +115,13 @@ Send findings to cco-agent-apply. Group by file for efficiency.
 
 Count findings, not locations. On failure: retry with alternative fix approach.
 
+On error: If apply fails for a finding, count as failed, continue with next.
+
 ### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
 Per CCO Rules: Needs-Approval Flow.
 
-### Step 5: Summary
+### Phase 5: Summary
 
 --auto mode: `cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
 
