@@ -67,7 +67,7 @@ Display: `Current: vX.Y.Z → Latest: vA.B.C`
 
 **--check mode:** Display version info and exit. Update `last_update_check` timestamp in cco-rules.md frontmatter.
 
-### Phase 3: Preflight
+### Phase 3: Source Verification
 
 Before downloading, verify the resolved ref has the expected file structure:
 
