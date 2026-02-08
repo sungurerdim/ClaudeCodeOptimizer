@@ -145,7 +145,7 @@ foreach ($File in $AgentFiles) {
 }
 
 # Clean up legacy files from previous CCO versions (v1.x + v2.x)
-$LegacyCleaned = 0
+$LegacyRemoved = @()
 
 # Uninstall v2.x plugin if present (files managed by Claude Code plugin system)
 $ClaudeCli = Get-Command claude -ErrorAction SilentlyContinue
@@ -165,7 +165,7 @@ foreach ($File in $LegacyNonPrefixedFiles) {
     $LegacyPath = Join-Path $ClaudeDir $File
     if (Test-Path $LegacyPath) {
         Remove-Item -Path $LegacyPath -Force -ErrorAction SilentlyContinue
-        $LegacyCleaned++
+        $LegacyRemoved += $File
     }
 }
 
@@ -174,7 +174,7 @@ $CmdDir = Join-Path $ClaudeDir "commands"
 if (Test-Path $CmdDir) {
     Get-ChildItem -Path $CmdDir -Filter "cco-*.md" | Where-Object { $CurrentCommands -notcontains $_.Name } | ForEach-Object {
         Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
-        $LegacyCleaned++
+        $LegacyRemoved += "commands/$($_.Name)"
     }
 }
 
@@ -183,7 +183,7 @@ $AgentDir = Join-Path $ClaudeDir "agents"
 if (Test-Path $AgentDir) {
     Get-ChildItem -Path $AgentDir -Filter "cco-*.md" | Where-Object { $CurrentAgents -notcontains $_.Name } | ForEach-Object {
         Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
-        $LegacyCleaned++
+        $LegacyRemoved += "agents/$($_.Name)"
     }
 }
 
@@ -192,7 +192,7 @@ $RulesDir = Join-Path $ClaudeDir "rules"
 if (Test-Path $RulesDir) {
     Get-ChildItem -Path $RulesDir -Filter "cco-*.md" | Where-Object { $CurrentRules -notcontains $_.Name } | ForEach-Object {
         Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
-        $LegacyCleaned++
+        $LegacyRemoved += "rules/$($_.Name)"
     }
 }
 
@@ -201,7 +201,7 @@ foreach ($Dir in $LegacyDirs) {
     $LegacyPath = Join-Path $ClaudeDir $Dir
     if (Test-Path $LegacyPath) {
         Remove-Item -Path $LegacyPath -Recurse -Force -ErrorAction SilentlyContinue
-        $LegacyCleaned++
+        $LegacyRemoved += "$Dir/"
     }
 }
 
@@ -222,9 +222,12 @@ if ($Failed -eq 0) {
     Write-Info "  rules\cco-rules.md"
     Write-Info "  commands\cco-*.md (8 commands)"
     Write-Info "  agents\cco-agent-*.md (3 agents)"
-    if ($LegacyCleaned -gt 0) {
+    if ($LegacyRemoved.Count -gt 0) {
         Write-Info ""
-        Write-Warn "Cleaned up $LegacyCleaned legacy file(s) from previous CCO version."
+        Write-Warn "Cleaned up $($LegacyRemoved.Count) legacy file(s) from previous CCO version:"
+        foreach ($Item in $LegacyRemoved) {
+            Write-Warn "  - $Item"
+        }
     }
     Write-Info ""
     Write-Info "Restart Claude Code to activate."
