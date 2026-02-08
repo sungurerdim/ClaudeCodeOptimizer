@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.2.0...v3.2.1) (2026-02-08)
+
+
+### Bug Fixes
+
+* **install:** update v1 pip package name and present all findings ([#18](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/18)) ([aa52c65](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/aa52c65bb0865ba7115317d6e647c947fe13db2e))
+
 ## [3.2.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.1.0...v3.2.0) (2026-02-08)
 
 
