@@ -48,7 +48,7 @@ Accounting: `applied + failed + needs_approval = total`. No declined category.
 
 | Step | Action | Execution |
 |------|--------|-----------|
-| 1. Pre-check | Git status | Single |
+| 1. Validate | Check input contract (verify findings/operations structure) | Single |
 | 2. Read | All affected files | **PARALLEL** |
 | 3. Apply | All independent edits | **PARALLEL** (different files) |
 | 4. Verify | Lint, type, test checks | **PARALLEL** |

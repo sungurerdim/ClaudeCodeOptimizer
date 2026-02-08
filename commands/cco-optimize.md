@@ -120,7 +120,12 @@ On error: If apply fails for a finding, count as failed, continue with next.
 
 ### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: Needs-Approval Flow.
+After apply, if needs_approval > 0:
+
+1. Display items table (ID, severity, issue, location, reason)
+2. Ask: Fix All / Review Each
+
+In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign).
 
 ### Phase 4.6: Loop [CONDITIONAL, --loop flag only]
 
@@ -133,7 +138,11 @@ Each iteration narrows scope to only changed files. Summary shows per-iteration 
 
 ### Phase 5: Summary
 
---auto mode: `cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
+Accounting: `applied + failed + needs_approval = total`. No declined category. Fix, flag for approval (architectural), or fail with technical reason.
+
+--auto mode (no deferrals — never say "too complex", "might break", or "consider later"):
+
+`cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
 
 Interactive: table with counts, failed items list, stash reminder if applicable.
 

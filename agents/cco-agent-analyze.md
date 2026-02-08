@@ -44,7 +44,7 @@ Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
 
 ## Execution
 
-1. **Linters** — Run format/lint/type checkers in parallel via Bash
+1. **Linters** — If project has configured linters (detected from config files like .eslintrc, biome.json, pyproject.toml, Makefile), run them via Bash. Skip if no tooling detected.
 2. **Grep** — All patterns from all scopes in single parallel batch
 3. **Context** — Read matched files in parallel (offset+limit=20 around match)
 4. **Output** — Combined JSON with findings tagged by scope
@@ -95,5 +95,7 @@ Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# inte
 | Conservative | Uncertain → lower severity. Style → max LOW. Single occurrence → max MEDIUM (except security). |
 | Pattern threshold | 3+ examples before concluding systemic pattern |
 | Confidence | Report all findings with confidence score. Do not filter by confidence. |
-| False positives | Skip: pre-existing issues, platform-guarded code, intentional markers, linter domain, test fixtures, single occurrences |
+| Confidence scoring | ≥80: High confidence. 60-79: Medium confidence. <60: Low confidence. In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign). In interactive mode: user always decides. |
+| Severity levels | CRITICAL: Security, data loss, crash. HIGH: Broken functionality. MEDIUM: Suboptimal but works. LOW: Style only. When uncertain, choose lower severity. |
+| False positives | Skip: pre-existing issues, platform-guarded code, intentional markers (`# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks), linter domain, test fixtures, single occurrences |
 | CRITICAL validation | Analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |

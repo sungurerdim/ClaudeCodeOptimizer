@@ -377,7 +377,12 @@ On error: If a Skill call fails, log error with details, continue with next. Cou
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: Needs-Approval Flow.
+After apply, if needs_approval > 0:
+
+1. Display items table (ID, severity, issue, location, reason)
+2. Ask: Fix All / Review Each
+
+In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign).
 
 ### Phase 7: Update Profile
 
@@ -391,7 +396,7 @@ On error: If CLAUDE.md update fails, display updated profile in output.
 
 Clean up Claude Code auto-memory files using the full project context from Discovery + Assess.
 
-**Target directory:** `~/.claude/projects/<project>/memory/` (derived from git root)
+**Target directory:** `{user home}/.claude/projects/{project-hash}/memory/` (derived from git root, OS-agnostic path)
 
 **Steps:**
 1. Read `MEMORY.md` and all topic files in the memory directory
@@ -431,6 +436,10 @@ Next: /cco-blueprint --preview (check progress)
       /cco-blueprint (close remaining gaps)
 ```
 
---auto mode: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Total: {n}`
+Accounting: `applied + failed + needs_approval = total`. No declined category.
+
+--auto mode (no deferrals — never say "too complex", "might break", or "consider later"):
+
+`cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Total: {n}`
 
 Status: OK (overall >= target), WARN (gap exists but progress made), FAIL (CRITICAL unfixed or regression).

@@ -69,12 +69,22 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 ---
 
+## Rules Architecture
+
+CCO rules follow a "behavioral, not procedural" design. Rules define WHAT behavior is expected, not HOW to execute operations. Operational details (accounting formulas, approval flows, execution sequences) live in the commands and agents that use them.
+
+| Layer | Contains | Example |
+|-------|----------|---------|
+| Rules | Behavioral constraints | "Read before write" |
+| Commands | Operational procedures | Needs-approval flow, accounting |
+| Agents | Execution details | Confidence scoring, linter detection |
+
 ## Agent System
 
 | Agent | Purpose | Model | Pattern |
 |-------|---------|-------|---------|
-| analyze | Read-only analysis, metrics, findings | Haiku | Linters → Grep → Context reads → JSON |
-| apply | Write operations with verification | Opus | Pre-check → Read → Apply → Verify → Cascade |
+| analyze | Read-only analysis, metrics, findings | Haiku | Conditional linters → Grep → Context reads → JSON |
+| apply | Write operations with verification | Opus | Validate input → Read → Apply → Verify → Cascade |
 | research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
 
 ---
