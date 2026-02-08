@@ -33,7 +33,7 @@ Keep counts in sync when adding/removing files:
 
 ```bash
 # Verify counts (cross-platform: use Glob in Claude Code)
-# Commands: 7 (optimize, align, commit, research, preflight, docs, update)
+# Commands: 8 (optimize, align, commit, research, docs, blueprint, pr, update)
 # Agents: 3 (analyze, apply, research)
 ```
 
@@ -45,7 +45,7 @@ Update `README.md` and `docs/` if counts change.
    ```bash
    # Verify all files exist
    ls rules/cco-rules.md
-   ls commands/cco-*.md | wc -l   # Should be 7
+   ls commands/cco-*.md | wc -l   # Should be 8
    ls agents/cco-agent-*.md | wc -l  # Should be 3
    ```
 
