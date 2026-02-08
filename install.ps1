@@ -157,7 +157,7 @@ if ($ClaudeCli) {
 # Uninstall v1.x pip package if present
 $PipCmd = Get-Command pip -ErrorAction SilentlyContinue
 if ($PipCmd) {
-    & pip uninstall claude-code-optimizer -y 2>$null | Out-Null
+    & pip uninstall claudecodeoptimizer -y 2>$null | Out-Null
 }
 
 # Remove v2.x non-prefixed command files
