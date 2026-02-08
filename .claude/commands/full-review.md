@@ -77,7 +77,7 @@ if (!isUnattended && !isReportOnly) {
 
 ```javascript
 // Cross-platform detection using Claude's native tools
-commands = Glob("commands/cco-*.md").length     // Expected: 7
+commands = Glob("commands/cco-*.md").length     // Expected: 8
 agents = Glob("agents/cco-agent-*.md").length  // Expected: 3
 version = Read("rules/cco-rules.md").frontmatter.cco_version
 
@@ -95,7 +95,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 ### Group A: Structure & Release (Cat 1 + Cat 7)
 
 **CATEGORY 1 - Inventory & Sync (12 checks):**
-- Count files: commands/cco-*.md (expected: 9), agents/cco-agent-*.md (expected: 3)
+- Count files: commands/cco-*.md (expected: 8), agents/cco-agent-*.md (expected: 3)
 - Compare counts against README.md, docs/commands.md, docs/agents.md
 - SSOT: grep for orphan refs (.cco/, principles.md, projects.json)
 - Terminology: CRITICAL/HIGH/MEDIUM/LOW consistent (not P0/P1)
@@ -113,7 +113,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 - AskUserQuestion standards (max 4 questions × 4 options)
 - --auto mode: zero AskUserQuestion calls
 - --preview mode: zero Edit/Write calls
-- All 9 commands support --auto and --preview (where applicable)
+- All 8 commands support --auto and --preview (where applicable)
 
 **CATEGORY 3 - Agent Quality (10 checks):**
 - cco-agent-analyze: 9 OPTIMIZE scopes + 6 REVIEW scopes + 4 AUDIT scopes
@@ -239,7 +239,7 @@ if (toApply.length > 0) {
 ═══════════════════════════════════════════════════════════
 
 Detected:
-  Commands: 7  Agents: 3  Rules: rules/cco-rules.md
+  Commands: 8  Agents: 3  Rules: rules/cco-rules.md
 
 ┌─────────────────────────┬────────┬────────┬────────┐
 │ Category                │ Passed │ Failed │ Status │

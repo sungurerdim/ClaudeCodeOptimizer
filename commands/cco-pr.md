@@ -40,6 +40,44 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
 4. If no commits ahead of base → stop: "No commits to create PR for."
 5. If unpushed commits → `git push -u origin {branch}` automatically
 6. If PR already exists → show existing PR URL and ask: Update / Skip
+7. Check if branch is behind main:
+   ```bash
+   git fetch origin main
+   git merge-base --is-ancestor origin/main HEAD
+   ```
+   If main has new commits not in branch:
+   ```javascript
+   AskUserQuestion([{
+     question: "Branch is behind main. How to proceed?",
+     header: "Sync",
+     options: [
+       { label: "Rebase (Recommended)", description: "git rebase origin/main — clean linear history" },
+       { label: "Continue anyway", description: "Create PR without rebasing (may have merge conflicts)" },
+       { label: "Cancel", description: "Abort PR creation" }
+     ],
+     multiSelect: false
+   }])
+   ```
+   In `--auto` mode: rebase automatically. On conflict → `git rebase --abort`, warn, continue with PR.
+8. Verify repo settings (first run per repo, cached):
+   ```bash
+   gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge}'
+   ```
+   Expected: `squash=true, title=PR_TITLE, msg=PR_BODY, delete=true`
+   If mismatch found and not `--auto`:
+   ```javascript
+   AskUserQuestion([{
+     question: "Repo settings need adjustment for release-please compatibility. Fix now?",
+     header: "Settings",
+     options: [
+       { label: "Fix all (Recommended)", description: "Enable squash merge with PR_TITLE format, auto-delete branches" },
+       { label: "Skip", description: "Continue without fixing (changelog entries may be affected)" }
+     ],
+     multiSelect: false
+   }])
+   ```
+   Fix via: `gh api repos/{owner}/{repo} -X PATCH -f allow_squash_merge=true -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY -f delete_branch_on_merge=true`
+   In `--auto` mode: fix automatically, log changes.
 
 On error: Display clear message with fix instructions.
 

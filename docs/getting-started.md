@@ -23,17 +23,18 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 ```
 ~/.claude/
 ├── rules/
-│   └── cco-rules.md          # Core rules (auto-loaded)
+│   └── cco-rules.md            # Core rules (auto-loaded)
 ├── commands/
-│   ├── cco-optimize.md        # 7 slash commands
+│   ├── cco-optimize.md          # 8 slash commands
 │   ├── cco-align.md
 │   ├── cco-commit.md
 │   ├── cco-research.md
-│   ├── cco-preflight.md
 │   ├── cco-docs.md
+│   ├── cco-blueprint.md
+│   ├── cco-pr.md
 │   └── cco-update.md
 └── agents/
-    ├── cco-agent-analyze.md   # 3 subagents
+    ├── cco-agent-analyze.md     # 3 subagents
     ├── cco-agent-apply.md
     └── cco-agent-research.md
 ```
@@ -139,7 +140,8 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 | Full security audit | `/cco-optimize --scope=security` |
 | Architecture review | `/cco-align` |
 | Quality-gated commit | `/cco-commit` |
-| Pre-release check | `/cco-preflight` |
+| Project health | `/cco-blueprint` |
+| Create PR | `/cco-pr` |
 | Research a topic | `/cco-research "your question"` |
 | Update CCO | `/cco-update` |
 

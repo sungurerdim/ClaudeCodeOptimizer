@@ -103,7 +103,7 @@ Before execution, verify required external tools exist. Check via `which`/`where
 
 | Tool | Commands That Require It | Criticality |
 |------|--------------------------|-------------|
-| `git` | All commands | CRITICAL for commit/pr/preflight, non-critical for others |
+| `git` | All commands | CRITICAL for commit/pr, non-critical for others |
 | `gh` | cco-pr | CRITICAL — stop if missing, link to https://cli.github.com |
 
 **Behavior:**
@@ -120,6 +120,21 @@ Agents (cco-agent-analyze, cco-agent-apply, cco-agent-research) return structure
 - If agent fails, return `{"error": "{message}"}` — never return empty
 - Calling command MUST validate agent output before processing (check for `error` field, verify expected structure)
 - If agent output is missing or malformed → retry once, then report as failed dimension
+
+### Version Architecture
+
+**SSOT:** `version.txt` — single source of truth for CCO version. Never manually edit version files.
+
+| File | Managed By | Purpose |
+|------|------------|---------|
+| `version.txt` | release-please | Primary version number |
+| `.release-please-manifest.json` | release-please | Internal manifest state |
+| `rules/cco-rules.md` frontmatter | release-please | Runtime version (`x-release-please-version` annotation) |
+| `CHANGELOG.md` | release-please | Generated version history |
+
+**Version flow:** `/cco-commit` → `/cco-pr` (conventional title) → squash merge → release-please reads commit → bumps version files
+
+**Bump rules:** `feat` → minor, `fix` → patch, `feat!`/`fix!` → major, all others → no bump
 
 ### Version Awareness
 

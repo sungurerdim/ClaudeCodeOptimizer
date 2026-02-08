@@ -20,6 +20,7 @@ model: opus
 | `--auto` | All 9 scopes, all severities, no questions, single-line summary. Exit: 0/1/2 |
 | `--preview` | Analyze and report findings without applying fixes |
 | `--scope=<name>` | Specific scope(s), comma-separated. Valid: security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify |
+| `--loop` | Re-run until clean or max 3 iterations. Combines with `--auto`. |
 
 ## Context
 
@@ -120,6 +121,15 @@ On error: If apply fails for a finding, count as failed, continue with next.
 ### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
 Per CCO Rules: Needs-Approval Flow.
+
+### Phase 4.6: Loop [CONDITIONAL, --loop flag only]
+
+If `--loop` and applied > 0 in this iteration:
+1. Re-run Phase 2 (Analyze) scoped to files modified in previous iteration
+2. Re-run Phase 4 (Apply) for new findings
+3. Repeat until: applied = 0 (clean), or iteration count reaches 3
+
+Each iteration narrows scope to only changed files. Summary shows per-iteration breakdown.
 
 ### Phase 5: Summary
 

@@ -73,7 +73,6 @@ Research agent. Multi-source with CRAAP+ reliability scoring.
 | `/cco-align` | architecture, patterns, etc. | Yes | dependency |
 | `/cco-commit` | (quality gates only) | No | No |
 | `/cco-research` | - | No | full |
-| `/cco-preflight` | (orchestrates optimize + align) | (orchestrates) | dependency |
 | `/cco-docs` | docs scope | Yes | No |
 | `/cco-blueprint` | all scopes (optimize + review + audit) | Yes | No |
 | `/cco-pr` | - | No | No |
