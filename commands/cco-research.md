@@ -76,6 +76,8 @@ Launch all search agents in single message via parallel Task calls to cco-agent-
 
 ### Phase 4: Synthesize
 
+Validate agent outputs from Phase 3: check for `error` field, verify `sources` array exists. If any agent returned malformed output → retry once. If retry also fails, exclude that track from synthesis.
+
 - T1-T2 sources → cco-agent-research for conflict resolution
 - T3+ sources → aggregate locally
 

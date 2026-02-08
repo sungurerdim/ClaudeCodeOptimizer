@@ -63,7 +63,7 @@ Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review):
 
 Merge findings and metrics. Filter by user-selected scopes.
 
-On error: If an agent call fails, log error, continue with remaining groups.
+On error: Validate agent output (check for `error` field, verify `findings` array exists). If output is missing or malformed → retry once. If retry also fails, log error, continue with remaining groups.
 
 ### Phase 3: Gap Analysis [CURRENT vs IDEAL]
 

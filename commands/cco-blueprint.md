@@ -86,6 +86,10 @@ Toolchain: {tools} | {CI} | {container}
 
 Discovery → [Init Flow] → Assess [PARALLEL] → Consolidate → Plan → [Apply] → Update Profile → Summary
 
+### Phase 0: Prerequisites
+
+Verify `git` is available (`git --version`). If missing → warn: "Git not found. Some features (git status, commit history) will be limited." Continue with reduced functionality.
+
 ### Phase 1: Discovery [PARALLEL]
 
 1. Search CLAUDE.md for `<!-- cco-blueprint-start -->`

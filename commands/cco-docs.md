@@ -90,7 +90,7 @@ In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
 Delegate to cco-agent-analyze (scope: docs): scan existing docs, detect project type, detect documentation needs.
 
-On error: If analysis fails, proceed with gap analysis using file existence checks only.
+On error: Validate agent output (check for `error` field, verify expected structure). If output is missing or malformed → retry once. If analysis still fails, proceed with gap analysis using file existence checks only.
 
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
 

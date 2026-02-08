@@ -74,7 +74,7 @@ Merge all findings. Filter by user-selected scopes. Categorize: autoFixable vs a
 
 Analysis always scans all severities. Filtering happens post-analysis via Plan Review.
 
-On error: If an agent call fails, log error, continue with remaining groups. Failed group scores as "N/A".
+On error: Validate agent output (check for `error` field, verify `findings` array exists). If output is missing or malformed → retry once. If agent call fails or retry also fails, log error, continue with remaining groups. Failed group scores as "N/A".
 
 ### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 

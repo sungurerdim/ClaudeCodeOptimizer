@@ -34,6 +34,10 @@ At start, detect project context:
 
 Setup → Pre-checks → (Verify ‖ Optimize ‖ Align) → Changelog → [Plan] → Execute
 
+### Phase 0: Prerequisites
+
+Verify `git` is available (`git --version`). If missing → stop: "Install Git: https://git-scm.com"
+
 ### Phase 1: Setup [SKIP if --auto]
 
 ```javascript
@@ -81,6 +85,8 @@ Run concurrently:
 - Skill calls: `Skill("cco-optimize", "--auto")` and `Skill("cco-align", "--auto")`
 
 Collect all background results via TaskOutput before any output.
+
+On error: Validate sub-command outputs. If a Skill call returns empty or malformed results → retry once. If retry fails, log error and exclude from results. Verification Bash failures count as blockers.
 
 ### Phase 4: Changelog
 

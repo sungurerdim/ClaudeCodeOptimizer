@@ -34,11 +34,13 @@ Always return valid JSON:
 }
 ```
 
-On error: return empty findings/scores/metrics, `"error": "message"`.
+On error: return `{"findings": [], "scores": {}, "metrics": {}, "error": "message"}`.
 
 Finding ID format: `SCOPE-NN` (e.g., SEC-01). Severity: CRITICAL/HIGH/MEDIUM/LOW. Confidence: 0-100.
 
 Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
+
+**Output delivery:** Return the JSON as the final text message to the calling command. Do NOT write output to a file. Do NOT use `run_in_background`. The calling command reads the Task tool's return value directly.
 
 ## Execution
 
