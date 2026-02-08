@@ -19,7 +19,7 @@ model: opus
 | `--preview` | Analyze + dashboard, no changes |
 | `--init` | Profile creation/refresh only (no analysis) |
 | `--refresh` | Re-scan profile (run history and decisions preserved) |
-| `--scope=X` | Specific area: stack, deps, dx, structure, code, architecture, docs, all |
+| `--scope=X` | Specific area: stack, deps, dx, structure, code, architecture, docs, memory, all |
 
 ## Context
 
@@ -377,6 +377,33 @@ Update CLAUDE.md blueprint section:
 - Decisions → append new SKIP decisions
 
 On error: If CLAUDE.md update fails, display updated profile in output.
+
+### Phase 7.5: Memory Cleanup [SKIP if --preview]
+
+Clean up Claude Code auto-memory files using the full project context from Discovery + Assess.
+
+**Target directory:** `~/.claude/projects/<project>/memory/` (derived from git root)
+
+**Steps:**
+1. Read `MEMORY.md` and all topic files in the memory directory
+2. Cross-reference entries against current project state:
+
+| Check | Stale Signal | Action |
+|-------|-------------|--------|
+| File references | Referenced file/dir no longer exists (checked via Glob) | Remove entry |
+| Build/test commands | Command no longer in package.json/Makefile/scripts (from Discovery) | Update or remove |
+| Pattern notes | Contradicts current architecture (from Project Map) | Update to match current state |
+| Debugging notes | References issues that are now fixed (from Assess findings) | Remove |
+| Dependency info | Version/package changed or removed (from Discovery) | Update |
+| Duplicate entries | Same info in MEMORY.md and topic file, or repeated across topics | Consolidate |
+
+3. Ensure MEMORY.md stays within 200-line budget (Claude Code only loads first 200 lines at startup). Move detailed content to topic files if needed.
+4. Remove orphan topic files not referenced from MEMORY.md
+5. Report cleanup results in summary
+
+**In --auto mode:** Apply all cleanup silently. In interactive mode: show planned changes, ask confirmation if >5 entries would be removed.
+
+On error: If memory directory doesn't exist or is empty, skip silently (auto-memory may not be enabled).
 
 ### Phase 8: Summary
 
