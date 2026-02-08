@@ -39,14 +39,22 @@ model: opus
 
 Setup → Analyze → Gap Analysis → Recommendations → [Plan] → Apply → Summary
 
-### Phase 1: Setup [SKIP IF --auto]
+### Phase 1: Setup [SKIP if --auto]
 
-**Q1 (multiselect):** "Which areas to review?"
-- Structure (Recommended): architecture + patterns
-- Quality (Recommended): testing + maintainability
-- Completeness & Data: functional-completeness + ai-architecture
+```javascript
+AskUserQuestion([{
+  question: "Which areas should be reviewed?",
+  header: "Scopes",
+  options: [
+    { label: "Structure (Recommended)", description: "architecture + patterns" },
+    { label: "Quality (Recommended)", description: "testing + maintainability" },
+    { label: "Completeness & Data", description: "functional-completeness + ai-architecture" }
+  ],
+  multiSelect: true
+}])
+```
 
-### Phase 2: Analyze [PARALLEL SCOPES]
+### Phase 2: Analyze [PARALLEL: 3 calls]
 
 Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review):
 - Structure: architecture, patterns
@@ -54,6 +62,8 @@ Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review):
 - Completeness: functional-completeness, ai-architecture
 
 Merge findings and metrics. Filter by user-selected scopes.
+
+On error: Validate agent output (check for `error` field, verify `findings` array exists). If output is missing or malformed → retry once. If retry also fails, log error, continue with remaining groups.
 
 ### Phase 3: Gap Analysis [CURRENT vs IDEAL]
 
@@ -65,6 +75,9 @@ Define ideal metrics by project type:
 | Library | <30% | >80% | <8 | 85%+ |
 | API | <50% | >70% | <12 | 80%+ |
 | Web | <60% | >65% | <15 | 70%+ |
+| Monorepo | <35% | >70% | <12 | 75%+ |
+| Mobile | <55% | >65% | <12 | 65%+ |
+| Infra/IaC | <45% | >70% | <10 | 60%+ |
 
 Calculate gaps: current vs ideal for coupling, cohesion, complexity, coverage. Display Current vs Ideal table.
 
@@ -74,19 +87,46 @@ Technology assessment: if agent found alternatives, show current vs ideal techno
 
 Categorize by effort/impact: Quick Win (high impact, low effort) → Moderate → Complex → Major.
 
-### Phase 5: Plan Review [when findings > 0, SKIP if --auto]
+### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
 Display architectural plan before asking.
 
-**Post-analysis Q2:**
-- Action: Fix All (Recommended) / By Severity / Review Each / Report Only
-- Severity filter (multiselect): CRITICAL / HIGH / MEDIUM / LOW
+```javascript
+AskUserQuestion([
+  {
+    question: "What action should be taken?",
+    header: "Action",
+    options: [
+      { label: "Fix All (Recommended)", description: "Apply all recommended changes" },
+      { label: "By Severity", description: "Choose which severity levels to fix" },
+      { label: "Review Each", description: "Approve each finding individually" },
+      { label: "Report Only", description: "Don't change anything" }
+    ],
+    multiSelect: false
+  }
+])
+
+// Conditional: only when Action = "By Severity"
+AskUserQuestion([{
+  question: "Which severity levels should be fixed?",
+  header: "Severity",
+  options: [
+    { label: "CRITICAL", description: "Security, data loss, crash" },
+    { label: "HIGH", description: "Broken functionality" },
+    { label: "MEDIUM", description: "Suboptimal but works" },
+    { label: "LOW", description: "Style only" }
+  ],
+  multiSelect: true
+}])
+```
 
 ### Phase 6: Apply
 
 Send recommendations to cco-agent-apply. Verify changes don't break functionality.
 
 Count findings, not locations.
+
+On error: If apply fails for a finding, count as failed, continue with next.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 

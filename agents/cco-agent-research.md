@@ -39,6 +39,8 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
 Run all search strategies in one message, then fetch all top URLs in one message. Stop when themes repeat 3x. Penalize promotional content.
 
+**Output delivery:** Return the output contract fields as the final text message to the calling command. Do NOT write output to a file. Do NOT use `run_in_background`. If research fails, return `{"sources": [], "synthesis": "", "confidence": "LOW", "error": "message"}`. The calling command reads the Task tool's return value directly.
+
 ## Scope Parameter
 
 | Scope | Returns | Depth |

@@ -36,14 +36,14 @@ jobs:
 
       - name: Validate commands
         run: |
-          expected="cco-optimize cco-align cco-commit cco-research cco-preflight cco-docs cco-update"
+          expected="cco-optimize cco-align cco-commit cco-research cco-preflight cco-docs cco-update cco-blueprint cco-pr"
           for cmd in $expected; do
             if [ ! -f "commands/${cmd}.md" ]; then
               echo "Error: commands/${cmd}.md not found"
               exit 1
             fi
           done
-          echo "All 7 command files exist"
+          echo "All 9 command files exist"
 
       - name: Validate agents
         run: |

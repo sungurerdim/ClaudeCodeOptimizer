@@ -97,6 +97,30 @@ If finding count exceeds 2x initial estimate, stop and ask the user before conti
 
 ## CCO Operations
 
+### Tool Prerequisites
+
+Before execution, verify required external tools exist. Check via `which`/`where` or `command -v`.
+
+| Tool | Commands That Require It | Criticality |
+|------|--------------------------|-------------|
+| `git` | All commands | CRITICAL for commit/pr/preflight, non-critical for others |
+| `gh` | cco-pr | CRITICAL — stop if missing, link to https://cli.github.com |
+
+**Behavior:**
+- CRITICAL missing → stop immediately, display install instructions
+- Non-critical missing → warn once, continue with reduced functionality, remind in summary
+
+### Agent Output Delivery
+
+Agents (cco-agent-analyze, cco-agent-apply, cco-agent-research) return structured data to calling commands via the Task tool's return message.
+
+**Rules:**
+- Agent MUST return its output contract (JSON or structured text) as the **final text message** — not written to a file
+- Agent MUST NOT use `run_in_background: true` for Task calls to other agents (output may be lost)
+- If agent fails, return `{"error": "{message}"}` — never return empty
+- Calling command MUST validate agent output before processing (check for `error` field, verify expected structure)
+- If agent output is missing or malformed → retry once, then report as failed dimension
+
 ### Version Awareness
 
 If `last_update_check` is >24 hours old, run `/cco-update --check` at the start of any CCO command (skip silently in --auto mode).

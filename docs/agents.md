@@ -36,8 +36,9 @@ Need changes?
 
 Read-only analysis agent. Returns structured JSON with findings, scores, and metrics.
 
-- **15 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
+- **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
 - **6 review scopes** (77 checks): architecture, patterns, testing, maintainability, ai-architecture, functional-completeness
+- **4 audit scopes** (40 checks): stack-assessment, dependency-health, dx-quality, project-structure
 - Platform filtering, skip patterns, false positive handling
 - Confidence threshold ≥80
 
@@ -74,6 +75,8 @@ Research agent. Multi-source with CRAAP+ reliability scoring.
 | `/cco-research` | - | No | full |
 | `/cco-preflight` | (orchestrates optimize + align) | (orchestrates) | dependency |
 | `/cco-docs` | docs scope | Yes | No |
+| `/cco-blueprint` | all scopes (optimize + review + audit) | Yes | No |
+| `/cco-pr` | - | No | No |
 | `/cco-update` | - | No | No |
 
 ---

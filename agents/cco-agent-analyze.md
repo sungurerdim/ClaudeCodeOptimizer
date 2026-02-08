@@ -34,11 +34,13 @@ Always return valid JSON:
 }
 ```
 
-On error: return empty findings/scores/metrics, `"error": "message"`.
+On error: return `{"findings": [], "scores": {}, "metrics": {}, "error": "message"}`.
 
 Finding ID format: `SCOPE-NN` (e.g., SEC-01). Severity: CRITICAL/HIGH/MEDIUM/LOW. Confidence: 0-100.
 
 Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
+
+**Output delivery:** Return the JSON as the final text message to the calling command. Do NOT write output to a file. Do NOT use `run_in_background`. The calling command reads the Task tool's return value directly.
 
 ## Execution
 
@@ -75,6 +77,15 @@ Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# inte
 | maintainability | MNT-01 to MNT-12 | Complexity hotspots, cognitive complexity, long methods/params, deep nesting, magic in logic, hardcoded config |
 | ai-architecture | AIA-01 to AIA-10 | Over-engineering (interface with 1 impl), local solutions, architectural drift, pattern inconsistency |
 | functional-completeness | FUN-01 to FUN-18 | Missing CRUD/pagination/filter, incomplete error handling, state transition gaps, caching/indexing strategy |
+
+### Audit Scopes (project-level assessment)
+
+| Scope | ID Range | Focus |
+|-------|----------|-------|
+| stack-assessment | STK-01 to STK-10 | Framework fitness, runtime currency, build tool match, redundant deps, dep weight, SDK alignment |
+| dependency-health | DEP-01 to DEP-10 | Abandoned packages, license conflicts, pinning strategy, dev/prod boundary, duplicate versions |
+| dx-quality | DXQ-01 to DXQ-10 | Setup friction, env docs, script discoverability, CI/local parity, error message quality, IDE support |
+| project-structure | PST-01 to PST-10 | Directory conventions, naming consistency, feature isolation, config sprawl, gitignore completeness |
 
 ## Judgment Rules
 
