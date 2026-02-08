@@ -1,6 +1,6 @@
 ---
 description: Check for updates and upgrade CCO to the latest version
-argument-hint: "[--auto] [--check] [--dev] [--stable]"
+argument-hint: "[--auto] [--check]"
 allowed-tools: WebFetch, Read, Write, Edit, Bash, AskUserQuestion
 model: opus
 ---
@@ -15,8 +15,6 @@ model: opus
 |------|--------|
 | `--auto` | Silent update, no questions, upgrade if available |
 | `--check` | Version check only, no changes |
-| `--dev` | Use dev channel (latest dev branch commit) |
-| `--stable` | Use stable channel (latest release tag, default) |
 
 Without flags: check for update, ask before upgrading.
 
@@ -48,32 +46,24 @@ agents/cco-agent-research.md
 
 Channel Resolve → Version Check → Compare → [Upgrade] → Verify → Summary
 
-### Phase 0: Channel Resolve
+### Phase 0: Resolve Latest Version
 
-Determine channel from args:
-- `--dev` → channel = dev
-- `--stable` or no flag → channel = stable
+Fetch latest release tag from GitHub API (`/repos/{repo}/tags?per_page=1`).
 
-| Channel | Git ref | Source URL base |
-|---------|---------|-----------------|
-| stable | Latest tag from GitHub API (`/repos/{repo}/tags?per_page=1`) | `https://raw.githubusercontent.com/{repo}/v{VERSION}/{path}` |
-| dev | `dev` branch | `https://raw.githubusercontent.com/{repo}/dev/{path}` |
+Source URL base: `https://raw.githubusercontent.com/{repo}/v{VERSION}/{path}`
 
 ### Phase 1: Version Check
 
 1. Read current `cco_version` from context (cco-rules.md frontmatter)
-2. Resolve remote version:
-   - **stable:** WebFetch GitHub tags API → extract latest tag (strip `v` prefix)
-   - **dev:** WebFetch `rules/cco-rules.md` from dev branch → extract `cco_version` from frontmatter
+2. Resolve remote version: WebFetch GitHub tags API → extract latest tag (strip `v` prefix)
 
 ### Phase 2: Compare
 
 Compare current vs remote using semver:
 - Same version → "CCO is up to date (vX.Y.Z)"
 - New version → proceed to upgrade flow
-- **dev channel:** Also compare even if versions match (dev may have newer commits at same version)
 
-Display: `Current: vX.Y.Z → Latest: vA.B.C (channel)`
+Display: `Current: vX.Y.Z → Latest: vA.B.C`
 
 **--check mode:** Display version info and exit. Update `last_update_check` timestamp in cco-rules.md frontmatter.
 
@@ -83,9 +73,7 @@ Before downloading, verify the resolved ref has the expected file structure:
 
 1. WebFetch `{BASE_URL}/rules/cco-rules.md`
 2. Confirm response starts with `---` (YAML frontmatter)
-3. On failure:
-   - **stable:** "Release tag predates install-script model. Use --dev."
-   - **dev:** "Could not fetch files from dev branch."
+3. On failure: "Release tag predates install-script model. Check repository for updates."
 
 ### Phase 4: Upgrade [SKIP if --check]
 
@@ -139,7 +127,7 @@ Read cco-rules.md frontmatter → confirm `cco_version` matches remote version.
 | Mode | Output |
 |------|--------|
 | `--check` | `CCO: v{current} (up to date)` or `CCO: v{current} → v{latest} available. Run /cco-update to upgrade.` |
-| `--auto` | `cco-update: {OK\|FAIL} \| v{current} → v{latest} ({channel})` |
-| Interactive | Version info, channel, files updated count, legacy cleaned count, restart reminder |
+| `--auto` | `cco-update: {OK\|FAIL} \| v{current} → v{latest}` |
+| Interactive | Version info, files updated count, legacy cleaned count, restart reminder |
 
 **Restart reminder:** "Restart Claude Code session to load updated rules."

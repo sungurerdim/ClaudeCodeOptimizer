@@ -67,7 +67,9 @@ On error: Validate agent output (check for `error` field, verify `findings` arra
 
 ### Phase 3: Gap Analysis [CURRENT vs IDEAL]
 
-Define ideal metrics by project type:
+**If blueprint profile exists** in CLAUDE.md (between `<!-- cco-blueprint-start/end -->`): use its Ideal Metrics section as targets. Blueprint metrics are calibrated to project type + quality level + data sensitivity.
+
+**Fallback** (no blueprint profile): define ideal metrics by project type:
 
 | Type | Coupling | Cohesion | Complexity | Coverage |
 |------|----------|----------|------------|----------|

@@ -1,25 +1,13 @@
 #!/usr/bin/env bash
 # CCO — Claude Code Optimizer Installer (Unix/Mac)
 #
-# Stable (latest release):
+# Usage:
 #   curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
-#
-# Dev (latest dev branch):
-#   curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/dev/install.sh | bash -s -- --dev
 
 set -euo pipefail
 
 REPO="sungurerdim/ClaudeCodeOptimizer"
 CLAUDE_DIR="${HOME}/.claude"
-CHANNEL="${CCO_CHANNEL:-stable}"
-
-# Parse args
-for arg in "$@"; do
-  case "$arg" in
-    --dev)    CHANNEL="dev" ;;
-    --stable) CHANNEL="stable" ;;
-  esac
-done
 
 # Files to install
 RULES_FILES=(
@@ -74,23 +62,17 @@ err()   { printf "\033[0;31m%s\033[0m\n" "$1" >&2; }
 info "CCO Installer"
 info "============="
 
-# Resolve channel to a git ref
-if [ "$CHANNEL" = "dev" ]; then
-  REF="dev"
-  info "Channel: dev (latest commit)"
-else
-  # Fetch latest tag from GitHub API
-  LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/tags?per_page=1" 2>/dev/null \
-    | grep -m1 '"name"' \
-    | sed 's/.*"name": *"\([^"]*\)".*/\1/' 2>/dev/null) || true
+# Resolve latest release tag
+LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/tags?per_page=1" 2>/dev/null \
+  | grep -m1 '"name"' \
+  | sed 's/.*"name": *"\([^"]*\)".*/\1/' 2>/dev/null) || true
 
-  if [ -n "${LATEST_TAG:-}" ]; then
-    REF="$LATEST_TAG"
-    info "Channel: stable ($LATEST_TAG)"
-  else
-    REF="main"
-    info "Channel: stable (main — no tags found)"
-  fi
+if [ -n "${LATEST_TAG:-}" ]; then
+  REF="$LATEST_TAG"
+  info "Channel: stable ($LATEST_TAG)"
+else
+  REF="main"
+  info "Channel: stable (main — no tags found)"
 fi
 
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${REF}"
@@ -102,16 +84,8 @@ TEST_CONTENT=$(curl -fsSL "${BASE_URL}/rules/cco-rules.md" 2>/dev/null) || true
 if [ -z "${TEST_CONTENT:-}" ] || ! printf '%s' "$TEST_CONTENT" | head -1 | grep -q "^---"; then
   err "  Source verification failed: ${REF} does not contain CCO files."
   err ""
-  if [ "$CHANNEL" = "stable" ]; then
-    err "  The latest release tag (${REF}) predates the install-script distribution model."
-    err "  Use the dev channel until a new release is published:"
-    err ""
-    err "    curl -fsSL https://raw.githubusercontent.com/${REPO}/dev/install.sh | bash -s -- --dev"
-    err ""
-  else
-    err "  Could not download files from the '${REF}' ref."
-    err "  Check the repository URL and try again."
-  fi
+  err "  The latest release tag (${REF}) may predate the install-script distribution model."
+  err "  Check the repository for updates: https://github.com/${REPO}"
   exit 1
 fi
 ok "  Source verified (${REF})"
