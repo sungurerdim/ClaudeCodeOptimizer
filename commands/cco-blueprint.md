@@ -1,7 +1,7 @@
 ---
 description: Project health system - profile-based assessment, transformation, and progress tracking via CLAUDE.md
 argument-hint: "[--auto] [--preview] [--init] [--refresh] [--scope=<name>]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, Skill, AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 
@@ -230,7 +230,7 @@ Quality target adjustment: prototype 30% relaxed, mvp 15% relaxed, production st
 
 Sensitive data handling: security weight 25%→35%, privacy scope escalates to CRITICAL.
 
-Write profile to CLAUDE.md. If `--init`, stop here. If first-time profile creation (not --init, not --refresh), ask user whether to continue with assessment:
+Write profile to CLAUDE.md before asking any questions. If `--init`, stop here. If first-time profile creation (not --init, not --refresh), ask user whether to continue with assessment (profile is already saved at this point — user can safely stop and resume later):
 
 ```javascript
 AskUserQuestion([{
@@ -254,10 +254,10 @@ Always run all tracks regardless of current scores.
 
 | Track | Tool |
 |-------|------|
-| A: Code Quality | `Skill("cco-optimize", "--auto --preview")` |
-| B: Architecture | `Skill("cco-align", "--auto --preview")` |
-| C: Documentation | `Skill("cco-docs", "--auto --preview")` |
-| D: Audit | `Task(cco-agent-analyze, {scopes: audit scopes, mode: "audit"})` |
+| A: Code Quality | `Task(cco-agent-analyze, {scopes: ["security", "hygiene", "types", "simplify", "performance", "robustness", "privacy"], mode: "auto"})` |
+| B: Architecture | `Task(cco-agent-analyze, {scopes: ["architecture", "patterns", "testing", "maintainability"], mode: "auto"})` |
+| C: Documentation | `Task(cco-agent-analyze, {scopes: ["doc-sync"], mode: "auto"})` |
+| D: Audit | `Task(cco-agent-analyze, {scopes: ["stack-assessment", "dependency-health", "dx-quality", "project-structure"], mode: "audit"})` |
 
 All tracks run with `--preview`: analyze only, no changes applied.
 
@@ -365,15 +365,16 @@ AskUserQuestion([{
 
 ### Phase 6: Apply [SKIP if --preview]
 
-Apply in order:
-1. CRITICAL/security: `Skill("cco-optimize", "--auto --scope=security,privacy,robustness")`
-2. Code quality: `Skill("cco-optimize", "--auto --scope=hygiene,types,simplify,performance")`
-3. Architecture: `Skill("cco-align", "--auto")`
-4. Documentation: `Skill("cco-docs", "--auto")`
+Apply findings via cco-agent-apply in priority order:
 
-Profile constraints are passed as context to each Skill call.
+1. CRITICAL/security findings first (security, privacy, robustness scopes)
+2. Code quality findings (hygiene, types, simplify, performance scopes)
+3. Architecture findings (architecture, patterns, maintainability scopes)
+4. Documentation findings (doc-sync scope)
 
-On error: If a Skill call fails, log error with details, continue with next. Count as failed in accounting.
+Send each group as a `Task(cco-agent-apply, {findings: [...], fixAll: true})` call. Profile constraints are passed as context.
+
+On error: If an apply call fails, log error with details, continue with next group. Count as failed in accounting.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
@@ -416,6 +417,8 @@ Clean up Claude Code auto-memory files using the full project context from Disco
 5. Report cleanup results in summary
 
 **In --auto mode:** Apply all cleanup silently. In interactive mode: show planned changes, ask confirmation if >5 entries would be removed.
+
+**Atomicity:** Collect all planned deletions/edits first. Read and validate each target exists before modifying. If any read fails, skip that entry (don't abort entire cleanup). Each file edit is independent — partial cleanup is acceptable.
 
 On error: If memory directory doesn't exist or is empty, skip silently (auto-memory may not be enabled).
 

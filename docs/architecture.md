@@ -87,7 +87,42 @@ CCO rules follow a "behavioral, not procedural" design. Rules define WHAT behavi
 | apply | Write operations with verification | Opus | Validate input → Read → Apply → Verify → Cascade |
 | research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
 
+### Agent Contracts
+
+**Input:** All agents receive parameters via the Task tool's prompt. Each agent documents its expected fields in its `## Input` section.
+
+| Agent | Input | Modes | Output |
+|-------|-------|-------|--------|
+| analyze | `{scopes: string[], mode: "review"\|"auto"\|"audit"}` | review (strategic), auto (tactical), audit (project-level) | `{findings[], scores{}, metrics{}, error?}` |
+| apply | `{findings[], fixAll?: boolean}` | — | `{applied, failed, needs_approval, total, error?}` |
+| research | `{query, depth: "standard"\|"deep"}` | — | `{sources[], synthesis, reliability_score, error?}` |
+
+**Error contract:** On failure, all agents return `{"error": "message"}` with empty arrays for data fields. Calling commands retry once on malformed output, then report as failed.
+
+### File Manifest Sync
+
+The file lists in `install.sh`, `install.ps1`, and `commands/cco-update.md` must stay synchronized. When adding or removing a command/agent file, update all three locations.
+
 ---
+
+## Command Structure
+
+### Standard Section Order
+
+All commands follow this section order: Frontmatter → Description → Args/Flags → Context → Scopes (if applicable) → Execution Flow → Summary format.
+
+- Use `## Args` for commands with positional/named arguments
+- Use `## Flags` for commands with only boolean/option flags
+
+### Shared Patterns
+
+Plan Review, Needs-Approval Review, and Accounting are inlined in each command (self-containment principle). This duplication is intentional — each command carries its own operational context without cross-references. When updating these patterns, check all commands that use them:
+
+| Pattern | Used By |
+|---------|---------|
+| Plan Review | cco-optimize, cco-align, cco-blueprint, cco-docs |
+| Needs-Approval | cco-optimize, cco-align, cco-blueprint |
+| Accounting | cco-optimize, cco-align, cco-blueprint, cco-commit |
 
 ## Command Flow
 
@@ -106,7 +141,7 @@ User: /cco-optimize → Setup → Analyze (parallel) → Plan Review → Apply �
 ```json
 {
   "id": "SEC-01", "scope": "security", "severity": "CRITICAL",
-  "title": "Hardcoded API key", "location": "src/config.py:42",
+  "title": "Hardcoded API key", "location": { "file": "src/config.py", "line": 42 },
   "fixable": true, "fix": "Move to environment variable"
 }
 ```

@@ -14,7 +14,7 @@ Comprehensive codebase analysis with severity scoring. Returns structured JSON.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `scopes` | `string[]` | Yes | Scope IDs to analyze |
-| `mode` | `string` | Yes | `"review"` or `"auto"` |
+| `mode` | `string` | Yes | `"review"`, `"auto"`, or `"audit"` |
 
 ## Output Schema
 
