@@ -5,13 +5,15 @@ last_update_check: 1970-01-01T00:00:00Z
 
 # CCO Rules
 
-## Focus and Discipline
+## Scope Control
 
-### Decision Commitment
+### Minimal Footprint
 
-Pick one approach and follow through. When multiple solutions seem viable, choose the simplest one that meets the requirements. Only reassess if it fails.
+Every changed line must trace directly to the user's request. Unrelated issues: mention, don't fix. Create new files only when the user explicitly requests them.
 
-### Exploration Restraint
+> Why: Opus overengineers when given latitude. Explicit scope prevents feature creep and unnecessary abstractions.
+
+### Exploration Budget
 
 Read only what you need before acting:
 
@@ -21,15 +23,15 @@ Read only what you need before acting:
 | Feature (3-5 files) | 5-10 files |
 | Architecture scan | Structure first, then deepen |
 
-### Change Scope
+> Why: Excessive file reads consume context window and degrade output quality in long sessions.
 
-Every changed line should trace directly to the user's request. Unrelated issues: mention, don't fix.
+### Decide and Execute
 
-### File Discipline
+Pick one approach and follow through. Only reassess if it fails. Do not explore alternatives before the first attempt fails.
 
-Create new files only when the user explicitly requests them. Skip: `.git`, `node_modules`, `vendor`, `venv`, `dist`, `build`, `__pycache__`
+> Why: Extended thinking amplifies analysis paralysis. Commit to the simplest viable approach.
 
-## Code Quality
+## Code Integrity
 
 ### Complexity Limits
 
@@ -43,20 +45,63 @@ Refactor before proceeding when code exceeds these limits:
 | Nesting Depth | ≤ 3 |
 | Parameters | ≤ 4 |
 
-### Code Volume
+> Why: Hard limits prevent complexity from accumulating silently across edits.
 
-Avoid single-use abstractions, impossible error handling, and unnecessary bulk. If 100+ lines could be 50, prefer the shorter version.
+### Anti-Overengineering
 
-### Anti-Overengineering Guard
+Before adding any abstraction, all three must be YES:
 
-Before flagging any finding, all three must be YES:
-1. Does this actually break something or pose a risk?
-2. Does this cause real problems for developers/users?
-3. Is fixing it worth the effort and side effects?
+1. Does this solve a concrete, current problem?
+2. Will this be used in more than one place?
+3. Is inline code insufficient?
 
-All NO = not a finding.
+All NO = don't abstract. Avoid single-use wrappers, impossible error handling, and unnecessary bulk.
 
-## Security
+> Why: Opus defaults to premature abstraction. The 3-question test forces justification before adding complexity.
+
+## Verification
+
+### Read Before Write
+
+Before modifying any file: read it first. Before using any import or API: verify it exists in the codebase or documentation. Never assume file contents, function signatures, or API shapes from memory.
+
+> Why: Hallucination rate drops from ~40% to ~10% when actual file contents are verified before editing.
+
+### Edit Discipline
+
+Preserve the existing file's indentation style (tabs vs spaces, width). Match surrounding code style for naming, formatting, and patterns. On Windows paths, use the path format the project already uses.
+
+> Why: Indentation mismatches and style inconsistencies are the most common file editing failures.
+
+## Uncertainty Protocol
+
+### Surface Uncertainty
+
+When uncertain, state it explicitly ("~90% sure", "uncertain about X"). Ask before proceeding on ambiguous tasks. Never guess at requirements.
+
+> Why: Confident-sounding wrong answers cause more damage than acknowledged uncertainty.
+
+### Scope Creep Guard
+
+If finding count exceeds 2x initial estimate, stop and ask the user before continuing.
+
+> Why: Unchecked scope expansion leads to inconsistent changes and context exhaustion.
+
+## Session Resilience
+
+### Anchor to Artifacts
+
+Files and git state are the source of truth — not conversation memory. When returning to a topic after other work, re-read the relevant files before making changes. Never rely on earlier conversation context for file contents.
+
+> Why: Context compaction loses details. Re-reading files costs less than fixing hallucinated edits.
+
+### Error Recovery
+
+On tool error: diagnose why, then use a different approach on the second attempt. Never retry the exact same failing command.
+
+> Why: Identical retries waste turns. Strategy change on second attempt resolves most failures.
+
+## Security Baseline
 
 ### Security Patterns
 
@@ -70,17 +115,17 @@ Address these patterns before continuing:
 | Unsanitized external data | Add validation |
 | eval/pickle/yaml.load | Use safe alternatives |
 
-## Workflow
+> Why: These patterns represent the highest-risk, lowest-effort security fixes across all project types.
 
-### Uncertainty
+## Development Standards
 
-When uncertain, surface it. State confidence level ("~90% sure", "uncertain about X") and ask before proceeding on ambiguous tasks.
+### Respect Intent Markers
 
-### Error Recovery
+Never flag intentionally marked code: `# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks, platform guards, test fixtures.
 
-On tool error: diagnose why, then use a different approach on the second attempt.
+> Why: Flagging deliberate patterns produces false positives and erodes trust in analysis results.
 
-### Severity Levels
+### Issue Prioritization
 
 | Level | Criteria |
 |-------|----------|
@@ -91,117 +136,4 @@ On tool error: diagnose why, then use a different approach on the second attempt
 
 When uncertain, choose lower severity.
 
-### Scope Creep Detection
-
-If finding count exceeds 2x initial estimate, stop and ask the user before continuing.
-
-## CCO Operations
-
-### Tool Prerequisites
-
-Before execution, verify required external tools exist. Check via `which`/`where` or `command -v`.
-
-| Tool | Commands That Require It | Criticality |
-|------|--------------------------|-------------|
-| `git` | All commands | CRITICAL for commit/pr, non-critical for others |
-| `gh` | cco-pr | CRITICAL — stop if missing, link to https://cli.github.com |
-
-**Behavior:**
-- CRITICAL missing → stop immediately, display install instructions
-- Non-critical missing → warn once, continue with reduced functionality, remind in summary
-
-### Agent Output Delivery
-
-Agents (cco-agent-analyze, cco-agent-apply, cco-agent-research) return structured data to calling commands via the Task tool's return message.
-
-**Rules:**
-- Agent MUST return its output contract (JSON or structured text) as the **final text message** — not written to a file
-- Agent MUST NOT use `run_in_background: true` for Task calls to other agents (output may be lost)
-- If agent fails, return `{"error": "{message}"}` — never return empty
-- Calling command MUST validate agent output before processing (check for `error` field, verify expected structure)
-- If agent output is missing or malformed → retry once, then report as failed dimension
-
-### Version Architecture
-
-**SSOT:** `version.txt` — single source of truth for CCO version. Never manually edit version files.
-
-| File | Managed By | Purpose |
-|------|------------|---------|
-| `version.txt` | release-please | Primary version number |
-| `.release-please-manifest.json` | release-please | Internal manifest state |
-| `rules/cco-rules.md` frontmatter | release-please | Runtime version (`x-release-please-version` annotation) |
-| `CHANGELOG.md` | release-please | Generated version history |
-
-**Version flow:** `/cco-commit` → `/cco-pr` (conventional title) → squash merge → release-please reads commit → bumps version files
-
-**Bump rules:** `feat` → minor, `fix` → patch, `feat!`/`fix!` → major, all others → no bump
-
-### Version Awareness
-
-If `last_update_check` is >24 hours old, run `/cco-update --check` at the start of any CCO command (skip silently in --auto mode).
-
-### Agent Delegation
-
-| Need | Tool |
-|------|------|
-| Single fact | WebSearch/WebFetch |
-| 3+ sources | cco-agent-research |
-| Find file/pattern | Glob/Grep/Read |
-| Structured audit | cco-agent-analyze |
-| 1-2 file edits | Edit/Write |
-| 3+ file edits | cco-agent-apply |
-
-### Efficiency
-
-- Independent tool calls: parallel in single message
-- Long Bash: `run_in_background: true`, collect via TaskOutput before output
-- Multiple agents: parallel Task calls in single message
-
-### No Deferrals (Auto Mode)
-
-When `--auto` active:
-
-| Never Say | Do Instead |
-|-----------|------------|
-| "Too complex" | Fix it |
-| "Might break" | Fix it, user reviews |
-| "Consider later" | Do it now |
-
-### Accounting
-
-`applied + failed + needs_approval = total`
-
-No declined category. Fix, flag for approval (architectural), or fail with technical reason.
-
-### Skip Patterns
-
-Never flag intentionally marked code: `# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks, platform guards, test fixtures.
-
-### Execution Flow
-
-All analysis commands: Setup → Analyze → Gate → [Plan] → Apply → Summary. Skip questions in --auto. Display plan before asking user. Single-line summary in --auto.
-
-### Plan Review
-
-When findings > 0 and not --auto:
-1. Display full plan table with rationale before asking
-2. Action: Fix All / By Severity / Review Each / Report Only
-3. Severity filter (multiselect): CRITICAL / HIGH / MEDIUM / LOW
-
-### Needs-Approval Flow
-
-After apply, if needs_approval > 0 and not --auto:
-1. Display items table (ID, severity, issue, location, reason)
-2. Ask: Fix All / Review Each
-
-### Confidence Scoring
-
-All findings are presented to the user regardless of confidence score. Confidence is shown as metadata to help the user decide.
-
-| Score | Display | --auto Behavior |
-|-------|---------|-----------------|
-| ≥80 | High confidence | Auto-fix |
-| 60-79 | Medium confidence | Auto-fix |
-| <60 | Low confidence | Auto-fix (except architectural changes requiring structural redesign) |
-
-In interactive mode: user always decides. In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign).
+> Why: Consistent severity across all commands ensures predictable prioritization and filtering.

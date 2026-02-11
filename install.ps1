@@ -231,7 +231,11 @@ if ($Failed -eq 0) {
     }
     Write-Info ""
     Write-Info "Restart Claude Code to activate."
-    Write-Info "Run /cco-optimize to get started."
+    Write-Info ""
+    Write-Info "Get started:"
+    Write-Info "  /cco-blueprint  →  Project health profile & scores"
+    Write-Info "  /cco-optimize   →  Fix security, types, performance"
+    Write-Info "  /cco-align      →  Architecture gap analysis"
 } else {
     Write-Err "Installation completed with $Failed error(s)."
     Write-Err "Re-run the installer or download files manually."

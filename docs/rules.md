@@ -14,11 +14,15 @@ Claude Code automatically reads all `.md` files in `~/.claude/rules/` at session
 
 | Category | Rules |
 |----------|-------|
-| **Focus and Discipline** | Decision Commitment, Exploration Restraint, Change Scope, File Discipline |
-| **Code Quality** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4), Code Volume, Anti-Overengineering Guard |
-| **Security** | Security Patterns (secrets, bare except, empty catch, unsanitized data, eval) |
-| **Workflow** | Uncertainty, Error Recovery, Severity Levels, Scope Creep Detection |
-| **CCO Operations** | Version Awareness, Agent Delegation, Efficiency, No Deferrals, Accounting, Skip Patterns, Execution Flow, Plan Review, Confidence Scoring |
+| **Scope Control** | Minimal Footprint, Exploration Budget, Decide and Execute |
+| **Code Integrity** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4), Anti-Overengineering |
+| **Verification** | Read Before Write, Edit Discipline |
+| **Uncertainty Protocol** | Surface Uncertainty, Scope Creep Guard |
+| **Session Resilience** | Anchor to Artifacts, Error Recovery |
+| **Security Baseline** | Security Patterns (secrets, bare except, empty catch, unsanitized data, eval) |
+| **Development Standards** | Respect Intent Markers, Issue Prioritization |
+
+Each rule includes a `> Why:` rationale explaining which Opus 4.6 weakness it targets.
 
 ## Hard Limits
 

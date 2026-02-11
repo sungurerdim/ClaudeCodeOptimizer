@@ -32,7 +32,7 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
 | Step | Action | Execution |
 |------|--------|-----------|
-| 1. Search | Diverse strategies (docs, github, tutorial, SO) | **PARALLEL** |
+| 1. Search | Diverse strategies (docs, github, tutorial, SO). Use the current year in all search queries. Never default to historical years from training data. Outdated year searches return stale results. | **PARALLEL** |
 | 2. Fetch | All high-tier URLs | **PARALLEL** |
 | 3. Score | Tier assignment + CRAAP+ scoring | Instant |
 | 4. Output | Structured JSON | Instant |

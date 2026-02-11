@@ -37,7 +37,7 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
 3. If on main/master → stop: "Create a branch first. Cannot PR from main."
 4. If no commits ahead of base → stop: "No commits to create PR for."
 5. If unpushed commits → `git push -u origin {branch}` automatically
-6. If PR already exists → show existing PR URL and ask: Update / Skip
+6. If PR already exists → show existing PR URL and ask: Update (update title and body in place via `gh pr edit`) / Skip
 7. Check if branch is behind main:
    ```bash
    git fetch origin main

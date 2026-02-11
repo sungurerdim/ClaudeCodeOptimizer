@@ -232,7 +232,11 @@ if [ "${failed}" -eq 0 ]; then
   fi
   info ""
   info "Restart Claude Code to activate."
-  info "Run /cco-optimize to get started."
+  info ""
+  info "Get started:"
+  info "  /cco-blueprint  →  Project health profile & scores"
+  info "  /cco-optimize   →  Fix security, types, performance"
+  info "  /cco-align      →  Architecture gap analysis"
 else
   err "Installation completed with ${failed} error(s)."
   err "Re-run the installer or download files manually."

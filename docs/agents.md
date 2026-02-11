@@ -39,8 +39,9 @@ Read-only analysis agent. Returns structured JSON with findings, scores, and met
 - **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
 - **6 review scopes** (77 checks): architecture, patterns, testing, maintainability, ai-architecture, functional-completeness
 - **4 audit scopes** (40 checks): stack-assessment, dependency-health, dx-quality, project-structure
+- Conditional linter execution (detected from config files, skipped if no tooling)
 - Platform filtering, skip patterns, false positive handling
-- Confidence threshold ≥80
+- Confidence scoring with severity levels (self-contained in agent)
 
 ## cco-agent-apply
 

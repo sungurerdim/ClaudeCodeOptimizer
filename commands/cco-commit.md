@@ -90,7 +90,7 @@ Options are dynamic: up to 2 existing branches + up to 2 new branch candidates =
 |----------|--------|
 | Existing branch | `git checkout {branch}` — uncommitted changes carry over |
 | New branch | `git checkout -b {type}/{description}` — uncommitted changes carry over |
-| Multiple scopes, user picks one | `git stash` the rest, `git checkout -b {branch}`, commit selected files, `git stash pop` after commit |
+| Multiple scopes, user picks one | `git stash` the rest, `git checkout -b {branch}`, commit selected files, `git stash pop` after commit. If stash pop fails (conflict), warn: "Stash pop conflict — resolve manually with `git stash show` and `git stash drop` after resolving." |
 | Commit on main | Skip guard, proceed normally |
 
 After branch switch/creation: continue with Phase 2 (Analyze) on the branch. Subsequent `/cco-commit` calls see the feature branch → guard doesn't trigger → normal commit flow.

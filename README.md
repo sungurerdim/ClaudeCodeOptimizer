@@ -36,9 +36,10 @@ Restart Claude Code. Done.
 ## Quick Start
 
 ```
-/cco-optimize   # Fix issues
-/cco-align      # Architecture gaps
-/cco-commit     # Quality-gated commits
+/cco-blueprint  →  Project health profile & scores
+/cco-optimize   →  Fix security, types, performance
+/cco-align      →  Architecture gap analysis
+/cco-commit     →  Quality-gated commits
 ```
 
 ---

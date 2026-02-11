@@ -81,7 +81,7 @@ The status line appears after the first assistant message.
 
 ## Build from source
 
-Requires [Go 1.22+](https://go.dev/dl/).
+Requires [Go 1.23+](https://go.dev/dl/).
 
 ```bash
 cd extras/statusline

@@ -295,3 +295,224 @@ func TestBuildStatusline_WithGit(t *testing.T) {
 		t.Error("missing add count")
 	}
 }
+
+// ============================================================================
+// parseGitStatus
+// ============================================================================
+
+func TestParseGitStatus_BranchAndAheadBehind(t *testing.T) {
+	status := "# branch.oid abc123\n# branch.head feature/test\n# branch.ab +3 -1"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Branch != "feature/test" {
+		t.Errorf("Branch = %q, want \"feature/test\"", info.Branch)
+	}
+	if info.Ahead != 3 {
+		t.Errorf("Ahead = %d, want 3", info.Ahead)
+	}
+	if info.Behind != 1 {
+		t.Errorf("Behind = %d, want 1", info.Behind)
+	}
+}
+
+func TestParseGitStatus_ModifiedFiles(t *testing.T) {
+	// "1 .M ..." = working tree modified; "1 M. ..." = index modified
+	status := "# branch.head main\n1 .M N... 100644 100644 100644 abc def file1.go\n1 M. N... 100644 100644 100644 abc def file2.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Mod != 2 {
+		t.Errorf("Mod = %d, want 2 (1 wt + 1 idx)", info.Mod)
+	}
+}
+
+func TestParseGitStatus_AddedDeletedRenamed(t *testing.T) {
+	status := "# branch.head main\n1 A. N... 100644 100644 100644 abc def added.go\n1 .D N... 100644 100644 100644 abc def deleted.go\n2 R. N... 100644 100644 100644 abc def old.go\tnew.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Add != 1 {
+		t.Errorf("Add = %d, want 1", info.Add)
+	}
+	if info.Del != 1 {
+		t.Errorf("Del = %d, want 1", info.Del)
+	}
+	if info.Ren != 1 {
+		t.Errorf("Ren = %d, want 1", info.Ren)
+	}
+}
+
+func TestParseGitStatus_UntrackedFiles(t *testing.T) {
+	status := "# branch.head main\n? newfile.go\n? another.txt"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Add != 2 {
+		t.Errorf("Add = %d, want 2 (untracked)", info.Add)
+	}
+}
+
+func TestParseGitStatus_Conflicts(t *testing.T) {
+	status := "# branch.head main\nu UU N... 100644 100644 100644 100644 abc def ghi conflict.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Conflict != 1 {
+		t.Errorf("Conflict = %d, want 1", info.Conflict)
+	}
+}
+
+func TestParseGitStatus_EmptyOutput(t *testing.T) {
+	info := &GitInfo{}
+	parseGitStatus("", info)
+	if info.Branch != "" {
+		t.Errorf("Branch = %q, want empty", info.Branch)
+	}
+}
+
+func TestParseGitStatus_ShortLine(t *testing.T) {
+	// Lines shorter than 4 chars for "1 " prefix should be skipped
+	status := "# branch.head main\n1 M"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Mod != 0 {
+		t.Errorf("Mod = %d, want 0 (short line skipped)", info.Mod)
+	}
+}
+
+func TestParseGitStatus_CopiedFile(t *testing.T) {
+	status := "# branch.head main\n1 C. N... 100644 100644 100644 abc def copied.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Add != 1 {
+		t.Errorf("Add = %d, want 1 (copied counts as add)", info.Add)
+	}
+}
+
+func TestParseGitStatus_BothIndexAndWorkTree(t *testing.T) {
+	// "1 MM ..." = modified in both index and working tree
+	status := "# branch.head main\n1 MM N... 100644 100644 100644 abc def file.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Mod != 2 {
+		t.Errorf("Mod = %d, want 2 (idx M + wt M)", info.Mod)
+	}
+}
+
+func TestParseGitStatus_StagedDelete(t *testing.T) {
+	status := "# branch.head main\n1 D. N... 100644 100644 100644 abc def removed.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Del != 1 {
+		t.Errorf("Del = %d, want 1 (staged delete)", info.Del)
+	}
+}
+
+func TestParseGitStatus_MixedChanges(t *testing.T) {
+	status := "# branch.head develop\n# branch.ab +5 -2\n1 M. N... 100644 100644 100644 a b mod1.go\n1 .M N... 100644 100644 100644 a b mod2.go\n1 A. N... 100644 100644 100644 a b new.go\n1 .D N... 100644 100644 100644 a b gone.go\n? untracked.txt\nu UU N... 100644 100644 100644 100644 a b c merge.go"
+	info := &GitInfo{}
+	parseGitStatus(status, info)
+	if info.Branch != "develop" {
+		t.Errorf("Branch = %q, want \"develop\"", info.Branch)
+	}
+	if info.Ahead != 5 {
+		t.Errorf("Ahead = %d, want 5", info.Ahead)
+	}
+	if info.Behind != 2 {
+		t.Errorf("Behind = %d, want 2", info.Behind)
+	}
+	if info.Mod != 2 {
+		t.Errorf("Mod = %d, want 2", info.Mod)
+	}
+	if info.Add != 2 {
+		t.Errorf("Add = %d, want 2 (1 staged + 1 untracked)", info.Add)
+	}
+	if info.Del != 1 {
+		t.Errorf("Del = %d, want 1", info.Del)
+	}
+	if info.Conflict != 1 {
+		t.Errorf("Conflict = %d, want 1", info.Conflict)
+	}
+}
+
+// ============================================================================
+// visibleLen — multibyte/edge cases
+// ============================================================================
+
+func TestVisibleLen_Emoji(t *testing.T) {
+	// Each emoji is one rune (even if 4 bytes in UTF-8)
+	if got := visibleLen("🎉🚀"); got != 2 {
+		t.Errorf("visibleLen(emoji) = %d, want 2", got)
+	}
+}
+
+func TestVisibleLen_CJK(t *testing.T) {
+	// Each CJK character is one rune
+	if got := visibleLen("日本語"); got != 3 {
+		t.Errorf("visibleLen(CJK) = %d, want 3", got)
+	}
+}
+
+func TestVisibleLen_ANSIAtEnd(t *testing.T) {
+	// ANSI code at end without text after it
+	s := "hello\x1b[0m"
+	if got := visibleLen(s); got != 5 {
+		t.Errorf("visibleLen(trailing ANSI) = %d, want 5", got)
+	}
+}
+
+func TestVisibleLen_ConsecutiveANSI(t *testing.T) {
+	// Two ANSI codes back-to-back with no text between
+	s := "\x1b[92m\x1b[1mhello\x1b[0m"
+	if got := visibleLen(s); got != 5 {
+		t.Errorf("visibleLen(consecutive ANSI) = %d, want 5", got)
+	}
+}
+
+// ============================================================================
+// buildLocationRow / buildStatusRow / buildSessionRow
+// ============================================================================
+
+func TestBuildLocationRow_NoGit(t *testing.T) {
+	input := &Input{CWD: "/home/user/myproject"}
+	row := buildLocationRow(input, nil)
+	if len(row) != 1 {
+		t.Fatalf("expected 1 element, got %d", len(row))
+	}
+	if !containsVisible(row[0], "myproject") {
+		t.Error("missing project name in location row")
+	}
+}
+
+func TestBuildLocationRow_WithGitAndTag(t *testing.T) {
+	input := &Input{CWD: "/home/user/repo"}
+	git := &GitInfo{Branch: "dev", RepoName: "repo", Tag: "v2.0.0"}
+	row := buildLocationRow(input, git)
+	if len(row) != 2 {
+		t.Fatalf("expected 2 elements (repo:branch + tag), got %d", len(row))
+	}
+	if !containsVisible(row[0], "repo:dev") {
+		t.Error("missing repo:branch")
+	}
+	if !containsVisible(row[1], "v2.0.0") {
+		t.Error("missing tag")
+	}
+}
+
+func TestBuildStatusRow_NoGit(t *testing.T) {
+	row := buildStatusRow(nil)
+	if len(row) != 1 {
+		t.Fatalf("expected 1 element, got %d", len(row))
+	}
+	if !containsVisible(row[0], "No git") {
+		t.Error("missing 'No git'")
+	}
+}
+
+func TestBuildStatusRow_WithConflict(t *testing.T) {
+	git := &GitInfo{Branch: "main", Ahead: 1, Behind: 0, Conflict: 2, Mod: 1}
+	row := buildStatusRow(git)
+	// Should have 5 elements: alert + mod + add + del + mv
+	if len(row) != 5 {
+		t.Fatalf("expected 5 elements, got %d", len(row))
+	}
+	if !containsVisible(row[0], "2 conflict") {
+		t.Error("missing conflict count")
+	}
+}

@@ -21,7 +21,6 @@ Without flags: check for update, ask before upgrading.
 ## Context
 
 - CCO version: from `cco_version` in cco-rules.md frontmatter (already in context)
-- Last check: from `last_update_check` in cco-rules.md frontmatter (already in context)
 
 ## Files
 

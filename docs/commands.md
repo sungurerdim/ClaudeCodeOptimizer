@@ -268,7 +268,9 @@ Update CCO to the latest version.
 
 All operations report: `Applied: N | Failed: M | Needs Approval: D | Total: N+M+D`
 
-Formula: `applied + failed + needs_approval = total` (no silent skips)
+Formula: `applied + failed + needs_approval = total` (no silent skips, no declined category)
+
+Each command carries its own accounting formula and needs-approval flow inline (not referenced from global rules).
 
 ### Recovery
 

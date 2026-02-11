@@ -97,13 +97,80 @@ func execGit(args ...string) (string, bool) {
 	case <-time.After(timeout):
 		if cmd.Process != nil {
 			cmd.Process.Kill()
+			<-done // wait for goroutine to finish after kill
 		}
 		return "", false
 	}
 }
 
+// parseGitStatus parses output from `git status --porcelain=v2 -b` into GitInfo fields.
+// Format reference: https://git-scm.com/docs/git-status#_porcelain_format_version_2
+func parseGitStatus(statusOut string, info *GitInfo) {
+	for _, line := range strings.Split(statusOut, "\n") {
+		if len(line) == 0 {
+			continue
+		}
+
+		// "# branch.head <name>" — current branch name (14 = len("# branch.head "))
+		if strings.HasPrefix(line, "# branch.head ") {
+			info.Branch = line[14:]
+		} else if strings.HasPrefix(line, "# branch.ab ") {
+			// "# branch.ab +N -M" — ahead/behind counts
+			parts := strings.Fields(line)
+			for _, p := range parts {
+				if strings.HasPrefix(p, "+") {
+					if v, err := strconv.Atoi(p[1:]); err == nil {
+						info.Ahead = v
+					}
+				} else if strings.HasPrefix(p, "-") {
+					if v, err := strconv.Atoi(p[1:]); err == nil {
+						info.Behind = v
+					}
+				}
+			}
+		} else if strings.HasPrefix(line, "u ") {
+			// "u ..." — unmerged (conflict) entry
+			info.Conflict++
+		} else if strings.HasPrefix(line, "1 ") || strings.HasPrefix(line, "2 ") {
+			// "1 XY ..." — ordinary change; "2 XY ..." — rename/copy
+			// Position 2 = index status, position 3 = working tree status
+			if len(line) < 4 {
+				continue
+			}
+			idx := line[2]
+			wt := line[3]
+
+			// Working tree changes
+			if wt == 'M' {
+				info.Mod++
+			}
+			if wt == 'D' {
+				info.Del++
+			}
+
+			// Staged changes (counted into same totals)
+			if idx == 'M' {
+				info.Mod++
+			}
+			if idx == 'A' || idx == 'C' {
+				info.Add++
+			}
+			if idx == 'D' {
+				info.Del++
+			}
+			if idx == 'R' {
+				info.Ren++
+			}
+		} else if strings.HasPrefix(line, "? ") {
+			// "? <path>" — untracked file
+			info.Add++
+		}
+	}
+}
+
+// getGitInfo runs git commands in parallel and returns parsed info.
+// Returns nil if git status fails or no branch is detected (e.g. not a git repo).
 func getGitInfo() *GitInfo {
-	// Run git status and tag lookup in parallel
 	var wg sync.WaitGroup
 	var statusOut, tagOut string
 	var statusOk, tagOk bool
@@ -142,57 +209,7 @@ func getGitInfo() *GitInfo {
 		info.Tag = tagOut
 	}
 
-	// Parse git status --porcelain=v2 -b
-	for _, line := range strings.Split(statusOut, "\n") {
-		if len(line) == 0 {
-			continue
-		}
-
-		if strings.HasPrefix(line, "# branch.head ") {
-			info.Branch = line[14:]
-		} else if strings.HasPrefix(line, "# branch.ab ") {
-			parts := strings.Fields(line)
-			for _, p := range parts {
-				if strings.HasPrefix(p, "+") {
-					info.Ahead, _ = strconv.Atoi(p[1:])
-				} else if strings.HasPrefix(p, "-") {
-					info.Behind, _ = strconv.Atoi(p[1:])
-				}
-			}
-		} else if strings.HasPrefix(line, "u ") {
-			info.Conflict++
-		} else if strings.HasPrefix(line, "1 ") || strings.HasPrefix(line, "2 ") {
-			if len(line) < 4 {
-				continue
-			}
-			idx := line[2]
-			wt := line[3]
-
-			// Working tree changes
-			if wt == 'M' {
-				info.Mod++
-			}
-			if wt == 'D' {
-				info.Del++
-			}
-
-			// Staged changes (counted into same totals)
-			if idx == 'M' {
-				info.Mod++
-			}
-			if idx == 'A' || idx == 'C' {
-				info.Add++
-			}
-			if idx == 'D' {
-				info.Del++
-			}
-			if idx == 'R' {
-				info.Ren++
-			}
-		} else if strings.HasPrefix(line, "? ") {
-			info.Add++
-		}
-	}
+	parseGitStatus(statusOut, info)
 
 	if info.Branch == "" {
 		return nil
@@ -322,8 +339,61 @@ func minRowWidth(parts []string) int {
 // BUILD STATUSLINE
 // ============================================================================
 
-func buildStatusline(input *Input, git *GitInfo) string {
-	// Username
+// buildLocationRow returns row 1: repo:branch + optional tag, or project name if no git.
+func buildLocationRow(input *Input, git *GitInfo) []string {
+	var repoDisplay string
+	if git != nil {
+		repoDisplay = git.RepoName + ":" + git.Branch
+	} else {
+		repoDisplay = filepath.Base(input.CWD)
+	}
+	row := []string{c(repoDisplay, green)}
+	if git != nil && git.Tag != "" {
+		row = append(row, c(git.Tag, cyan))
+	}
+	return row
+}
+
+// buildStatusRow returns row 2: ahead/behind + file change counts, or "No git".
+func buildStatusRow(git *GitInfo) []string {
+	if git == nil {
+		return []string{c("No git", gray)}
+	}
+
+	var aheadStr, behindStr string
+	if git.Ahead > 0 {
+		aheadStr = c("\u25B3 ", green) + c(strconv.Itoa(git.Ahead), white)
+	} else {
+		aheadStr = c("\u25B3 0", gray)
+	}
+	if git.Behind > 0 {
+		behindStr = c("\u25BD ", yellow) + c(strconv.Itoa(git.Behind), white)
+	} else {
+		behindStr = c("\u25BD 0", gray)
+	}
+	alertStr := aheadStr + " " + behindStr
+	if git.Conflict > 0 {
+		alertStr += " " + c(fmt.Sprintf("%d conflict", git.Conflict), redBold)
+	}
+
+	changePart := func(label string, count int, style string) string {
+		if count > 0 {
+			return c(fmt.Sprintf("%s %d", label, count), style)
+		}
+		return c(fmt.Sprintf("%s 0", label), gray)
+	}
+
+	return []string{
+		alertStr,
+		changePart("mod", git.Mod, yellow),
+		changePart("add", git.Add, green),
+		changePart("del", git.Del, red),
+		changePart("mv", git.Ren, cyan),
+	}
+}
+
+// buildSessionRow returns row 3: username + CC version + model + context usage.
+func buildSessionRow(input *Input) []string {
 	username := "user"
 	if u, err := user.Current(); err == nil && u.Username != "" {
 		// On Windows, user.Current() returns DOMAIN\user
@@ -331,85 +401,27 @@ func buildStatusline(input *Input, git *GitInfo) string {
 		username = parts[len(parts)-1]
 	}
 
-	// Project name
-	projectName := filepath.Base(input.CWD)
-
-	// Model
-	modelDisplay := formatModelName(input.Model.DisplayName)
-
-	// Version (from stdin JSON, no process spawn needed)
-	ccVersion := input.Version
-
-	// Context
-	contextUsage := formatContextUsage(input)
-
-	// --- Row 1: Location ---
-	var repoDisplay string
-	if git != nil {
-		repoDisplay = git.RepoName + ":" + git.Branch
-	} else {
-		repoDisplay = projectName
-	}
-	row1 := []string{c(repoDisplay, green)}
-	if git != nil && git.Tag != "" {
-		row1 = append(row1, c(git.Tag, cyan))
-	}
-
-	// --- Row 2: Status ---
-	var row2 []string
-	if git == nil {
-		row2 = []string{c("No git", gray)}
-	} else {
-		// Ahead/behind
-		var aheadStr, behindStr string
-		if git.Ahead > 0 {
-			aheadStr = c("\u25B3 ", green) + c(strconv.Itoa(git.Ahead), white)
-		} else {
-			aheadStr = c("\u25B3 0", gray)
-		}
-		if git.Behind > 0 {
-			behindStr = c("\u25BD ", yellow) + c(strconv.Itoa(git.Behind), white)
-		} else {
-			behindStr = c("\u25BD 0", gray)
-		}
-		alertStr := aheadStr + " " + behindStr
-		if git.Conflict > 0 {
-			alertStr += " " + c(fmt.Sprintf("%d conflict", git.Conflict), redBold)
-		}
-
-		// File changes
-		changePart := func(label string, count int, style string) string {
-			if count > 0 {
-				return c(fmt.Sprintf("%s %d", label, count), style)
-			}
-			return c(fmt.Sprintf("%s 0", label), gray)
-		}
-
-		row2 = []string{
-			alertStr,
-			changePart("mod", git.Mod, yellow),
-			changePart("add", git.Add, green),
-			changePart("del", git.Del, red),
-			changePart("mv", git.Ren, cyan),
-		}
-	}
-
-	// --- Row 3: Session ---
 	versionStr := c("CC ?", gray)
-	if ccVersion != "" {
-		versionStr = c("CC "+ccVersion, yellow)
+	if input.Version != "" {
+		versionStr = c("CC "+input.Version, yellow)
 	}
 
-	row3 := []string{
+	row := []string{
 		c(username, cyan),
 		versionStr,
-		c(modelDisplay, magenta),
+		c(formatModelName(input.Model.DisplayName), magenta),
 	}
-	if contextUsage != "" {
-		row3 = append(row3, c(contextUsage, cyan))
+	if ctx := formatContextUsage(input); ctx != "" {
+		row = append(row, c(ctx, cyan))
 	}
+	return row
+}
 
-	// Calculate max width
+func buildStatusline(input *Input, git *GitInfo) string {
+	row1 := buildLocationRow(input, git)
+	row2 := buildStatusRow(git)
+	row3 := buildSessionRow(input)
+
 	maxW := minRowWidth(row1)
 	if w := minRowWidth(row2); w > maxW {
 		maxW = w
@@ -418,7 +430,6 @@ func buildStatusline(input *Input, git *GitInfo) string {
 		maxW = w
 	}
 
-	// Build output
 	var out bytes.Buffer
 	out.WriteString(justifyRow(row1, maxW, "\u00B7"))
 	out.WriteByte('\n')
@@ -436,7 +447,8 @@ func buildStatusline(input *Input, git *GitInfo) string {
 // ============================================================================
 
 func main() {
-	data, err := io.ReadAll(os.Stdin)
+	const maxStdinSize = 10 << 20 // 10 MB
+	data, err := io.ReadAll(io.LimitReader(os.Stdin, maxStdinSize))
 	if err != nil {
 		fmt.Printf("[Statusline Error: %v]\n", err)
 		return
