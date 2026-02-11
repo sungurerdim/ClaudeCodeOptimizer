@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.2.1...v4.0.0) (2026-02-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* commands/ directory replaced by skills/ with SKILL.md files. Install scripts (install.sh, install.ps1) replaced by Go binary installer. Run ./cco install to migrate.
+
+### Features
+
+* migrate to skills and Go installer ([#24](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/24)) ([5c8a055](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/5c8a0553eed7ec9582a61be311f68916993e28e5))
+
 ## [3.2.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.2.0...v3.2.1) (2026-02-08)
 
 
