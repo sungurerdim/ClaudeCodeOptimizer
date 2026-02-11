@@ -11,11 +11,9 @@ last_update_check: 1970-01-01T00:00:00Z
 
 Every changed line must trace directly to the user's request. Unrelated issues: mention, don't fix. Create new files only when the user explicitly requests them.
 
-> Why: Opus overengineers when given latitude. Explicit scope prevents feature creep and unnecessary abstractions.
-
 ### Exploration Budget
 
-Read only what you need before acting:
+Context efficiency guideline — expand when the task requires deeper understanding:
 
 | Task | Files to Read |
 |------|---------------|
@@ -23,19 +21,17 @@ Read only what you need before acting:
 | Feature (3-5 files) | 5-10 files |
 | Architecture scan | Structure first, then deepen |
 
-> Why: Excessive file reads consume context window and degrade output quality in long sessions.
+These are starting points. Read more when the task demands it.
 
 ### Decide and Execute
 
-Pick one approach and follow through. Only reassess if it fails. Do not explore alternatives before the first attempt fails.
-
-> Why: Extended thinking amplifies analysis paralysis. Commit to the simplest viable approach.
+For implementation: commit to the simplest approach, reassess only on failure. For design and architecture: compare 2-3 approaches briefly before committing.
 
 ## Code Integrity
 
 ### Complexity Limits
 
-Refactor before proceeding when code exceeds these limits:
+Flag when code approaches these limits. Refactor only when the current task's scope allows it — do not force mid-task restructuring.
 
 | Metric | Limit |
 |--------|-------|
@@ -44,8 +40,6 @@ Refactor before proceeding when code exceeds these limits:
 | File Lines | ≤ 500 |
 | Nesting Depth | ≤ 3 |
 | Parameters | ≤ 4 |
-
-> Why: Hard limits prevent complexity from accumulating silently across edits.
 
 ### Anti-Overengineering
 
@@ -57,7 +51,11 @@ Before adding any abstraction, all three must be YES:
 
 All NO = don't abstract. Avoid single-use wrappers, impossible error handling, and unnecessary bulk.
 
-> Why: Opus defaults to premature abstraction. The 3-question test forces justification before adding complexity.
+## Production Standards
+
+Every output must be production-ready by default. Apply security, privacy, performance, error handling, reliability, and code quality practices as a baseline — the same way a senior engineer would, without being asked. The user's lack of knowledge about a concern must never result in that concern being skipped.
+
+When a production standard requires a design decision the user should be aware of, inform them briefly — but the standard itself is non-negotiable.
 
 ## Verification
 
@@ -65,13 +63,9 @@ All NO = don't abstract. Avoid single-use wrappers, impossible error handling, a
 
 Before modifying any file: read it first. Before using any import or API: verify it exists in the codebase or documentation. Never assume file contents, function signatures, or API shapes from memory.
 
-> Why: Hallucination rate drops from ~40% to ~10% when actual file contents are verified before editing.
-
 ### Edit Discipline
 
 Preserve the existing file's indentation style (tabs vs spaces, width). Match surrounding code style for naming, formatting, and patterns. On Windows paths, use the path format the project already uses.
-
-> Why: Indentation mismatches and style inconsistencies are the most common file editing failures.
 
 ## Uncertainty Protocol
 
@@ -79,13 +73,9 @@ Preserve the existing file's indentation style (tabs vs spaces, width). Match su
 
 When uncertain, state it explicitly ("~90% sure", "uncertain about X"). Ask before proceeding on ambiguous tasks. Never guess at requirements.
 
-> Why: Confident-sounding wrong answers cause more damage than acknowledged uncertainty.
-
 ### Scope Creep Guard
 
 If finding count exceeds 2x initial estimate, stop and ask the user before continuing.
-
-> Why: Unchecked scope expansion leads to inconsistent changes and context exhaustion.
 
 ## Session Resilience
 
@@ -93,13 +83,23 @@ If finding count exceeds 2x initial estimate, stop and ask the user before conti
 
 Files and git state are the source of truth — not conversation memory. When returning to a topic after other work, re-read the relevant files before making changes. Never rely on earlier conversation context for file contents.
 
-> Why: Context compaction loses details. Re-reading files costs less than fixing hallucinated edits.
-
 ### Error Recovery
 
 On tool error: diagnose why, then use a different approach on the second attempt. Never retry the exact same failing command.
 
-> Why: Identical retries waste turns. Strategy change on second attempt resolves most failures.
+## Process Discipline
+
+### Task Awareness
+
+For multi-step work (3+ steps), track progress using task tools. Mark steps in_progress before starting and completed when verified. This prevents skipped steps and provides continuity across context compactions.
+
+### Goal Anchoring
+
+State the end goal before starting. Before each major step, confirm it serves that goal. If work has drifted from the original request, stop and realign.
+
+### Completion Verification
+
+Before reporting done: re-read modified files to confirm correctness, verify no steps were skipped, and confirm the original requirement is fully satisfied.
 
 ## Security Baseline
 
@@ -115,17 +115,33 @@ Address these patterns before continuing:
 | Unsanitized external data | Add validation |
 | eval/pickle/yaml.load | Use safe alternatives |
 
-> Why: These patterns represent the highest-risk, lowest-effort security fixes across all project types.
+## CCO Operations
 
-## Development Standards
+### Accounting
 
-### Respect Intent Markers
+applied + failed + needs_approval = total. No declined category.
 
-Never flag intentionally marked code: `# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks, platform guards, test fixtures.
+### Auto Mode
 
-> Why: Flagging deliberate patterns produces false positives and erodes trust in analysis results.
+When --auto active: no questions, no deferrals. Fix everything except large architectural changes. Never say "too complex", "might break", or "consider later".
 
-### Issue Prioritization
+### Agent Output
+
+Agents return structured data as final text message. Never write to files. On failure: {"error": "message"}. Validate before processing; retry once if malformed.
+
+### Tool Prerequisites
+
+Verify required external tools before execution. Critical missing → stop with install instructions. Non-critical → warn once, continue.
+
+### Confidence Scoring
+
+Findings include confidence (0-100). Auto mode: fix all except architectural redesign. Interactive: user decides.
+
+### Skip Patterns
+
+Never flag intentionally marked code: # noqa, # intentional, # safe:, _ prefix, TYPE_CHECKING blocks, platform guards, test fixtures.
+
+### Severity Levels
 
 | Level | Criteria |
 |-------|----------|
@@ -135,5 +151,3 @@ Never flag intentionally marked code: `# noqa`, `# intentional`, `# safe:`, `_` 
 | LOW | Style only |
 
 When uncertain, choose lower severity.
-
-> Why: Consistent severity across all commands ensures predictable prioritization and filtering.

@@ -6,14 +6,23 @@ Your first 10 minutes with CCO.
 
 ## Installation
 
+### Using Go Binary (Recommended)
+
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile cco.exe; .\cco.exe install
+```
+
+### Using /cco-update
+
+If you already have CCO installed, update to v4:
+```
+/cco-update
 ```
 
 **Restart Claude Code** after installation.
@@ -24,15 +33,15 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 ~/.claude/
 ├── rules/
 │   └── cco-rules.md            # Core rules (auto-loaded)
-├── commands/
-│   ├── cco-optimize.md          # 8 slash commands
-│   ├── cco-align.md
-│   ├── cco-commit.md
-│   ├── cco-research.md
-│   ├── cco-docs.md
-│   ├── cco-blueprint.md
-│   ├── cco-pr.md
-│   └── cco-update.md
+├── skills/
+│   ├── cco-optimize/SKILL.md   # 8 skills
+│   ├── cco-align/SKILL.md
+│   ├── cco-commit/SKILL.md
+│   ├── cco-research/SKILL.md
+│   ├── cco-docs/SKILL.md
+│   ├── cco-blueprint/SKILL.md
+│   ├── cco-pr/SKILL.md
+│   └── cco-update/SKILL.md
 └── agents/
     ├── cco-agent-analyze.md     # 3 subagents
     ├── cco-agent-apply.md
@@ -45,15 +54,19 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 /cco-update
 ```
 
-Or re-run the install script.
+Or re-run the Go installer binary.
 
 ### Uninstall
 
-Remove the CCO files from `~/.claude/`:
+Using Go binary:
+```bash
+./cco uninstall
+```
 
+Manual removal:
 ```bash
 rm ~/.claude/rules/cco-rules.md
-rm ~/.claude/commands/cco-*.md
+rm -rf ~/.claude/skills/cco-*/
 rm ~/.claude/agents/cco-agent-*.md
 ```
 
@@ -95,11 +108,13 @@ CCO rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Claude Code autom
 |----------|-----------|
 | **Scope Control** | Minimal Footprint, Exploration Budget, Decide and Execute |
 | **Code Integrity** | Complexity Limits (method ≤50 lines, nesting ≤3), Anti-Overengineering |
+| **Production Standards** | Production-ready baseline for all output |
 | **Verification** | Read Before Write, Edit Discipline |
 | **Uncertainty Protocol** | Surface Uncertainty (stop & ask), Scope Creep Guard |
 | **Session Resilience** | Anchor to Artifacts, Error Recovery |
+| **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
 | **Security Baseline** | Security Patterns (no secrets in source, no bare except, no eval) |
-| **Development Standards** | Respect Intent Markers, Issue Prioritization |
+| **CCO Operations** | Accounting, Auto Mode, Severity Levels, Skip Patterns |
 
 ### Hard Limits
 
@@ -127,11 +142,11 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 
 ## Troubleshooting
 
-### Commands not appearing
+### Skills not appearing
 
 1. **Restart Claude Code** after installation
-2. Verify files are installed: `ls ~/.claude/commands/cco-*.md`
-3. Try re-running the install script (see [Installation](#installation))
+2. Verify files are installed: `ls ~/.claude/skills/cco-*/SKILL.md`
+3. Try re-running the installer (see [Installation](#installation))
 
 ---
 

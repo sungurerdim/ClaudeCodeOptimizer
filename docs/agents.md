@@ -12,7 +12,7 @@ Specialized subagents for analysis, fixes, and research.
 | **cco-agent-apply** | Verified write operations + accounting | Opus | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
 | **cco-agent-research** | Multi-source research with CRAAP+ scoring | Haiku | WebSearch, WebFetch, Read, Grep, Glob |
 
-**Model Rationale:** Haiku for read-only agents (fast, cost-effective). Opus for apply agent (fewer tool errors, coding accuracy).
+**Model rationale:** Haiku for read-only agents (fast, cost-effective). Opus for apply agent (fewer tool errors, coding accuracy). Agent models are specified in frontmatter — skills inherit the session model.
 
 ## When to Use
 
@@ -39,9 +39,8 @@ Read-only analysis agent. Returns structured JSON with findings, scores, and met
 - **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
 - **6 review scopes** (77 checks): architecture, patterns, testing, maintainability, ai-architecture, functional-completeness
 - **4 audit scopes** (40 checks): stack-assessment, dependency-health, dx-quality, project-structure
-- Conditional linter execution (detected from config files, skipped if no tooling)
 - Platform filtering, skip patterns, false positive handling
-- Confidence scoring with severity levels (self-contained in agent)
+- Per CCO Rules: Confidence Scoring, Severity Levels, Skip Patterns
 
 ## cco-agent-apply
 
@@ -50,7 +49,7 @@ Write agent. Applies fixes with verification and cascade handling.
 - Batch edits with parallel execution
 - Post-change verification (lint/type/test)
 - Cascade fixing (max 3 iterations)
-- Accounting: `applied + failed + needs_approval = total`
+- Per CCO Rules: Accounting, Auto Mode
 - Educational output (why/avoid/prefer)
 - Docs scope for documentation generation
 
@@ -66,10 +65,10 @@ Research agent. Multi-source with CRAAP+ reliability scoring.
 
 ---
 
-## Agent Selection by Command
+## Agent Selection by Skill
 
-| Command | Analyze | Apply | Research |
-|---------|---------|-------|----------|
+| Skill | Analyze | Apply | Research |
+|-------|---------|-------|----------|
 | `/cco-optimize` | security, hygiene, types, etc. | Yes | dependency |
 | `/cco-align` | architecture, patterns, etc. | Yes | dependency |
 | `/cco-commit` | (quality gates only) | No | No |

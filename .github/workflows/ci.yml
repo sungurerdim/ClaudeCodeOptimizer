@@ -20,7 +20,7 @@ jobs:
       - name: Check frontmatter
         run: |
           FAIL=0
-          for file in commands/cco-*.md agents/cco-agent-*.md; do
+          for file in skills/cco-*/SKILL.md agents/cco-agent-*.md; do
             if ! head -1 "$file" | grep -q '^---$'; then
               echo "Error: $file missing YAML frontmatter"
               FAIL=1
@@ -49,7 +49,7 @@ jobs:
           if [ "$FAIL" -eq 1 ]; then exit 1; fi
           echo "All versions consistent: $VERSION"
 
-  go:
+  go-statusline:
     name: Go (statusline)
     runs-on: ubuntu-latest
     defaults:
@@ -80,6 +80,34 @@ jobs:
       - name: Build
         run: go build -ldflags="-s -w" -o cco-statusline .
 
+  go-installer:
+    name: Go (installer)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extras/installer
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Format check
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Error: Go files not formatted. Run 'gofmt -w .'"
+            gofmt -d .
+            exit 1
+          fi
+          echo "Go formatting OK"
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build -ldflags="-s -w" -o cco .
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -97,7 +125,7 @@ jobs:
   auto-merge:
     name: Auto Merge
     if: github.event_name == 'pull_request'
-    needs: [validate, go, security]
+    needs: [validate, go-statusline, go-installer, security]
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge
