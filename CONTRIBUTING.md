@@ -14,7 +14,7 @@ cd ClaudeCodeOptimizer
 
 | Type | Pattern | Location |
 |------|---------|----------|
-| Commands | `cco-{name}.md` | `commands/` |
+| Skills | `cco-{name}/SKILL.md` | `skills/` |
 | Agents | `cco-agent-{name}.md` | `agents/` |
 | Rules | `cco-rules.md` | `rules/` |
 
@@ -25,7 +25,14 @@ cd ClaudeCodeOptimizer
 1. Edit `rules/cco-rules.md` (single source of truth)
 2. Update `docs/rules.md` to reflect changes
 
-Rule categories: Focus and Discipline, Code Quality, Security, Workflow, CCO Operations.
+Rule categories: Scope Control, Code Integrity, Production Standards, Verification, Uncertainty Protocol, Session Resilience, Process Discipline, Security Baseline, CCO Operations.
+
+### Adding a New Skill
+
+1. Create `skills/cco-{name}/SKILL.md` with YAML frontmatter
+2. Update `extras/installer/main.go` file manifest
+3. Update `skills/cco-update/SKILL.md` file manifest
+4. Update `docs/commands.md` and `docs/agents.md` if applicable
 
 ### Updating Documentation
 
@@ -33,7 +40,7 @@ Keep counts in sync when adding/removing files:
 
 ```bash
 # Verify counts (cross-platform: use Glob in Claude Code)
-# Commands: 8 (optimize, align, commit, research, docs, blueprint, pr, update)
+# Skills: 8 (optimize, align, commit, research, docs, blueprint, pr, update)
 # Agents: 3 (analyze, apply, research)
 ```
 
@@ -45,26 +52,27 @@ Update `README.md` and `docs/` if counts change.
    ```bash
    # Verify all files exist
    ls rules/cco-rules.md
-   ls commands/cco-*.md | wc -l   # Should be 8
-   ls agents/cco-agent-*.md | wc -l  # Should be 3
+   ls skills/cco-*/SKILL.md | wc -l   # Should be 8
+   ls agents/cco-agent-*.md | wc -l   # Should be 3
    ```
 
 2. **One feature per PR** — keep changes focused
 
-3. **Update docs** if adding commands, agents, or rules
+3. **Update docs** if adding skills, agents, or rules
 
 4. **Follow existing patterns** — check similar files for conventions
 
 ## Code Style
 
 - Markdown: CommonMark, ATX headers (`#` not `===`)
-- YAML frontmatter for commands and agents
+- YAML frontmatter for skills and agents
 - Tables for structured data
 - No trailing whitespace
 
 ## Testing
 
 - CI validates file structure, frontmatter, and version consistency
+- Go code in `extras/` is built and tested in CI
 - All checks must pass before merge
 
 ## Questions?

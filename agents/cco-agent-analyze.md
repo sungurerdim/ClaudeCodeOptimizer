@@ -49,7 +49,7 @@ Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
 3. **Context** — Read matched files in parallel (offset+limit=20 around match)
 4. **Output** — Combined JSON with findings tagged by scope
 
-Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks, platform guards, test fixtures).
+Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
 
 ## Scopes
 
@@ -94,8 +94,7 @@ Run independent tool calls in parallel. Respect skip patterns (`# noqa`, `# inte
 | Evidence | Every finding cites `file:line`. Read actual code before reporting. |
 | Conservative | Uncertain → lower severity. Style → max LOW. Single occurrence → max MEDIUM (except security). |
 | Pattern threshold | 3+ examples before concluding systemic pattern |
-| Confidence | Report all findings with confidence score. Do not filter by confidence. |
-| Confidence scoring | ≥80: High confidence. 60-79: Medium confidence. <60: Low confidence. In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign). In interactive mode: user always decides. |
-| Severity levels | CRITICAL: Security, data loss, crash. HIGH: Broken functionality. MEDIUM: Suboptimal but works. LOW: Style only. When uncertain, choose lower severity. |
-| False positives | Skip: pre-existing issues, platform-guarded code, intentional markers (`# noqa`, `# intentional`, `# safe:`, `_` prefix, `TYPE_CHECKING` blocks), linter domain, test fixtures, single occurrences |
+| Confidence | Report all findings with confidence score. Do not filter by confidence. Per CCO Rules: Confidence Scoring. |
+| Severity | Per CCO Rules: Severity Levels. |
+| False positives | Skip: pre-existing issues, platform-guarded code, linter domain, single occurrences. Per CCO Rules: Skip Patterns. |
 | CRITICAL validation | Analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |

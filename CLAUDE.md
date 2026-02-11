@@ -1,22 +1,22 @@
 <!-- cco-blueprint-start -->
 ## CCO Blueprint Profile
 
-**Project:** ClaudeCodeOptimizer | **Type:** Developer Tool | **Stack:** Markdown + Go + Shell | **Target:** Production
+**Project:** ClaudeCodeOptimizer | **Type:** Developer Tool | **Stack:** Markdown + Go | **Target:** Production
 
 ### Config
 - **Priorities:** Security, Code Quality, Architecture, Documentation
 - **Constraints:** No restrictions
 - **Data:** No sensitive data | **Regulations:** N/A
-- **Audience:** Public users | **Deploy:** GitHub releases (install scripts)
+- **Audience:** Public users | **Deploy:** GitHub releases (Go binary installer)
 
 ### Project Map
 ```
-Entry: install.sh / install.ps1 → GitHub raw download → ~/.claude/
+Entry: extras/installer/ (Go binary) → GitHub release download → ~/.claude/
 Modules:
   rules/        → Core rules (1 file, auto-loaded)
-  commands/     → Slash commands (8 files)
+  skills/       → Slash skills (8 directories, each with SKILL.md)
   agents/       → Subagents (3 files)
-  extras/       → Optional add-ons (statusline: Go)
+  extras/       → Optional add-ons (statusline: Go, installer: Go)
   docs/         → Documentation (5 files)
   .github/      → CI/CD (2 workflows)
 External: GitHub API (tags), release-please, gitleaks
@@ -41,10 +41,4 @@ Toolchain: gofmt + go vet | GitHub Actions CI | No container
 | DX | 78 | WARN |
 | Documentation | 81 | WARN |
 | Overall | 84 | WARN |
-
-### Run History
-- 2026-02-08: Applied 3 | Failed 0 | Overall 82→83
-- 2026-02-09: Applied 3 | Failed 0 | Overall 83→84
-
-### Decisions
 <!-- cco-blueprint-end -->

@@ -12,6 +12,9 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -29,3 +32,41 @@ jobs:
             gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --delete-branch || \
               echo "::warning::Release PR #$PR created but auto-merge failed. Merge manually: https://github.com/$GITHUB_REPOSITORY/pull/$PR"
           fi
+
+  upload-binaries:
+    name: Upload Binaries
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build installer binaries
+        working-directory: extras/installer
+        run: |
+          LDFLAGS="-s -w"
+          GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-darwin-amd64 .
+          GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-darwin-arm64 .
+          GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-linux-amd64 .
+          GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-linux-arm64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-windows-amd64.exe .
+
+      - name: Build statusline binaries
+        working-directory: extras/statusline
+        run: |
+          LDFLAGS="-s -w"
+          GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-darwin-amd64 .
+          GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-darwin-arm64 .
+          GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-linux-amd64 .
+          GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-linux-arm64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-windows-amd64.exe .
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.release-please.outputs.tag_name }}" dist/* --repo "$GITHUB_REPOSITORY"
