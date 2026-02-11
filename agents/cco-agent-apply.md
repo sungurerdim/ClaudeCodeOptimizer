@@ -41,6 +41,7 @@ Per CCO Rules: Accounting, Agent Output.
 - When `fixAll: true`: ask user for significant changes (>50 lines), never skip
 - Force-write always: execute all writes unconditionally
 - Per CCO Rules: Auto Mode (no deferrals)
+- **Import/API verification:** Before writing any fix that adds an import/require/include → Glob/Grep to confirm the module exists in the project or dependencies. Before using any API method → verify it exists in the dependency source or documentation. Never rely on memory for API shapes.
 
 ## Execution
 
@@ -48,8 +49,8 @@ Per CCO Rules: Accounting, Agent Output.
 |------|--------|-----------|
 | 1. Pre-check | Git status | Single |
 | 2. Read | All affected files | **PARALLEL** |
-| 3. Apply | All independent edits | **PARALLEL** (different files) |
-| 4. Verify | Lint, type, test checks | **PARALLEL** |
+| 3. Apply | All independent edits | **PARALLEL** (different files), **SEQUENTIAL** (same file — re-read after each edit to refresh line numbers) |
+| 4. Verify | Lint, type, test checks | **PARALLEL** — batch all verification commands into a single message |
 | 5. Cascade | If new errors, repeat 3-4 | Sequential (max 3 iterations, then → `failed`) |
 
 ## Fix Categories

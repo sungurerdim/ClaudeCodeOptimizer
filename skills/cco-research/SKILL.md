@@ -8,7 +8,7 @@ allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 
 **Smart Research** — Parallel search → tier → synthesize → recommend.
 
-Hybrid research: Local (Glob/Grep) + Web (cco-agent-research).
+Hybrid: Local (Glob/Grep) + Web (cco-agent-research).
 
 ## Context
 
@@ -35,8 +35,8 @@ AskUserQuestion([
     question: "How deep should the research go?",
     header: "Depth",
     options: [
-      { label: "Quick", description: "T1-T2 sources only, fast results" },
-      { label: "Standard (Recommended)", description: "T1-T4 sources, good balance" },
+      { label: "Quick", description: "T1-T2 sources only" },
+      { label: "Standard (Recommended)", description: "T1-T4 sources" },
       { label: "Deep", description: "All tiers, 20+ sources, resumable" }
     ],
     multiSelect: false
@@ -45,10 +45,10 @@ AskUserQuestion([
     question: "What areas should be searched?",
     header: "Focus",
     options: [
-      { label: "Local codebase", description: "Search project files for answers" },
+      { label: "Local codebase", description: "Search project files" },
       { label: "Security/CVE", description: "Vulnerability databases and advisories" },
       { label: "Changelog/releases", description: "Version history and breaking changes" },
-      { label: "Dependencies", description: "Package registry and compatibility info" }
+      { label: "Dependencies", description: "Package registry and compatibility" }
     ],
     multiSelect: true
   }
@@ -61,30 +61,29 @@ Extract from $ARGS: concepts, date context, tech domain, comparison mode, search
 
 ### Phase 3: Research [PARALLEL: up to 7 calls]
 
-Launch all search agents in single message via parallel Task calls to cco-agent-research:
+Launch parallel Task calls to cco-agent-research:
 
-| Track | Scope | When |
-|-------|-------|------|
-| Local codebase | scope: local | If focus includes local |
-| T1: Official docs | scope: search, official domains | Always |
-| T2: GitHub/changelogs | scope: search, GitHub domains | Always |
-| T3: Technical blogs | scope: search, tutorials | Standard+ |
-| T4: Community | scope: search, SO/Reddit/dev.to | Standard+ |
-| Security | scope: search, NVD/CVE/Snyk | If security query |
-| Comparison A/B | scope: search, per option | If comparison detected |
+| Track | When |
+|-------|------|
+| Local codebase | If focus includes local |
+| T1: Official docs | Always |
+| T2: GitHub/changelogs | Always |
+| T3: Technical blogs | Standard+ |
+| T4: Community (SO/Reddit) | Standard+ |
+| Security (NVD/CVE/Snyk) | If security query |
+| Comparison A/B | If comparison detected |
 
 ### Phase 4: Synthesize
 
-Validate agent outputs from Phase 3. If any agent returned malformed output → retry once. If retry also fails, exclude that track from synthesis.
+Validate agent outputs. Malformed → retry once, exclude on second failure.
 
-- T1-T2 sources → cco-agent-research for conflict resolution
-- T3+ sources → aggregate locally
+T1-T2 sources → cco-agent-research for conflict resolution. T3+ → aggregate locally.
 
-Early saturation: 3+ T1/T2 sources agree → stop searching.
+**Mandatory saturation gate:** After each search batch: if 3+ T1/T2 sources agree → skip remaining lower-tier searches, proceed to synthesis. This check is not optional.
 
 ### Phase 5: Output
 
-Display: Executive summary, evidence hierarchy (primary T1-T2, supporting T3-T4), contradictions resolved, knowledge gaps, recommendation (DO/DON'T/CONSIDER), sources with tier/score, metadata.
+Executive summary, evidence hierarchy (primary T1-T2, supporting T3-T4), contradictions resolved, knowledge gaps, recommendation (DO/DON'T/CONSIDER), sources with tier/score.
 
 ## Source Tiers
 

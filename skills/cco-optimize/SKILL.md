@@ -8,9 +8,7 @@ allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 
 **Incremental Code Improvement** — Quality gates + parallel analysis + background fixes.
 
-**Philosophy:** "This code works. How can it work better?"
-
-**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco-align`.
+For strategic architecture assessment, use `/cco-align`.
 
 ## Args
 
@@ -60,8 +58,6 @@ AskUserQuestion([{
 }])
 ```
 
-In --auto mode: all 9 scopes, no stash, no questions.
-
 ### Phase 2: Analyze [PARALLEL: 4 calls]
 
 Launch scope groups as parallel Task calls to cco-agent-analyze:
@@ -70,11 +66,7 @@ Launch scope groups as parallel Task calls to cco-agent-analyze:
 - Performance: performance
 - AI Cleanup: ai-hygiene, doc-sync
 
-Merge all findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired.
-
-Analysis always scans all severities. Filtering happens post-analysis via Plan Review.
-
-Per CCO Rules: Agent Error Handling.
+Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Error Handling.
 
 ### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 
@@ -82,30 +74,23 @@ Per CCO Rules: Plan Review Protocol.
 
 ### Phase 4: Apply [SYNCHRONOUS]
 
-Send findings to cco-agent-apply. Group by file for efficiency.
-
-Count findings, not locations. On failure: retry with alternative fix approach.
-
-On error: If apply fails for a finding, count as failed, continue with next.
+Send findings to cco-agent-apply. Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
 
 ### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: after apply, if needs_approval > 0, display items table and ask Fix All / Review Each.
+**Phase gate:** After Phase 4 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
 
-### Phase 4.6: Loop [CONDITIONAL, --loop flag only]
+Per CCO Rules: if needs_approval > 0, display items table and ask Fix All / Review Each.
 
-If `--loop` and applied > 0 in this iteration:
-1. Re-run Phase 2 (Analyze) scoped to files modified in previous iteration
-2. Re-run Phase 4 (Apply) for new findings
-3. Repeat until: applied = 0 (clean), or iteration count reaches 3
+### Phase 4.6: Loop [--loop flag only]
 
-Each iteration narrows scope to only changed files. Summary shows per-iteration breakdown.
+If applied > 0: re-run Phase 2 scoped to modified files → re-run Phase 4. Max 3 iterations. Summary shows per-iteration breakdown.
 
 ### Phase 5: Summary
 
 Per CCO Rules: Accounting, Auto Mode, Severity Levels.
 
---auto mode: `cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
+--auto: `cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
 
 Interactive: table with counts, failed items list, stash reminder if applicable.
 

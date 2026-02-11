@@ -36,6 +36,8 @@ Always return valid JSON:
 
 On error: return `{"findings": [], "scores": {}, "metrics": {}, "error": "message"}`.
 
+**Zero-findings normalization:** If a scope has no findings, return score in `scores`, `issuesFound: 0` in `metrics`, and empty `findings: []`. Never return null — always use empty arrays/objects.
+
 Finding ID format: `SCOPE-NN` (e.g., SEC-01). Severity: CRITICAL/HIGH/MEDIUM/LOW. Confidence: 0-100.
 
 Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
@@ -46,7 +48,7 @@ Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
 
 1. **Linters** — If project has configured linters (detected from config files like .eslintrc, biome.json, pyproject.toml, Makefile), run them via Bash. Skip if no tooling detected.
 2. **Grep** — All patterns from all scopes in single parallel batch
-3. **Context** — Read matched files in parallel (offset+limit=20 around match)
+3. **Context** — Read matched files in parallel (offset+limit=50 around match). MANDATORY: never report a finding without completing this step. If context reveals false positive → discard.
 4. **Output** — Combined JSON with findings tagged by scope
 
 Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
@@ -98,3 +100,4 @@ Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
 | Severity | Per CCO Rules: Severity Levels. |
 | False positives | Skip: pre-existing issues, platform-guarded code, linter domain, single occurrences. Per CCO Rules: Skip Patterns. |
 | CRITICAL validation | Analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |
+| CRITICAL/HIGH gate | Before finalizing: (1) re-read the file section, (2) check skip patterns, (3) verify not test/mock/fixture context. Any check fails → downgrade one severity level. |

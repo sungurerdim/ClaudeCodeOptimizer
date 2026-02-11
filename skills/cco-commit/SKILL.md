@@ -31,159 +31,114 @@ allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 
 Pre-checks → Analyze → Execute → Verify → Summary
 
-### Phase 1: Pre-checks + Quality Gates [PARALLEL: 5 checks]
+### Phase 1: Pre-checks + Quality Gates
 
-**1.0 Prerequisites:** Verify `git` is available (`git --version`). If missing → stop: "Install Git: https://git-scm.com". Then fetch remote main: `git fetch origin main 2>/dev/null` (best-effort, no-op if offline or no remote).
+**1.1 Prerequisites:** Verify `git` available. Fetch remote: `git fetch origin main 2>/dev/null` (best-effort).
 
-**1.0a Main branch guard:** If current branch is `main` or `master`:
+**1.2 Main branch guard [ON MAIN ONLY]:** If on `main` or `master`:
 
-**Step 1: Check existing feature branches**
-
-```bash
-git branch --list 'feat/*' 'fix/*' 'chore/*' 'refactor/*' 'docs/*' 'ci/*' 'test/*' 'perf/*' --sort=-committerdate
-```
-
-Existing branches = work in progress. `/cco-pr --auto-merge` deletes merged branches, so remaining ones mean unfinished work.
-
-**Step 2: Early-analyze changes (Phase 2 logic, before branch decision)**
-
-Read `git diff` and `git status` to classify uncommitted changes. Apply smart grouping:
-- Single logical scope → one branch candidate (e.g., `feat/add-auth`)
-- Multiple scopes detected → list them separately for user choice
-
-**Step 3: Ask user**
+1. Check existing feature branches: `git branch --list 'feat/*' 'fix/*' 'chore/*' 'refactor/*' 'docs/*' 'ci/*' 'test/*' 'perf/*' --sort=-committerdate`
+2. Early-analyze changes (Phase 2 logic) to classify scope and generate branch candidates
+3. Ask user where changes should go:
 
 ```javascript
-// When existing branches AND/OR multiple scopes detected:
 AskUserQuestion([{
   question: "You're on main. Where should these changes go?",
   header: "Branch",
   options: [
-    // Existing branches (if any, most recent first, max 2):
+    // Up to 2 existing branches (most recent first):
     { label: "{existing-branch}", description: "Continue on this branch ({n} commits ahead)" },
-    // New branch candidates from analysis:
-    { label: "New: {type}/{description}", description: "{n} files — {summary of changes}" },
+    // Up to 2 new branch candidates from analysis:
+    { label: "New: {type}/{description}", description: "{n} files — {summary}" },
     // Always last:
     { label: "Commit on main", description: "Not recommended for release-please repos" }
   ],
   multiSelect: false
 }])
-
-// When no existing branches AND single scope:
-AskUserQuestion([{
-  question: "You're on main. Create '{type}/{description}' for these changes?",
-  header: "Branch",
-  options: [
-    { label: "Create branch (Recommended)", description: "{type}/{description} — {summary}" },
-    { label: "Commit on main", description: "Not recommended for release-please repos" }
-  ],
-  multiSelect: false
-}])
+// Single scope + no existing branches → simpler "Create branch?" / "Commit on main" prompt
 ```
-
-Options are dynamic: up to 2 existing branches + up to 2 new branch candidates = max 4 options.
-
-**Step 4: Execute branch decision**
 
 | Decision | Action |
 |----------|--------|
 | Existing branch | `git checkout {branch}` — uncommitted changes carry over |
-| New branch | `git checkout -b {type}/{description}` — uncommitted changes carry over |
-| Multiple scopes, user picks one | `git stash` the rest, `git checkout -b {branch}`, commit selected files, `git stash pop` after commit. If stash pop fails (conflict), warn: "Stash pop conflict — resolve manually with `git stash show` and `git stash drop` after resolving." |
+| New branch | `git checkout -b {type}/{description}` |
+| Multiple scopes, user picks one | `git stash` the rest, checkout branch, commit selected, `git stash pop` |
 | Commit on main | Skip guard, proceed normally |
 
-After branch switch/creation: continue with Phase 2 (Analyze) on the branch. Subsequent `/cco-commit` calls see the feature branch → guard doesn't trigger → normal commit flow.
+Branch naming: `{type}/{short-description}`, all lowercase, hyphens, max 50 chars.
 
-**Branch naming rules:**
-- Format: `{type}/{short-description}` — all lowercase, hyphens for spaces
-- Max 50 chars total
-- Description from dominant change area, not individual files
-- Examples: `feat/add-auth`, `fix/login-validation`, `chore/update-deps`, `refactor/extract-services`
+**1.3 Conflict check:** `UU`/`AA`/`DD` in status → stop.
 
-**1.1 Conflict check:** If `UU`/`AA`/`DD` in git status → stop immediately.
+**1.4 File type detection:** Categorize as code, test, tested-content (skills/, agents/, rules/), docs, config.
 
-**1.2 File type detection:** Categorize changed files as code, test, tested-content (skills/, agents/, rules/), docs, config.
-
-**1.3 Quality Gates [PARALLEL, CONDITIONAL]:**
-
-Run on full project (not just changed files):
+**1.5 Quality Gates [PARALLEL, CONDITIONAL]:**
 - Always: secret scan + large file check on changed files
-- If code changes: format, lint, type commands in parallel (background)
-- If code/test/tested-content changes: test command (background)
-- Pure docs/config only: skip tests
+- Code changes: format, lint, type commands in parallel (background)
+- Code/test/tested-content: test command (background)
+- Pure docs/config: skip tests
 
-**1.4 Gate failure:** Ask "Fix first (Recommended)" or "Commit anyway". Show error details on fix.
+**1.6 Gate failure [CONDITIONAL]:** Ask "Fix first (Recommended)" or "Commit anyway".
 
 ### Phase 2: Analyze Changes
 
-Collect all uncommitted changes. Read git diff for analysis.
+Read git diff. Collect all uncommitted changes.
 
-**Amend detection (unpushed commits):**
-
-If there are unpushed commits on the current branch, check whether new changes should amend an existing commit instead of creating a new one:
+**Amend detection (unpushed commits only):**
 
 | Condition | Action |
 |-----------|--------|
-| Change is trivial (≤3 lines or single-line fix) | Amend to most recent unpushed commit |
-| Changed file(s) overlap with files in an unpushed commit | Amend to that commit (most relevant match) |
-| Change is in the same logical scope as an unpushed commit | Amend to that commit |
-| Multiple unpushed commits match | Prefer the most recent one |
-| No overlap and non-trivial | Create new commit (normal flow) |
+| Trivial change (≤3 lines) | Amend most recent unpushed commit |
+| File overlap with unpushed commit | Amend that commit |
+| Same logical scope as unpushed commit | Amend that commit |
+| No overlap and non-trivial | New commit |
 
-**Amend execution:** `git add {files} && git commit --amend --no-edit` (preserves original message). If the amended commit's message no longer accurately describes the changes, update it.
+Amend: `git add {files} && git commit --amend --no-edit`. Update message if it no longer describes changes. Safety: never amend pushed commits.
 
-**Safety:** Only amend commits that have NOT been pushed. Never amend if `git log @{upstream}..HEAD` is empty or upstream tracking fails with no `origin/{branch}` match (means branch was already pushed or is tracking).
+**Smart grouping:** ≤5 files or single logical change → single commit. Multiple distinct changes → split. Default: single.
 
-**Smart grouping:** ≤5 files or single logical change → single commit. Multiple distinct logical changes → split into separate commits. Default: single commit.
-
-Display commit plan table: type, title, file count. If amending, show `(amend → {short-hash})` next to the entry.
+Display commit plan table: type, title, file count. If amending: `(amend → {short-hash})`.
 
 ### Phase 3: Execute Commits [DIRECT]
 
-No approval question — table was shown, commit directly. Skip in `--preview` mode.
+No approval question — table was shown, commit directly. Skip in `--preview`.
 
-For each commit: stage files → build conventional commit message → create commit.
+Stage files → build conventional commit message → create commit.
 
-**Title Rules:**
-- Format: `type(scope): title` or `type!: title` for breaking
-- Must be ≤50 characters total
-- If >50 chars → stop and ask user
-
-**Scope detection:** Directory where >50% of files changed. No majority → omit scope.
+**Title:** `type(scope): title` ≤50 chars. If >50 → ask user. Scope: directory where >50% of files changed, omit if no majority.
 
 **Type detection (release-please compatible):**
 
-| Type | Release Bump | When | Examples |
-|------|-------------|------|----------|
-| `feat` | **minor** | New user-facing capability that didn't exist before | New endpoint, new CLI flag, new UI component |
-| `fix` | **patch** | Corrects broken behavior users can observe | Bug fix, crash fix, incorrect output |
-| `feat!`/`fix!` | **major** | Change that breaks existing consumers | Removed endpoint, renamed export, changed return type |
-| `refactor` | none | Code restructuring with no behavior change | Extract function, rename internal var, reorganize files |
-| `chore` | none | Maintenance, dependencies, build config | Update deps, CI config, linter rules, internal tooling |
-| `docs` | none | Documentation only | README, comments, API docs, changelog |
-| `perf` | none | Performance improvement, no new behavior | Cache optimization, query tuning, lazy loading |
-| `test` | none | Test additions or fixes | New test cases, fix flaky test |
-| `ci` | none | CI/CD pipeline changes | Workflow files, deployment scripts |
+| Type | Bump | When |
+|------|------|------|
+| `feat` | minor | New user-facing capability |
+| `fix` | patch | Corrects broken behavior |
+| `feat!`/`fix!` | major | Breaks existing consumers |
+| `refactor` | none | Code restructuring, no behavior change |
+| `chore` | none | Maintenance, deps, build config |
+| `docs` | none | Documentation only |
+| `perf` | none | Performance improvement |
+| `test` | none | Test additions or fixes |
+| `ci` | none | CI/CD pipeline changes |
 
 **Anti-bump rules (CRITICAL for release-please):**
-- `feat` = something a user/consumer can now DO that they couldn't before. If it's internal → `refactor` or `chore`
-- Improving existing behavior (faster, cleaner, more robust) is NOT `feat` → use `refactor`, `perf`, or `chore`
-- Adding/updating docs, tests, CI, config, or dev tooling is NEVER `feat` or `fix`
-- `fix` = something was BROKEN and now works. Preventive improvements are `refactor` or `chore`
-- When uncertain between `feat`/`fix` and a non-bumping type → prefer the non-bumping type
-- `BREAKING CHANGE` footer only for changes that break existing consumers (API, CLI, library users)
+- `feat` = user can now DO something new. Internal → `refactor`/`chore`
+- Improving existing behavior is NOT `feat` → `refactor`/`perf`/`chore`
+- Docs, tests, CI, config, dev tooling are NEVER `feat`/`fix`
+- `fix` = something was BROKEN. Preventive → `refactor`/`chore`
+- Uncertain → prefer non-bumping type
+- `BREAKING CHANGE` footer only for changes breaking existing consumers
 
 **Message rules:**
 1. Analyze git diff content only — not session memory
 2. Describe what changed, not why
-3. Breaking changes: append exclamation mark to type (e.g., feat!), add BREAKING CHANGE footer with description of what breaks
-4. Append trailer only: `Co-Authored-By: {model} <noreply@anthropic.com>` — no other non-trailer lines after the body (GitHub ignores trailers if non-trailer content is mixed in)
-5. Title must be lowercase after the colon (e.g., `feat(api): add user endpoint` not `feat(api): Add user endpoint`)
+3. Breaking: `type!`, add BREAKING CHANGE footer
+4. Trailer: `Co-Authored-By: {model} <noreply@anthropic.com>` — no non-trailer lines after body
+5. Lowercase after colon: `feat(api): add endpoint` not `feat(api): Add endpoint`
 
 ### Phase 4: Verify
 
-Check commits created successfully via `git log`. Verify working tree clean (unless `--staged-only`).
+`git log` to confirm commits. Verify working tree clean (unless `--staged-only`).
 
 ### Phase 5: Summary
 
-Show: commit count, file count, branch, status, commit list, next steps (`git push`). Stash reminder if applicable.
+Commit count, file count, branch, commit list, next steps (`git push`). Stash reminder if applicable.

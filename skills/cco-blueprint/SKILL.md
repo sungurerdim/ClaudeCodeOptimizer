@@ -9,8 +9,6 @@ disable-model-invocation: true
 
 **Project Health System** — Profile-based assessment, transformation, and progress tracking.
 
-**Philosophy:** One command to assess, transform, and track any project. Profile in CLAUDE.md ensures context persists across sessions.
-
 ## Flags
 
 | Flag | Effect |
@@ -28,7 +26,7 @@ disable-model-invocation: true
 
 ## CLAUDE.md Profile Format
 
-Profile is stored between markers in CLAUDE.md. Content outside markers is never modified.
+Profile stored between `<!-- cco-blueprint-start -->` and `<!-- cco-blueprint-end -->` markers. Content outside markers is never modified.
 
 ```markdown
 <!-- cco-blueprint-start -->
@@ -37,18 +35,16 @@ Profile is stored between markers in CLAUDE.md. Content outside markers is never
 **Project:** {name} | **Type:** {type} | **Stack:** {stack} | **Target:** {quality}
 
 ### Config
-- **Priorities:** {priority1}, {priority2}
-- **Constraints:** {constraint1}, {constraint2}
+- **Priorities:** {list}
+- **Constraints:** {list}
 - **Data:** {data types} | **Regulations:** {if applicable}
 - **Audience:** {audience} | **Deploy:** {deploy method}
 
 ### Project Map
-```
 Entry: {entry point} → {framework}
-Modules: {module flow}
+Modules: {module → role mapping}
 External: {external dependencies}
 Toolchain: {tools} | {CI} | {container}
-```
 
 ### Ideal Metrics
 | Metric | Target |
@@ -68,58 +64,52 @@ Toolchain: {tools} | {CI} | {container}
 | DX | {n} | {OK/WARN} |
 | Documentation | {n} | {OK/WARN} |
 | Overall | {n} | {OK/WARN} |
-
 <!-- cco-blueprint-end -->
 ```
 
 **Profile read/write rules:**
-- Parse content between `<!-- cco-blueprint-start -->` and `<!-- cco-blueprint-end -->`
-- If CLAUDE.md does not exist, create it with profile section only
-- If CLAUDE.md exists, strip ALL CCO marker sections before writing new profile:
-  - v4: `<!-- cco-blueprint-start -->` … `<!-- cco-blueprint-end -->`
-  - v2-v3: `<!-- CCO_ADAPTIVE_START -->` … `<!-- CCO_ADAPTIVE_END -->`
-  - v2: `<!-- CCO_CONTEXT_START -->` … `<!-- CCO_CONTEXT_END -->`
-  - v1-v2: `<!-- CCO_PRINCIPLES_START -->` … `<!-- CCO_PRINCIPLES_END -->`
-- Preserve all content outside the markers
+- If CLAUDE.md does not exist → create with profile section only
+- If exists → strip ALL CCO marker sections before writing: v4 (`cco-blueprint-start/end`), v2-v3 (`CCO_ADAPTIVE_START/END`), v2 (`CCO_CONTEXT_START/END`), v1-v2 (`CCO_PRINCIPLES_START/END`)
+- Preserve all content outside markers
+
+## Phase Checklist
+
+| Phase | Name | Skippable? |
+|-------|------|------------|
+| 1 | Discovery | No |
+| 2 | Init Flow | Yes (if profile exists) |
+| 3 | Assess | No |
+| 3.5 | Project Map | No |
+| 4 | Consolidate | No |
+| 5 | Plan Review | Yes (--auto) |
+| 6 | Apply | Yes (--preview) |
+| 6.5 | Needs-Approval Review | Yes (--auto) |
+| 7 | Update Profile | No |
+| 7.5 | Memory Cleanup | Yes (--preview) |
+| 8 | Summary | No |
+
+Before reporting completion, verify every non-skipped phase produced output.
 
 ## Execution Flow
 
 Discovery → [Init Flow] → Assess [PARALLEL] → Consolidate → Plan → [Apply] → Update Profile → Summary
 
-### Phase 0: Prerequisites
-
-Verify `git` is available (`git --version`). If missing → warn: "Git not found. Some features (git status, commit history) will be limited." Continue with reduced functionality.
-
 ### Phase 1: Discovery [PARALLEL]
 
 1. Search CLAUDE.md for `<!-- cco-blueprint-start -->`
-2. Parallel project detection (Glob/Grep/Read):
-
-| Signal | Detection |
-|--------|-----------|
-| Language | Glob `**/*.{ts,js,py,go,rs,java,rb,cs}` → majority |
-| Framework | Grep: express, fastapi, react, next, django, flask, gin, actix |
-| Project type | routes/ → API, pages/ → Web, bin/ → CLI, src/lib/ → Library |
-| Toolchain | Glob: .eslintrc*, tsconfig.json, .prettierrc*, mypy.ini, biome.json |
-| CI/CD | Glob: .github/workflows/*.yml, .gitlab-ci.yml, Jenkinsfile |
-| Docker | Glob: Dockerfile*, docker-compose*, compose.y*ml |
-| Tests | Glob: **/*.test.*, **/*.spec.*, **/test_*.py |
-| Data sensitivity | Grep: password, email, credit_card, ssn, token patterns |
-| Git | `git status --short`, `git log --oneline -5` |
+2. Parallel project detection via Glob/Grep/Read: language (majority file ext), framework (express/fastapi/react/etc), project type (routes→API, pages→Web, bin→CLI, src/lib→Library), toolchain (.eslintrc, tsconfig, biome.json), CI/CD, Docker, tests, data sensitivity (password/email/token patterns), git status
 
 **Decision tree:**
-1. Profile exists AND not --init/--refresh → Phase 3 (incremental mode)
-2. Profile exists AND --refresh → Phase 2 (re-ask questions, preserve decisions)
-3. No profile AND --init → Phase 2 (create profile, stop after)
-4. No profile AND not --init → Phase 2 (create profile, ask user to continue)
-
-On error: If CLAUDE.md is unreadable or corrupt, create fresh profile. Log warning.
+1. Profile exists AND not --init/--refresh → Phase 3 (incremental)
+2. Profile exists AND --refresh → Phase 2 (re-ask, preserve decisions)
+3. No profile AND --init → Phase 2 (create profile, stop)
+4. No profile AND not --init → Phase 2 (create profile, ask to continue)
 
 ### Phase 2: Init Flow [no profile OR --init/--refresh]
 
-Two AskUserQuestion calls (6 questions total). All questions in English. Detection results marked "(Detected)" in relevant option.
+Two AskUserQuestion calls (6 questions total, all in English). Detection results marked "(Detected)".
 
-#### Call 1: Project Identity (3 questions)
+#### Call 1: Project Identity
 
 ```javascript
 AskUserQuestion([
@@ -128,9 +118,9 @@ AskUserQuestion([
     header: "Project Type",
     options: [
       { label: "{Detected type} (Detected)", description: "Auto-detected from project structure" },
-      { label: "Frontend", description: "Web apps, mobile apps, desktop apps (React, Flutter, Electron, etc.)" },
-      { label: "Developer Tool", description: "CLIs, libraries, SDKs, plugins, extensions, frameworks" },
-      { label: "Infrastructure", description: "IaC (Terraform/Pulumi), CI/CD configs, deployment scripts, DevOps" }
+      { label: "Frontend", description: "Web apps, mobile apps, desktop apps" },
+      { label: "Developer Tool", description: "CLIs, libraries, SDKs, plugins, extensions" },
+      { label: "Infrastructure", description: "IaC, CI/CD configs, deployment scripts" }
     ],
     multiSelect: false
   },
@@ -138,10 +128,10 @@ AskUserQuestion([
     question: "What quality level should this project meet?",
     header: "Quality",
     options: [
-      { label: "Prototype", description: "Experimenting with ideas, might throw away. Minimal checks." },
-      { label: "MVP", description: "Ship fast with basics covered. Good enough, not perfect." },
-      { label: "Production (Recommended)", description: "Real users depend on this. Full quality gates." },
-      { label: "Enterprise", description: "Compliance and audits required. Strictest checks." }
+      { label: "Prototype", description: "Minimal checks" },
+      { label: "MVP", description: "Ship fast with basics covered" },
+      { label: "Production (Recommended)", description: "Full quality gates" },
+      { label: "Enterprise", description: "Compliance and audits required" }
     ],
     multiSelect: false
   },
@@ -149,19 +139,17 @@ AskUserQuestion([
     question: "What kind of data does this project handle?",
     header: "Data",
     options: [
-      { label: "Personal info", description: "Names, emails, phone numbers, addresses — anything identifying a person" },
-      { label: "Sensitive data", description: "Health records, financial data, biometrics, payment cards" },
-      { label: "Auth credentials", description: "Passwords, API keys, tokens, session data" },
-      { label: "No sensitive data", description: "Only public or anonymous data, nothing private" }
+      { label: "Personal info", description: "Names, emails, addresses — anything identifying" },
+      { label: "Sensitive data", description: "Health, financial, biometrics, payment cards" },
+      { label: "Auth credentials", description: "Passwords, API keys, tokens, sessions" },
+      { label: "No sensitive data", description: "Only public or anonymous data" }
     ],
     multiSelect: true
   }
 ])
 ```
 
-The first option's label for Q1 is dynamically set based on Discovery results. If detection is ambiguous, no option gets "(Detected)" tag.
-
-#### Call 2: Strategy (3 questions)
+#### Call 2: Strategy
 
 ```javascript
 AskUserQuestion([
@@ -169,10 +157,10 @@ AskUserQuestion([
     question: "What should CCO focus on improving?",
     header: "Priorities",
     options: [
-      { label: "Security (Recommended)", description: "Find vulnerabilities, fix data leak risks, harden defenses" },
-      { label: "Code Quality (Recommended)", description: "Clean up code, add types, reduce complexity, remove dead code" },
-      { label: "Architecture", description: "Improve project structure, design patterns, module boundaries" },
-      { label: "Documentation", description: "Fill gaps in README, API docs, developer guides" }
+      { label: "Security (Recommended)", description: "Vulnerabilities, data leaks, hardening" },
+      { label: "Code Quality (Recommended)", description: "Types, complexity, dead code" },
+      { label: "Architecture", description: "Structure, patterns, module boundaries" },
+      { label: "Documentation", description: "README, API docs, developer guides" }
     ],
     multiSelect: true
   },
@@ -180,10 +168,10 @@ AskUserQuestion([
     question: "What should CCO avoid changing?",
     header: "Constraints",
     options: [
-      { label: "Keep framework/language", description: "Don't suggest migrating to a different framework or language" },
-      { label: "Don't break public APIs", description: "Preserve all existing endpoints, function signatures, exports" },
-      { label: "No new dependencies", description: "Only use packages already in the project" },
-      { label: "No restrictions", description: "CCO can change anything for the best result" }
+      { label: "Keep framework/language", description: "Don't suggest migrations" },
+      { label: "Don't break public APIs", description: "Preserve endpoints, signatures, exports" },
+      { label: "No new dependencies", description: "Only use existing packages" },
+      { label: "No restrictions", description: "CCO can change anything" }
     ],
     multiSelect: true
   },
@@ -191,32 +179,30 @@ AskUserQuestion([
     question: "Who uses this project?",
     header: "Audience",
     options: [
-      { label: "Public users", description: "Anyone on the internet can access it — strictest security needed" },
-      { label: "Internal team", description: "Only people in your company/org use it — standard security" },
-      { label: "Other developers", description: "A library or tool other devs consume — API design and docs matter most" },
-      { label: "Not decided / local only", description: "Still in development, not deployed anywhere yet" }
+      { label: "Public users", description: "Internet-facing — strictest security" },
+      { label: "Internal team", description: "Company/org only — standard security" },
+      { label: "Other developers", description: "Library/tool consumers — API design matters" },
+      { label: "Not decided / local only", description: "Still in development" }
     ],
     multiSelect: false
   }
 ])
 ```
 
-Deployment detail (Docker/cloud/serverless) is auto-detected from Discovery and written to profile without asking.
+Deployment auto-detected from Discovery (Docker/cloud/serverless), written to profile without asking.
 
 #### --auto Mode Defaults
 
 | Question | Default |
 |----------|---------|
-| Q1 Project type | Auto-detected from Discovery |
-| Q2 Quality | Production |
-| Q3 Data | Grep scan for PII/credential patterns in code |
-| Q4 Priorities | Security + Code Quality |
-| Q5 Constraints | Keep framework/language |
-| Q6 Audience | Auto-detect (Dockerfile → container, .github → cloud, else local) |
+| Project type | Auto-detected |
+| Quality | Production |
+| Data | Grep scan for PII/credential patterns |
+| Priorities | Security + Code Quality |
+| Constraints | Keep framework/language |
+| Audience | Auto-detect (Dockerfile → container, .github → cloud, else local) |
 
-#### Ideal Metrics Calculation
-
-After questions, calculate ideal metrics by project type:
+#### Ideal Metrics by Project Type
 
 | Type | Coupling | Cohesion | Complexity | Coverage |
 |------|----------|----------|------------|----------|
@@ -228,203 +214,106 @@ After questions, calculate ideal metrics by project type:
 | Mobile | <55% | >65% | <12 | 65%+ |
 | Infra/IaC | <45% | >70% | <10 | 60%+ |
 
-Quality target adjustment: prototype 30% relaxed, mvp 15% relaxed, production standard, enterprise 10% strict.
+Adjustments: prototype 30% relaxed, mvp 15% relaxed, production standard, enterprise 10% strict. Sensitive data: security weight 25%→35%.
 
-Sensitive data handling: security weight 25%→35%, privacy scope escalates to CRITICAL.
-
-Write profile to CLAUDE.md before asking any questions. If `--init`, stop here. If first-time profile creation (not --init, not --refresh), ask user whether to continue with assessment (profile is already saved at this point — user can safely stop and resume later):
+Write profile to CLAUDE.md. If `--init` → stop here. If first-time (not --init/--refresh):
 
 ```javascript
 AskUserQuestion([{
   question: "Profile created. Continue with assessment and fixes?",
   header: "Continue",
   options: [
-    { label: "Continue (Recommended)", description: "Run full assessment and apply fixes now" },
-    { label: "Stop here", description: "Profile saved. Run /cco-blueprint again to assess later" }
+    { label: "Continue (Recommended)", description: "Run full assessment now" },
+    { label: "Stop here", description: "Profile saved. Run /cco-blueprint again later" }
   ],
   multiSelect: false
 }])
 ```
 
-If user selects "Stop here", display profile summary and exit.
-
-On error: If CLAUDE.md write fails, display profile in output and instruct user to add manually.
-
 ### Phase 3: Assess [PARALLEL]
 
-Always run all tracks regardless of current scores.
+| Track | Agent Call |
+|-------|-----------|
+| A: Code Quality | cco-agent-analyze: security, hygiene, types, simplify, performance, robustness, privacy (mode: auto) |
+| B: Architecture | cco-agent-analyze: architecture, patterns, testing, maintainability (mode: auto) |
+| C: Documentation | cco-agent-analyze: doc-sync (mode: auto) |
+| D: Audit | cco-agent-analyze: stack-assessment, dependency-health, dx-quality, project-structure (mode: audit) |
 
-| Track | Tool |
-|-------|------|
-| A: Code Quality | `Task(cco-agent-analyze, {scopes: ["security", "hygiene", "types", "simplify", "performance", "robustness", "privacy"], mode: "auto"})` |
-| B: Architecture | `Task(cco-agent-analyze, {scopes: ["architecture", "patterns", "testing", "maintainability"], mode: "auto"})` |
-| C: Documentation | `Task(cco-agent-analyze, {scopes: ["doc-sync"], mode: "auto"})` |
-| D: Audit | `Task(cco-agent-analyze, {scopes: ["stack-assessment", "dependency-health", "dx-quality", "project-structure"], mode: "audit"})` |
+All tracks run with `--preview`. Per CCO Rules: Agent Error Handling.
 
-All tracks run with `--preview`: analyze only, no changes applied.
+### Phase 3.5: Project Map
 
-Per CCO Rules: Agent Error Handling.
+Build from Discovery + Assess results. Generated from directory structure, entry points (package.json main/bin), import/require patterns, dependency files, detected toolchain.
 
-### Phase 3.5: Project Map [PARALLEL with Phase 3 consolidation]
-
-Build bird's-eye view from Discovery data + Assess results:
-
-```
-PROJECT MAP
-===========
-{name} ({stack}) | {n} files | {n} LOC
-
-Entry: {entry point} → {framework}
-
-Modules:
-  {dir}/     → {role} ({submodules})
-  ...
-
-Data Flow:
-  {flow description}
-
-External:
-  {external deps list}
-
-Toolchain:
-  {formatter} + {linter} + {compiler} + {test runner} | {CI} | {container}
-```
-
-**Generation method:** From Phase 1 Discovery Glob/Grep/Read results:
-- Directory structure: `ls` + Glob for main directories and roles
-- Entry point: package.json main/bin or framework convention
-- Module relationships: Grep import/require patterns
-- External dependencies: package.json/pyproject.toml dependencies
-- Toolchain: already detected in Discovery
-
-Project Map is always displayed (including --auto). Written to profile on first run, updated on subsequent runs if changed.
+Always displayed (including --auto). Written to profile on first run, updated on subsequent runs.
 
 ### Phase 4: Consolidate
 
-1. Merge all track results, deduplicate by file:line
-2. Calculate health scores:
+Merge all track results, deduplicate by file:line.
+
+**Deduplication rules:**
+- Same file:line → merge, keep highest severity
+- Same file, same issue within 10 lines → merge
+- Contradictory findings → keep higher confidence
+
+Calculate health scores:
 
 | Dimension | Weight | Source |
 |-----------|--------|--------|
-| Security | 25%* | optimize: security + privacy + robustness |
-| Code Quality | 20% | optimize: hygiene + types + simplify + performance |
-| Architecture | 20% | align: architecture + patterns + maintainability |
-| Stack Health | 15% | audit: stack-assessment + dependency-health |
-| DX | 10% | audit: dx-quality + project-structure |
-| Documentation | 10% | docs results |
+| Security | 25%* | security + privacy + robustness |
+| Code Quality | 20% | hygiene + types + simplify + performance |
+| Architecture | 20% | architecture + patterns + maintainability |
+| Stack Health | 15% | stack-assessment + dependency-health |
+| DX | 10% | dx-quality + project-structure |
+| Documentation | 10% | doc-sync |
 
-*Sensitive data profiles: Security increases to 35%, other weights decrease proportionally.
+*Sensitive data profiles: Security → 35%, others decrease proportionally.
 
-3. Prioritize 80/20: Quick Win → Moderate → Complex → Major
-
-On error: If scoring data is incomplete, use available dimensions only. Note missing dimensions.
+Prioritize 80/20: Quick Win → Moderate → Complex → Major.
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
-```
-PROJECT BLUEPRINT
-=================
-Project: {name} ({type}) | {stack} | Health: {score}/100 ({grade})
-
---- Project Map ---
-Entry: {entry} → {framework}
-Modules: {module summary}
-External: {external deps}
-Toolchain: {toolchain summary}
-
---- Health Scores ---
-| Dimension       | Current | Target | Gap | Status |
-|-----------------|---------|--------|-----|--------|
-| Security        |   {n}   |  {n}   | {n} |  {st}  |
-| Code Quality    |   {n}   |  {n}   | {n} |  {st}  |
-| Architecture    |   {n}   |  {n}   | {n} |  {st}  |
-| Stack Health    |   {n}   |  {n}   | {n} |  {st}  |
-| DX              |   {n}   |  {n}   | {n} |  {st}  |
-| Documentation   |   {n}   |  {n}   | {n} |  {st}  |
-| Overall         |   {n}   |  {n}   | {n} |  {st}  |
-
---- Findings ---
-Total: {n} | Auto-fixable: {n} | Needs approval: {n}
-
-Quick Wins:
-  [{severity}] {id}: {title} in {file}:{line}
-  ...
-```
-
-Action options: Fix all (recommended) / Critical+high only / Quick wins only / Report only.
+Display blueprint dashboard: project info, health scores table (Current/Target/Gap/Status), findings summary with quick wins. Action options: Fix all (recommended) / Critical+high only / Quick wins only / Report only.
 
 ### Phase 6: Apply [SKIP if --preview]
 
-Apply findings via cco-agent-apply in priority order:
-
-1. CRITICAL/security findings first (security, privacy, robustness scopes)
-2. Code quality findings (hygiene, types, simplify, performance scopes)
-3. Architecture findings (architecture, patterns, maintainability scopes)
-4. Documentation findings (doc-sync scope)
-
-Send each group as a `Task(cco-agent-apply, {findings: [...], fixAll: true})` call. Profile constraints are passed as context.
-
-On error: If an apply call fails, log error with details, continue with next group. Count as failed in accounting.
+Send findings to cco-agent-apply in priority order: CRITICAL/security → Code quality → Architecture → Documentation. Per CCO Rules: on error, count as failed, continue.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: after apply, if needs_approval > 0, display items table and ask Fix All / Review Each.
+Per CCO Rules: if needs_approval > 0, display items table and ask Fix All / Review Each.
 
 ### Phase 7: Update Profile
 
-Update CLAUDE.md blueprint section:
-- Current Scores → new scores
-
-On error: If CLAUDE.md update fails, display updated profile in output.
+Update CLAUDE.md blueprint section with new Current Scores.
 
 ### Phase 7.5: Memory Cleanup [SKIP if --preview]
 
-Clean up Claude Code auto-memory files using the full project context from Discovery + Assess.
+Clean up Claude Code auto-memory files: `{user home}/.claude/projects/{project-hash}/memory/`
 
-**Target directory:** `{user home}/.claude/projects/{project-hash}/memory/` (derived from git root, OS-agnostic path)
-
-**Steps:**
-1. Read `MEMORY.md` and all topic files in the memory directory
+1. Read `MEMORY.md` and topic files
 2. Cross-reference entries against current project state:
 
 | Check | Stale Signal | Action |
 |-------|-------------|--------|
-| File references | Referenced file/dir no longer exists (checked via Glob) | Remove entry |
-| Build/test commands | Command no longer in package.json/Makefile/scripts (from Discovery) | Update or remove |
-| Pattern notes | Contradicts current architecture (from Project Map) | Update to match current state |
-| Debugging notes | References issues that are now fixed (from Assess findings) | Remove |
-| Dependency info | Version/package changed or removed (from Discovery) | Update |
-| Duplicate entries | Same info in MEMORY.md and topic file, or repeated across topics | Consolidate |
+| File references | File/dir no longer exists (Glob) | Remove entry |
+| Build/test commands | Command not in package.json/Makefile (Discovery) | Update or remove |
+| Pattern notes | Contradicts current architecture (Project Map) | Update |
+| Debugging notes | References fixed issues (Assess findings) | Remove |
+| Dependency info | Version/package changed or removed (Discovery) | Update |
+| Duplicate entries | Same info in MEMORY.md and topic file | Consolidate |
 
-3. Ensure MEMORY.md stays within 200-line budget (Claude Code only loads first 200 lines at startup). Move detailed content to topic files if needed.
+3. Keep MEMORY.md within 200-line budget (Claude Code startup limit). Move detail to topic files.
 4. Remove orphan topic files not referenced from MEMORY.md
-5. Report cleanup results in summary
 
-**In --auto mode:** Apply all cleanup silently. In interactive mode: show planned changes, ask confirmation if >5 entries would be removed.
-
-**Atomicity:** Collect all planned deletions/edits first. Read and validate each target exists before modifying. If any read fails, skip that entry (don't abort entire cleanup). Each file edit is independent — partial cleanup is acceptable.
-
-On error: If memory directory doesn't exist or is empty, skip silently (auto-memory may not be enabled).
+In --auto: silent cleanup. Interactive: confirm if >5 entries removed. Partial cleanup acceptable.
 
 ### Phase 8: Summary
 
 Per CCO Rules: Accounting, Auto Mode.
 
-```
-BLUEPRINT COMPLETE
-==================
-Before → After:
-| Dimension | Before | After | Delta |
-|-----------|--------|-------|-------|
-| Overall   |  {n}   |  {n}  |  {±n} |
-...
+Before/After delta table, accounting (applied/failed/needs_approval/total), next steps.
 
-Accounting: Applied: {n} | Failed: {n} | Needs Approval: {n} | Total: {n}
+--auto: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Total: {n}`
 
-Next: /cco-blueprint --preview (check progress)
-      /cco-blueprint (close remaining gaps)
-```
-
---auto mode: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Total: {n}`
-
-Status: OK (overall >= target), WARN (gap exists but progress made), FAIL (CRITICAL unfixed or regression).
+Status: OK (overall >= target), WARN (gap exists but progress), FAIL (CRITICAL unfixed or regression).

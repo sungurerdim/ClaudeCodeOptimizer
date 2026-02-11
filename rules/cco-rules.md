@@ -57,6 +57,10 @@ Every output must be production-ready by default. Apply security, privacy, perfo
 
 When a production standard requires a design decision the user should be aware of, inform them briefly — but the standard itself is non-negotiable.
 
+## Output Brevity
+
+Tables over paragraphs. Bullets over prose. Summary: max 1-3 sentences. Educational content: only when the fix is non-obvious. Never repeat information the user already knows.
+
 ## Verification
 
 ### Read Before Write
@@ -92,6 +96,8 @@ On tool error: diagnose why, then use a different approach on the second attempt
 ### Task Awareness
 
 For multi-step work (3+ steps), track progress using task tools. Mark steps in_progress before starting and completed when verified. This prevents skipped steps and provides continuity across context compactions.
+
+Phase gate: when a plan has numbered substeps, execute in order. Verify each substep produced its expected output before proceeding to the next. Never skip a substep.
 
 ### Goal Anchoring
 
@@ -148,7 +154,7 @@ Validate agent output. On malformed/missing response, retry once. On second fail
 
 ### Parallel Execution
 
-Run independent tool calls in parallel in a single message. Use `run_in_background` for long Bash commands; collect via TaskOutput before producing output.
+ALWAYS batch independent tool calls into a single message. Never issue sequential calls when no data dependency exists. Self-check before each message: could any of these calls run simultaneously? If yes → batch them. Use `run_in_background` for long Bash commands; collect via TaskOutput before producing output.
 
 ### Severity Levels
 
