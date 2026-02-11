@@ -6,11 +6,9 @@ allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 
 # /cco-align
 
-**Align with Ideal Architecture** — "If I designed from scratch, what would be best?"
+**Align with Ideal Architecture** — Evaluate as if designing from scratch, compare current state to that ideal.
 
-**Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Compare current state to that ideal.
-
-**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco-optimize`.
+For tactical file-level fixes, use `/cco-optimize`.
 
 ## Args
 
@@ -32,7 +30,7 @@ allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 | testing | TST-01 to TST-10 | Coverage strategy, test quality, gaps |
 | maintainability | MNT-01 to MNT-12 | Complexity, readability, documentation |
 | ai-architecture | AIA-01 to AIA-10 | Over-engineering, local solutions, drift |
-| functional-completeness | FUN-01 to FUN-18 | API completeness, CRUD, pagination, filtering, edge cases, schema validation, state transitions, data management |
+| functional-completeness | FUN-01 to FUN-18 | API completeness, CRUD, pagination, edge cases, schema validation |
 
 ## Execution Flow
 
@@ -60,46 +58,40 @@ Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review):
 - Quality: testing, maintainability
 - Completeness: functional-completeness, ai-architecture
 
-Merge findings and metrics. Filter by user-selected scopes.
-
-Per CCO Rules: Agent Error Handling.
+Merge findings. Per CCO Rules: Agent Error Handling.
 
 ### Phase 3: Gap Analysis [CURRENT vs IDEAL]
 
-**If blueprint profile exists** in CLAUDE.md (between `<!-- cco-blueprint-start/end -->`): use its Ideal Metrics section as targets. Blueprint metrics are calibrated to project type + quality level + data sensitivity.
-
-**Default** (no blueprint profile): use project-type defaults per `/cco-blueprint` ideal metrics.
+If blueprint profile exists in CLAUDE.md: use its Ideal Metrics as targets. Otherwise: use project-type defaults per `/cco-blueprint`.
 
 Calculate gaps: current vs ideal for coupling, cohesion, complexity, coverage. Display Current vs Ideal table.
 
-Technology assessment: if agent found alternatives, show current vs ideal technology choices with migration cost. Recommend tech changes only with evidence (file:line), migration cost, and team familiarity consideration.
+Technology assessment: if alternatives found, show current vs ideal with migration cost. Recommend only with evidence (file:line).
+
+**Evidence verification:** Before including any gap: read the cited file:line to confirm evidence supports the claim. Remove any gap where cited code does not demonstrate the issue.
 
 ### Phase 4: Recommendations [80/20 PRIORITIZED]
 
-Categorize by effort/impact: Quick Win (high impact, low effort) → Moderate → Complex → Major.
+Categorize by effort/impact: Quick Win → Moderate → Complex → Major.
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
-Per CCO Rules: Plan Review Protocol. Display architectural plan before asking.
+Per CCO Rules: Plan Review Protocol.
 
 ### Phase 6: Apply
 
-Send recommendations to cco-agent-apply. Verify changes don't break functionality.
-
-Count findings, not locations.
-
-On error: If apply fails for a finding, count as failed, continue with next.
+Send to cco-agent-apply. Count findings, not locations. On error: count as failed, continue.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: after apply, if needs_approval > 0, display items table and ask Fix All / Review Each.
+Per CCO Rules: if needs_approval > 0, display items table and ask Fix All / Review Each.
 
 ### Phase 7: Summary
 
 Per CCO Rules: Accounting, Auto Mode, Severity Levels.
 
-Gap summary (before/after for coupling, cohesion, complexity, coverage), applied/failed/total accounting table, effort category breakdown.
+Gap summary (before/after), applied/failed/total, effort category breakdown.
 
---auto mode: `cco-align: {OK|WARN|FAIL} | Gaps: N | Applied: N | Failed: N | Needs Approval: N | Total: N`
+--auto: `cco-align: {OK|WARN|FAIL} | Gaps: N | Applied: N | Failed: N | Needs Approval: N | Total: N`
 
 Status: OK (failed=0, no gap>20%), WARN (failed>0 or gap>20%), FAIL (CRITICAL gap or error).
