@@ -75,7 +75,12 @@ Toolchain: {tools} | {CI} | {container}
 **Profile read/write rules:**
 - Parse content between `<!-- cco-blueprint-start -->` and `<!-- cco-blueprint-end -->`
 - If CLAUDE.md does not exist, create it with profile section only
-- If CLAUDE.md exists, update only the profile section (preserve all other content)
+- If CLAUDE.md exists, strip ALL CCO marker sections before writing new profile:
+  - v4: `<!-- cco-blueprint-start -->` … `<!-- cco-blueprint-end -->`
+  - v2-v3: `<!-- CCO_ADAPTIVE_START -->` … `<!-- CCO_ADAPTIVE_END -->`
+  - v2: `<!-- CCO_CONTEXT_START -->` … `<!-- CCO_CONTEXT_END -->`
+  - v1-v2: `<!-- CCO_PRINCIPLES_START -->` … `<!-- CCO_PRINCIPLES_END -->`
+- Preserve all content outside the markers
 
 ## Execution Flow
 
@@ -258,7 +263,7 @@ Always run all tracks regardless of current scores.
 
 All tracks run with `--preview`: analyze only, no changes applied.
 
-On error: If a track fails, log error, continue with remaining tracks. Score that dimension as "N/A".
+Per CCO Rules: Agent Error Handling.
 
 ### Phase 3.5: Project Map [PARALLEL with Phase 3 consolidation]
 
@@ -346,19 +351,7 @@ Quick Wins:
   ...
 ```
 
-```javascript
-AskUserQuestion([{
-  question: "How should we proceed?",
-  header: "Action",
-  options: [
-    { label: "Fix all (Recommended)", description: "Auto-fix everything possible, ask for approval items separately" },
-    { label: "Critical and high only", description: "Fix only CRITICAL and HIGH severity issues" },
-    { label: "Quick wins only", description: "Least effort, most improvement" },
-    { label: "Report only", description: "Don't change anything, just show results" }
-  ],
-  multiSelect: false
-}])
-```
+Action options: Fix all (recommended) / Critical+high only / Quick wins only / Report only.
 
 ### Phase 6: Apply [SKIP if --preview]
 

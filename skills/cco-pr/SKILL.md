@@ -1,6 +1,6 @@
 ---
 description: Create pull requests with conventional commit titles for clean release-please changelogs.
-argument-hint: "[--auto] [--auto-merge] [--preview] [--draft]"
+argument-hint: "[--auto] [--no-auto-merge] [--preview] [--draft]"
 allowed-tools: Read, Grep, Glob, Bash, AskUserQuestion
 ---
 
@@ -21,9 +21,9 @@ allowed-tools: Read, Grep, Glob, Bash, AskUserQuestion
 | Flag | Effect |
 |------|--------|
 | `--auto` | No questions, auto-detect everything, create PR directly |
-| `--auto-merge` | Enable auto-merge after PR creation (merges when checks pass, deletes branch) |
+| `--no-auto-merge` | Skip auto-merge setup (create PR only, merge manually) |
 | `--preview` | Show PR plan without creating |
-| `--draft` | Create as draft PR |
+| `--draft` | Create as draft PR (implies --no-auto-merge) |
 
 ## Execution Flow
 
@@ -33,13 +33,13 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
 
 1. Verify `git` is available (`git --version`). If missing → stop: "Install Git: https://git-scm.com"
 2. Verify `gh` is available (`gh --version`). If missing → stop: "Install GitHub CLI: https://cli.github.com"
-3. If on main/master → stop: "Create a branch first. Cannot PR from main."
-4. If no commits ahead of base → stop: "No commits to create PR for."
-5. If unpushed commits → `git push -u origin {branch}` automatically
-6. If PR already exists → show existing PR URL and ask: Update / Skip
-7. Check if branch is behind main:
+3. Fetch remote main: `git fetch origin main` (ensures up-to-date base for diff/rebase checks)
+4. If on main/master → stop: "Create a branch first. Cannot PR from main."
+5. If no commits ahead of base → stop: "No commits to create PR for."
+6. If unpushed commits → `git push -u origin {branch}` automatically
+7. If PR already exists → show existing PR URL and ask: Update / Skip
+8. Check if branch is behind main:
    ```bash
-   git fetch origin main
    git merge-base --is-ancestor origin/main HEAD
    ```
    If main has new commits not in branch:
@@ -56,7 +56,7 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
    }])
    ```
    In `--auto` mode: rebase automatically. On conflict → `git rebase --abort`, warn, continue with PR.
-8. Verify repo settings (single API call, first run per repo):
+9. Verify repo settings (single API call, first run per repo):
    ```bash
    gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'
    ```
@@ -197,7 +197,7 @@ On error: If `gh pr create` fails, display the title and body for manual creatio
 
 ### Phase 5: Merge Setup [DEFAULT]
 
-Triggers by default. Skip only when: user explicitly selected "Create PR only" or "Create as draft" in Phase 3, or `--draft` flag.
+Triggers by default. Skip only when: `--no-auto-merge` flag, `--draft` flag, or user explicitly selected "Create PR only" or "Create as draft" in Phase 3.
 
 ```bash
 gh pr merge {number} --auto --squash
@@ -262,7 +262,7 @@ Branch commits → /cco-pr → PR with conventional title → Squash merge →
 - Default commit message: "Pull request title and description"
 - **Automatically delete head branches**: checked (auto-cleanup remote branches after merge)
 
-Optional (enables `--auto-merge`):
+Recommended (enables auto-merge):
 - Settings → Branches → Branch protection rule for `main` → Require status checks
 
 This ensures the squash commit uses the PR title (conventional commit) as the commit message, not the concatenated individual commit messages.
