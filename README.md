@@ -58,14 +58,14 @@ No hooks, no plugins, no dependencies. Just markdown files.
 
 | Skill | Purpose |
 |-------|---------|
-| [`/cco-optimize`](docs/commands.md#cco-optimize) | Fix security, types, performance issues |
-| [`/cco-align`](docs/commands.md#cco-align) | Architecture and pattern analysis |
-| [`/cco-commit`](docs/commands.md#cco-commit) | Atomic commits with quality gates |
-| [`/cco-research`](docs/commands.md#cco-research) | Multi-source research with scoring |
-| [`/cco-docs`](docs/commands.md#cco-docs) | Documentation gap analysis |
-| [`/cco-blueprint`](docs/commands.md#cco-blueprint) | Project health assessment and transformation |
-| [`/cco-pr`](docs/commands.md#cco-pr) | Release-please compatible pull requests |
-| [`/cco-update`](docs/commands.md#cco-update) | Check and install updates |
+| [`/cco-optimize`](docs/skills.md#cco-optimize) | Fix security, types, performance issues |
+| [`/cco-align`](docs/skills.md#cco-align) | Architecture and pattern analysis |
+| [`/cco-commit`](docs/skills.md#cco-commit) | Atomic commits with quality gates |
+| [`/cco-research`](docs/skills.md#cco-research) | Multi-source research with scoring |
+| [`/cco-docs`](docs/skills.md#cco-docs) | Documentation gap analysis |
+| [`/cco-blueprint`](docs/skills.md#cco-blueprint) | Project health assessment and transformation |
+| [`/cco-pr`](docs/skills.md#cco-pr) | Release-please compatible pull requests |
+| [`/cco-update`](docs/skills.md#cco-update) | Check and install updates |
 
 8 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
 
@@ -74,7 +74,7 @@ No hooks, no plugins, no dependencies. Just markdown files.
 ## Docs
 
 - [Getting Started](docs/getting-started.md) — First 10 minutes
-- [Skills](docs/commands.md) — Flags, scopes, and examples
+- [Skills](docs/skills.md) — Flags, scopes, and examples
 - [Agents](docs/agents.md) — Specialized agents
 - [Rules](docs/rules.md) — Full rules reference
 

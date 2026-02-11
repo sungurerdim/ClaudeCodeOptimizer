@@ -162,7 +162,7 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 | Research a topic | `/cco-research "your question"` |
 | Update CCO | `/cco-update` |
 
-See [Commands](commands.md) for full documentation.
+See [Commands](skills.md) for full documentation.
 
 ---
 

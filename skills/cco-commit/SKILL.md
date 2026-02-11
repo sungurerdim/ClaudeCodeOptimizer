@@ -33,7 +33,7 @@ Pre-checks → Analyze → Execute → Verify → Summary
 
 ### Phase 1: Pre-checks + Quality Gates [PARALLEL: 5 checks]
 
-**1.0 Prerequisites:** Verify `git` is available (`git --version`). If missing → stop: "Install Git: https://git-scm.com"
+**1.0 Prerequisites:** Verify `git` is available (`git --version`). If missing → stop: "Install Git: https://git-scm.com". Then fetch remote main: `git fetch origin main 2>/dev/null` (best-effort, no-op if offline or no remote).
 
 **1.0a Main branch guard:** If current branch is `main` or `master`:
 
