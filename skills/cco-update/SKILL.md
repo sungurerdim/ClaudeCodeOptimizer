@@ -1,136 +1,98 @@
 ---
 description: Check for updates and upgrade CCO to the latest version
 argument-hint: "[--auto] [--check]"
-allowed-tools: WebFetch, Read, Write, Edit, Bash, AskUserQuestion
-disable-model-invocation: true
+allowed-tools: WebFetch, Read, Edit, Bash, AskUserQuestion
 ---
 
 # /cco-update
 
-**Update Manager** — Check for new versions, upgrade in place.
+**Update Manager** — Check for new versions, upgrade in place via `cco install`.
 
 ## Args
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Silent update, no questions, upgrade if available |
+| `--auto` | Silent update, no questions |
 | `--check` | Version check only, no changes |
 
 Without flags: check for update, ask before upgrading.
 
-## Context
+## Execution
 
-- CCO version: from `cco_version` in cco-rules.md frontmatter (already in context)
+### Step 1: Version Check
 
-## Files
+1. Read current `cco_version` from cco-rules.md frontmatter (already in context)
+2. WebFetch `https://api.github.com/repos/sungurerdim/ClaudeCodeOptimizer/tags?per_page=1` → extract latest tag name, strip `v` prefix
+3. Compare current vs latest semver
 
-All CCO files to update:
+**If same version:** Report up to date, update `last_update_check` timestamp in cco-rules.md frontmatter, done.
 
-```
-rules/cco-rules.md
-skills/cco-optimize/SKILL.md
-skills/cco-align/SKILL.md
-skills/cco-commit/SKILL.md
-skills/cco-research/SKILL.md
-skills/cco-docs/SKILL.md
-skills/cco-update/SKILL.md
-skills/cco-blueprint/SKILL.md
-skills/cco-pr/SKILL.md
-agents/cco-agent-analyze.md
-agents/cco-agent-apply.md
-agents/cco-agent-research.md
-```
+**--check mode:** Report version info, update `last_update_check` timestamp, done.
 
-## Execution Flow
+### Step 2: Prompt (skip if --auto)
 
-Channel Resolve → Version Check → Compare → [Upgrade] → Verify → Summary
-
-### Phase 0: Resolve Latest Version
-
-Fetch latest release tag from GitHub API (`/repos/{repo}/tags?per_page=1`).
-
-Source URL base: `https://raw.githubusercontent.com/{repo}/v{VERSION}/{path}`
-
-### Phase 1: Version Check
-
-1. Read current `cco_version` from context (cco-rules.md frontmatter)
-2. Resolve remote version: WebFetch GitHub tags API → extract latest tag (strip `v` prefix)
-
-### Phase 2: Compare
-
-Compare current vs remote using semver:
-- Same version → "CCO is up to date (vX.Y.Z)"
-- New version → proceed to upgrade flow
-
-Display: `Current: vX.Y.Z → Latest: vA.B.C`
-
-**--check mode:** Display version info and exit. Update `last_update_check` timestamp in cco-rules.md frontmatter.
-
-### Phase 3: Source Verification
-
-Before downloading, verify the resolved ref has the expected file structure:
-
-1. WebFetch `{BASE_URL}/rules/cco-rules.md`
-2. Confirm response starts with `---` (YAML frontmatter)
-3. On failure: "Release tag predates install-script model. Check repository for updates."
-
-### Phase 4: Upgrade [SKIP if --check]
-
-**--auto mode:** Proceed without asking.
-
-**Interactive mode:**
 ```javascript
 AskUserQuestion([{
-  question: "New version available. What should be done?",
+  question: "New version available (v{current} → v{latest}). What should be done?",
   header: "Upgrade",
   options: [
     { label: "Upgrade now (Recommended)", description: "Download and install the new version" },
-    { label: "Skip", description: "Stay on current version" },
-    { label: "View changelog", description: "See what changed before deciding" }
+    { label: "Skip", description: "Stay on current version" }
   ],
   multiSelect: false
 }])
 ```
 
-**Upgrade process:**
+### Step 3: Ensure Binary & Run
 
-1. Determine `~/.claude/` path (`$HOME/.claude/` on Unix, `$USERPROFILE\.claude\` on Windows)
-2. For each CCO file, WebFetch raw content from resolved source URL
-3. Validate each file starts with `---` (YAML frontmatter) before writing
-4. Create skill directories if missing (`skills/cco-*/`)
-5. Write validated content to local path
-6. Update `last_update_check` timestamp in cco-rules.md frontmatter
+The `cco install` binary handles everything: download files, legacy cleanup, timestamp update.
 
-**Legacy cleanup:** Remove old CCO installations and files (all previous versions) if present:
+**3a. Check if `cco` is on PATH**
 
-Uninstall previous distribution models:
-- v2.x plugin: `claude plugin uninstall cco@ClaudeCodeOptimizer` + `claude plugin marketplace remove ClaudeCodeOptimizer`
-- v1.x pip: `pip uninstall claudecodeoptimizer -y`
+```bash
+# Windows
+where cco 2>nul
 
-Pattern-based cleanup:
-- v3 commands: `commands/cco-*.md` — remove all (migrated to skills/)
-- `agents/cco-*.md` — keep only: cco-agent-analyze, cco-agent-apply, cco-agent-research
-- `rules/cco-*.md` — keep only: cco-rules.md
-- Stale skill directories not in current v4 set
+# macOS/Linux
+which cco 2>/dev/null
+```
 
-Hardcoded (v2.x commands without cco- prefix, no distinguishing pattern):
-- `commands/{optimize,align,commit,research,preflight,docs,tune}.md`
+If found → skip to 3c.
 
-Directories:
-- `commands/schemas/`, `rules/{core,frameworks,languages,operations}/`, `hooks/`
+**3b. Download binary (if not on PATH)**
 
-Reference Go binary as preferred update method: "For future updates, consider using the Go installer: `cco install`"
+Download to temp location from GitHub releases:
 
-### Phase 5: Verify
+```bash
+# Windows (PowerShell)
+irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile "$env:TEMP\cco.exe"
 
-Read cco-rules.md frontmatter → confirm `cco_version` matches remote version.
+# macOS
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-darwin-$(uname -m) -o /tmp/cco && chmod +x /tmp/cco
 
-### Phase 6: Summary
+# Linux
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-linux-$(uname -m) -o /tmp/cco && chmod +x /tmp/cco
+```
+
+Use the temp path for the next step.
+
+**3c. Run installer**
+
+```bash
+cco install        # if on PATH
+# or
+/tmp/cco install   # temp path (macOS/Linux)
+$env:TEMP\cco.exe install  # temp path (Windows)
+```
+
+### Step 4: Verify & Summary
+
+Read cco-rules.md → confirm `cco_version` matches latest.
 
 | Mode | Output |
 |------|--------|
-| `--check` | `CCO: v{current} (up to date)` or `CCO: v{current} → v{latest} available. Run /cco-update to upgrade.` |
+| `--check` | `CCO: v{current} (up to date)` or `CCO: v{current} → v{latest} available` |
 | `--auto` | `cco-update: {OK\|FAIL} \| v{current} → v{latest}` |
-| Interactive | Version info, files updated count, legacy cleaned count, restart reminder |
+| Interactive | Version info, restart reminder |
 
 **Restart reminder:** "Restart Claude Code session to load updated rules."
