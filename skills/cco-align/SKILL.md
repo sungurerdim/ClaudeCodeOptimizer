@@ -62,23 +62,13 @@ Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review):
 
 Merge findings and metrics. Filter by user-selected scopes.
 
-On error: Validate agent output. If output is missing or malformed → retry once. If retry also fails, log error, continue with remaining groups.
+Per CCO Rules: Agent Error Handling.
 
 ### Phase 3: Gap Analysis [CURRENT vs IDEAL]
 
 **If blueprint profile exists** in CLAUDE.md (between `<!-- cco-blueprint-start/end -->`): use its Ideal Metrics section as targets. Blueprint metrics are calibrated to project type + quality level + data sensitivity.
 
-**Fallback** (no blueprint profile): define ideal metrics by project type:
-
-| Type | Coupling | Cohesion | Complexity | Coverage |
-|------|----------|----------|------------|----------|
-| CLI | <40% | >75% | <10 | 70%+ |
-| Library | <30% | >80% | <8 | 85%+ |
-| API | <50% | >70% | <12 | 80%+ |
-| Web | <60% | >65% | <15 | 70%+ |
-| Monorepo | <35% | >70% | <12 | 75%+ |
-| Mobile | <55% | >65% | <12 | 65%+ |
-| Infra/IaC | <45% | >70% | <10 | 60%+ |
+**Default** (no blueprint profile): use project-type defaults per `/cco-blueprint` ideal metrics.
 
 Calculate gaps: current vs ideal for coupling, cohesion, complexity, coverage. Display Current vs Ideal table.
 
@@ -90,36 +80,7 @@ Categorize by effort/impact: Quick Win (high impact, low effort) → Moderate �
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
-Display architectural plan before asking.
-
-```javascript
-AskUserQuestion([
-  {
-    question: "What action should be taken?",
-    header: "Action",
-    options: [
-      { label: "Fix All (Recommended)", description: "Apply all recommended changes" },
-      { label: "By Severity", description: "Choose which severity levels to fix" },
-      { label: "Review Each", description: "Approve each finding individually" },
-      { label: "Report Only", description: "Don't change anything" }
-    ],
-    multiSelect: false
-  }
-])
-
-// Conditional: only when Action = "By Severity"
-AskUserQuestion([{
-  question: "Which severity levels should be fixed?",
-  header: "Severity",
-  options: [
-    { label: "CRITICAL", description: "Security, data loss, crash" },
-    { label: "HIGH", description: "Broken functionality" },
-    { label: "MEDIUM", description: "Suboptimal but works" },
-    { label: "LOW", description: "Style only" }
-  ],
-  multiSelect: true
-}])
-```
+Per CCO Rules: Plan Review Protocol. Display architectural plan before asking.
 
 ### Phase 6: Apply
 

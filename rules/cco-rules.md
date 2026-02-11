@@ -105,15 +105,7 @@ Before reporting done: re-read modified files to confirm correctness, verify no 
 
 ### Security Patterns
 
-Address these patterns before continuing:
-
-| Pattern | Fix |
-|---------|-----|
-| Secrets in source | Move to env vars |
-| Bare except/catch | Catch specific types |
-| Empty catch blocks | Add handling |
-| Unsanitized external data | Add validation |
-| eval/pickle/yaml.load | Use safe alternatives |
+Address security anti-patterns (secrets in source, bare catches, empty catch blocks, unsanitized external data, eval/pickle/yaml.load) before continuing. Standard fixes apply: env vars for secrets, specific catch types, input validation, safe alternatives.
 
 ## CCO Operations
 
@@ -140,6 +132,23 @@ Findings include confidence (0-100). Auto mode: fix all except architectural red
 ### Skip Patterns
 
 Never flag intentionally marked code: # noqa, # intentional, # safe:, _ prefix, TYPE_CHECKING blocks, platform guards, test fixtures.
+
+### Plan Review Protocol
+
+When findings > 0 and not --auto, display plan table before asking:
+
+1. Action: Fix All / By Severity / Review Each / Report Only
+2. If "By Severity": severity filter (multiselect) — CRITICAL / HIGH / MEDIUM / LOW
+
+After apply, if needs_approval > 0 and not --auto: display items table (ID, severity, issue, location, reason), ask Fix All / Review Each.
+
+### Agent Error Handling
+
+Validate agent output. On malformed/missing response, retry once. On second failure, continue with remaining groups. Score failed dimensions as N/A.
+
+### Parallel Execution
+
+Run independent tool calls in parallel in a single message. Use `run_in_background` for long Bash commands; collect via TaskOutput before producing output.
 
 ### Severity Levels
 

@@ -74,40 +74,11 @@ Merge all findings. Filter by user-selected scopes. Categorize: autoFixable vs a
 
 Analysis always scans all severities. Filtering happens post-analysis via Plan Review.
 
-On error: Validate agent output. If output is missing or malformed → retry once. If agent call fails or retry also fails, log error, continue with remaining groups. Failed group scores as "N/A".
+Per CCO Rules: Agent Error Handling.
 
 ### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 
-Display plan table before asking.
-
-```javascript
-AskUserQuestion([
-  {
-    question: "What action should be taken?",
-    header: "Action",
-    options: [
-      { label: "Fix All (Recommended)", description: "Auto-fix everything possible" },
-      { label: "By Severity", description: "Choose which severity levels to fix" },
-      { label: "Review Each", description: "Approve each finding individually" },
-      { label: "Report Only", description: "Don't change anything" }
-    ],
-    multiSelect: false
-  }
-])
-
-// Conditional: only when Action = "By Severity"
-AskUserQuestion([{
-  question: "Which severity levels should be fixed?",
-  header: "Severity",
-  options: [
-    { label: "CRITICAL", description: "Security, data loss, crash" },
-    { label: "HIGH", description: "Broken functionality" },
-    { label: "MEDIUM", description: "Suboptimal but works" },
-    { label: "LOW", description: "Style only" }
-  ],
-  multiSelect: true
-}])
-```
+Per CCO Rules: Plan Review Protocol.
 
 ### Phase 4: Apply [SYNCHRONOUS]
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -288,7 +289,22 @@ func cleanupLegacy(base string) []string {
 	var removed []string
 
 	// v1.x pip cleanup (best-effort, skip if pip not available)
-	// This is handled by the shell — Go binary doesn't call pip directly
+	if pipPath, err := exec.LookPath("pip"); err == nil {
+		cmd := exec.Command(pipPath, "uninstall", "claudecodeoptimizer", "-y")
+		if err := cmd.Run(); err == nil {
+			removed = append(removed, "pip:claudecodeoptimizer")
+		}
+	}
+
+	// v2.x plugin cleanup (best-effort, skip if claude not available)
+	if claudePath, err := exec.LookPath("claude"); err == nil {
+		cmd := exec.Command(claudePath, "plugin", "uninstall", "cco@ClaudeCodeOptimizer")
+		_ = cmd.Run()
+		cmd2 := exec.Command(claudePath, "plugin", "marketplace", "remove", "ClaudeCodeOptimizer")
+		if err := cmd2.Run(); err == nil {
+			removed = append(removed, "plugin:cco@ClaudeCodeOptimizer")
+		}
+	}
 
 	// v3 legacy commands (migrated to skills/)
 	for _, f := range legacyV3Commands {
@@ -483,8 +499,9 @@ func runUninstall() {
 	}
 
 	fmt.Println()
-	fmt.Println("Note: Blueprint profiles in project CLAUDE.md files must be removed manually.")
-	fmt.Println("      Look for <!-- cco-blueprint-start/end --> markers.")
+	fmt.Println("Note: Remove CCO sections from project CLAUDE.md files manually.")
+	fmt.Println("      Look for markers: cco-blueprint-start/end, CCO_ADAPTIVE_START/END,")
+	fmt.Println("      CCO_CONTEXT_START/END, CCO_PRINCIPLES_START/END")
 	fmt.Println()
 	fmt.Println("CCO uninstalled. Restart Claude Code to apply changes.")
 }
@@ -514,8 +531,9 @@ func removeAll(base string) {
 
 	fmt.Println("All CCO files removed.")
 	fmt.Println()
-	fmt.Println("Note: Blueprint profiles in project CLAUDE.md files must be removed manually.")
-	fmt.Println("      Look for <!-- cco-blueprint-start/end --> markers.")
+	fmt.Println("Note: Remove CCO sections from project CLAUDE.md files manually.")
+	fmt.Println("      Look for markers: cco-blueprint-start/end, CCO_ADAPTIVE_START/END,")
+	fmt.Println("      CCO_CONTEXT_START/END, CCO_PRINCIPLES_START/END")
 	fmt.Println()
 	fmt.Println("CCO uninstalled. Restart Claude Code to apply changes.")
 }
