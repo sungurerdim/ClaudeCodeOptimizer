@@ -9,7 +9,7 @@ model: opus
 
 **CCO Self-Review** - Comprehensive analysis of CCO system against its documented design principles.
 
-> **Internal Command:** This is in `.claude/commands/` (not `commands/`), used for CCO development only.
+> **Internal Command:** This is in `.claude/commands/` (not `skills/`), used for CCO development only.
 
 ## Args
 
@@ -77,11 +77,11 @@ if (!isUnattended && !isReportOnly) {
 
 ```javascript
 // Cross-platform detection using Claude's native tools
-commands = Glob("commands/cco-*.md").length     // Expected: 8
-agents = Glob("agents/cco-agent-*.md").length  // Expected: 3
+skills = Glob("skills/cco-*/SKILL.md").length     // Expected: 8
+agents = Glob("agents/cco-agent-*.md").length      // Expected: 3
 version = Read("rules/cco-rules.md").frontmatter.cco_version
 
-inventory = { commands, agents, version }
+inventory = { skills, agents, version }
 ```
 
 **Note:** Rules are in `rules/cco-rules.md` (single source of truth).
@@ -95,7 +95,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 ### Group A: Structure & Release (Cat 1 + Cat 7)
 
 **CATEGORY 1 - Inventory & Sync (12 checks):**
-- Count files: commands/cco-*.md (expected: 8), agents/cco-agent-*.md (expected: 3)
+- Count files: skills/cco-*/SKILL.md (expected: 8), agents/cco-agent-*.md (expected: 3)
 - Compare counts against README.md, docs/commands.md, docs/agents.md
 - SSOT: grep for orphan refs (.cco/, principles.md, projects.json)
 - Terminology: CRITICAL/HIGH/MEDIUM/LOW consistent (not P0/P1)
@@ -103,17 +103,18 @@ Launch 4 parallel Explore agents covering 8 categories:
 **CATEGORY 7 - Release Readiness (8 checks):**
 - Rules file exists with valid frontmatter
 - Version in cco-rules.md matches version.txt
-- Install scripts exist and reference correct files
+- Go installer binary builds for all targets
 - Cross-platform: no hardcoded paths (C:\, /home/)
 
-### Group B: Commands & Agents (Cat 2 + Cat 3)
+### Group B: Skills & Agents (Cat 2 + Cat 3)
 
-**CATEGORY 2 - Command Quality (15 checks):**
-- Each command has Architecture table
+**CATEGORY 2 - Skill Quality (15 checks):**
+- Each skill has valid YAML frontmatter (description, allowed-tools)
 - AskUserQuestion standards (max 4 questions × 4 options)
 - --auto mode: zero AskUserQuestion calls
 - --preview mode: zero Edit/Write calls
-- All 8 commands support --auto and --preview (where applicable)
+- All 8 skills support --auto and --preview (where applicable)
+- 6 skills auto-invoke enabled, 2 with disable-model-invocation: true
 
 **CATEGORY 3 - Agent Quality (10 checks):**
 - cco-agent-analyze: 9 OPTIMIZE scopes + 6 REVIEW scopes + 4 AUDIT scopes
@@ -126,7 +127,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 
 **CATEGORY 4 - Token Efficiency (18 checks):**
 - Tables for tabular data (not prose paragraphs)
-- No redundancy across files
+- No redundancy across files (shared patterns reference CCO Rules)
 - Large files (>500 lines) should reference by path
 - AskUserQuestion limits (max 4 questions, max 4 options)
 - No teaching of basics Claude already knows
@@ -140,7 +141,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 
 **CATEGORY 8 - Best Practices (12 checks):**
 - Positive framing: "Do X" not "Don't do Y"
-- Read-First: commands read files before editing
+- Read-First: skills read files before editing
 - Plan-Before-Act: Plan Review phase for complex changes
 - No BC hacks: zero backward, compat, legacy
 - No TODOs in production code
@@ -148,12 +149,12 @@ Launch 4 parallel Explore agents covering 8 categories:
 ### Group D: Documentation & Safety (Cat 6)
 
 **CATEGORY 6 - Documentation & Safety (15 checks):**
-- README accuracy: command count (8), agent count (3)
-- docs/commands.md: entry for each command
+- README accuracy: skill count (8), agent count (3)
+- docs/commands.md: entry for each skill
 - docs/agents.md: entry for each agent, all scopes documented
 - docs/rules.md: reflects rules/cco-rules.md content
 - Zero API keys, passwords, secrets
-- Edit/Write commands check git status first
+- Edit/Write skills check git status first
 
 ---
 
@@ -162,12 +163,12 @@ Launch 4 parallel Explore agents covering 8 categories:
 | # | Category | Checks | Focus |
 |---|----------|--------|-------|
 | 1 | Inventory & Sync | 12 | File counts, SSOT, terminology |
-| 2 | Command Quality | 15 | Template, AskUserQuestion, modes |
+| 2 | Skill Quality | 15 | Frontmatter, AskUserQuestion, modes |
 | 3 | Agent Quality | 10 | Scopes, models, output |
 | 4 | Token Efficiency | 18 | Density, no redundancy |
 | 5 | UX/DX Standards | 10 | Errors, status, transparency |
 | 6 | Documentation & Safety | 15 | Accuracy, security |
-| 7 | Release Readiness | 8 | Plugin, version, platform |
+| 7 | Release Readiness | 8 | Installer, version, platform |
 | 8 | Best Practices | 12 | Claude patterns, simplicity |
 
 **Total: ~100 checks**
@@ -176,14 +177,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 
 ## Severity Definitions
 
-| Severity | Criteria |
-|----------|----------|
-| CRITICAL | Security risk, broken functionality, data loss |
-| HIGH | Principle violation, doc mismatch, incorrect behavior |
-| MEDIUM | Suboptimal but functional |
-| LOW | Style, minor improvement |
-
-**When uncertain → choose lower severity.**
+Per CCO Rules: Severity Levels.
 
 ---
 
@@ -222,7 +216,7 @@ if (toApply.length > 0) {
     - terminology: Fix inconsistent terms
     - orphan-ref: Remove deprecated references
 
-    Per Core Rules: No Deferrals, Accounting.
+    Per CCO Rules: Accounting, Auto Mode.
 
     Return: { applied: n, failed: n, needs_approval: n, total: n, details: [...] }
   `, { model: "opus" })
@@ -239,13 +233,13 @@ if (toApply.length > 0) {
 ═══════════════════════════════════════════════════════════
 
 Detected:
-  Commands: 8  Agents: 3  Rules: rules/cco-rules.md
+  Skills: 8  Agents: 3  Rules: rules/cco-rules.md
 
 ┌─────────────────────────┬────────┬────────┬────────┐
 │ Category                │ Passed │ Failed │ Status │
 ├─────────────────────────┼────────┼────────┼────────┤
 │ 1. Inventory & Sync     │   {n}  │   {n}  │  {st}  │
-│ 2. Command Quality      │   {n}  │   {n}  │  {st}  │
+│ 2. Skill Quality        │   {n}  │   {n}  │  {st}  │
 │ 3. Agent Quality        │   {n}  │   {n}  │  {st}  │
 │ 4. Token Efficiency     │   {n}  │   {n}  │  {st}  │
 │ 5. UX/DX Standards      │   {n}  │   {n}  │  {st}  │
@@ -278,8 +272,8 @@ Before flagging, ask: (1) Does absence break something? (2) Confuse users? (3) W
 **All NO → not a finding.**
 
 NON-findings:
-- Simple command without explicit progress tracking
-- 2-step command without architecture table
+- Simple skill without explicit progress tracking
+- 2-step skill without architecture table
 
 ---
 
@@ -287,7 +281,7 @@ NON-findings:
 
 | Situation | Recovery |
 |-----------|----------|
-| Fix broke a command | `git checkout -- {file}` |
+| Fix broke a skill | `git checkout -- {file}` |
 | Multiple files affected | `git checkout .` |
 | Want to review changes | `git diff` |
 
@@ -300,4 +294,4 @@ NON-findings:
 3. **80/20 prioritization** - Quick Win → Moderate → Complex
 4. **Evidence required** - Every finding needs file:line
 
-Per Core Rules: Accounting, No Deferrals, Efficiency.
+Per CCO Rules: Accounting, Auto Mode, Efficiency.

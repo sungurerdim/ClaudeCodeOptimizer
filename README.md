@@ -2,9 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Structured guardrails for Claude Code.** Optimized by Opus 4.6, for Opus 4.6 — every rule tuned to how the model actually thinks.
+**Structured guardrails for Claude Code.** Every rule tuned to how the model actually thinks — minimal touch, maximum impact.
 
-*Minimal touch, maximum impact.* CCO adds just enough structure to prevent over-engineering, scope creep, and silent assumptions — without slowing Claude down.
+*CCO adds just enough structure to prevent over-engineering, scope creep, and silent assumptions — without slowing Claude down.*
 
 | Without CCO | With CCO |
 |-------------|----------|
@@ -17,16 +17,16 @@
 
 ## Install
 
-**Mac / Linux:**
+**macOS / Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile cco.exe; .\cco.exe install
 ```
 
 Restart Claude Code. Done.
@@ -36,29 +36,28 @@ Restart Claude Code. Done.
 ## Quick Start
 
 ```
-/cco-blueprint  →  Project health profile & scores
-/cco-optimize   →  Fix security, types, performance
-/cco-align      →  Architecture gap analysis
-/cco-commit     →  Quality-gated commits
+/cco-optimize   # Fix issues
+/cco-align      # Architecture gaps
+/cco-commit     # Quality-gated commits
 ```
 
 ---
 
 ## How It Works
 
-1. **Install** — Rules, commands, and agents are placed in `~/.claude/`
+1. **Install** — Rules, skills, and agents are placed in `~/.claude/`
 2. **Rules auto-load** — `~/.claude/rules/cco-rules.md` is loaded into every session automatically
-3. **Use commands** — `/cco-optimize`, `/cco-align`, etc.
+3. **Use skills** — `/cco-optimize`, `/cco-align`, etc. (6 auto-invoke on natural language, 2 explicit)
 4. **Update** — `/cco-update` checks for new versions
 
 No hooks, no plugins, no dependencies. Just markdown files.
 
 ---
 
-## Commands
+## Skills
 
-| Command | Purpose |
-|---------|---------|
+| Skill | Purpose |
+|-------|---------|
 | [`/cco-optimize`](docs/commands.md#cco-optimize) | Fix security, types, performance issues |
 | [`/cco-align`](docs/commands.md#cco-align) | Architecture and pattern analysis |
 | [`/cco-commit`](docs/commands.md#cco-commit) | Atomic commits with quality gates |
@@ -68,14 +67,14 @@ No hooks, no plugins, no dependencies. Just markdown files.
 | [`/cco-pr`](docs/commands.md#cco-pr) | Release-please compatible pull requests |
 | [`/cco-update`](docs/commands.md#cco-update) | Check and install updates |
 
-8 commands · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
+8 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
 
 ---
 
 ## Docs
 
 - [Getting Started](docs/getting-started.md) — First 10 minutes
-- [Commands](docs/commands.md) — Flags, scopes, and examples
+- [Skills](docs/commands.md) — Flags, scopes, and examples
 - [Agents](docs/agents.md) — Specialized agents
 - [Rules](docs/rules.md) — Full rules reference
 
@@ -101,35 +100,46 @@ Optional add-ons that complement CCO.
 
 Or re-run the installer:
 
-**Mac / Linux:**
+**macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+./cco install
 ```
 
 **Windows:**
 ```powershell
-irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+.\cco.exe install
 ```
 
 ### Uninstall
 
-**Mac / Linux:**
+**Using Go binary:**
+
+```bash
+./cco uninstall
+```
+
+**Manual:**
 
 ```bash
 rm -f ~/.claude/rules/cco-rules.md
-rm -f ~/.claude/commands/cco-*.md
+rm -rf ~/.claude/skills/cco-*/
 rm -f ~/.claude/agents/cco-agent-*.md
 ```
 
-**Windows (PowerShell):**
+### Migrate
 
-```powershell
-Remove-Item ~\.claude\rules\cco-rules.md -ErrorAction SilentlyContinue
-Remove-Item ~\.claude\commands\cco-*.md -ErrorAction SilentlyContinue
-Remove-Item ~\.claude\agents\cco-agent-*.md -ErrorAction SilentlyContinue
+<details>
+<summary>From v3 (commands)</summary>
+
+Run the v4 installer — it automatically migrates `commands/` to `skills/` and cleans up legacy files.
+
+```bash
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
 ```
 
-### Migrate
+Or use `/cco-update` if you already have v3 installed.
+
+</details>
 
 <details>
 <summary>From v2 (plugin)</summary>
@@ -141,30 +151,17 @@ Remove-Item ~\.claude\agents\cco-agent-*.md -ErrorAction SilentlyContinue
 /plugin marketplace remove ClaudeCodeOptimizer
 ```
 
-#### 2. Install v3
+#### 2. Install v4
 
-**Mac / Linux:**
+**macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
 ```
 
 **Windows:**
 ```powershell
-irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.ps1 | iex
+irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile cco.exe; .\cco.exe install
 ```
-
-#### Command mapping
-
-| v2 | v3 |
-|----|-----|
-| `/cco:optimize` | `/cco-optimize` |
-| `/cco:align` | `/cco-align` |
-| `/cco:commit` | `/cco-commit` |
-| `/cco:research` | `/cco-research` |
-| `/cco:docs` | `/cco-docs` |
-| — | `/cco-update` (new) |
-| — | `/cco-blueprint` (new) |
-| — | `/cco-pr` (new) |
 
 </details>
 
@@ -177,18 +174,10 @@ irm https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/insta
 pip uninstall claudecodeoptimizer
 ```
 
-#### 2. Remove old files
+#### 2. Install v4
 
 ```bash
-rm -f ~/.claude/rules/cco-*.md
-rm -f .claude/rules/cco-*.md
-rm -f .claude/commands/cco-*.md
-```
-
-#### 3. Install v3
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/install.sh | bash
+curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
 ```
 
 </details>
@@ -200,7 +189,8 @@ curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/mai
 |---------|-------------|-----------|
 | v1.x | pip package | Python dependency |
 | v2.x | Claude Code plugin | Marketplace + hooks |
-| **v3.x** | **Install script** | **curl/irm + rules/commands/agents** |
+| v3.x | Install script | curl/irm + rules/commands/agents |
+| **v4.x** | **Go binary** | **Single cross-platform binary + rules/skills/agents** |
 
 </details>
 

@@ -34,21 +34,19 @@ Batch write operations with verification. Fix everything, leave nothing behind.
 }
 ```
 
-Accounting: `applied + failed + needs_approval = total`. No declined category.
-
-**Output delivery:** Return the JSON as the final text message to the calling command. Do NOT write output to a file. The calling command reads the Task tool's return value directly.
+Per CCO Rules: Accounting, Agent Output.
 
 ## Policies
 
 - When `fixAll: true`: ask user for significant changes (>50 lines), never skip
 - Force-write always: execute all writes unconditionally
-- No deferrals: fix, flag for approval (architectural), or fail with technical reason
+- Per CCO Rules: Auto Mode (no deferrals)
 
 ## Execution
 
 | Step | Action | Execution |
 |------|--------|-----------|
-| 1. Validate | Check input contract (verify findings/operations structure) | Single |
+| 1. Pre-check | Git status | Single |
 | 2. Read | All affected files | **PARALLEL** |
 | 3. Apply | All independent edits | **PARALLEL** (different files) |
 | 4. Verify | Lint, type, test checks | **PARALLEL** |

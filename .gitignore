@@ -50,5 +50,10 @@ extras/statusline/dist/
 extras/statusline/coverage.*
 extras/statusline/bin/statusline
 
+# Go installer local build artifacts (bin/ is committed with pre-built binaries)
+extras/installer/cco
+extras/installer/cco.exe
+extras/installer/dist/
+
 # Windows artifacts
 nul

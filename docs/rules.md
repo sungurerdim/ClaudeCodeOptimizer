@@ -2,7 +2,7 @@
 
 Core rules auto-loaded from `~/.claude/rules/cco-rules.md` at every session start.
 
-**Source:** `rules/cco-rules.md` — single source of truth. Installed to `~/.claude/rules/cco-rules.md` by the install script.
+**Source:** `rules/cco-rules.md` — single source of truth. Installed to `~/.claude/rules/cco-rules.md` by the installer.
 
 ---
 
@@ -16,13 +16,13 @@ Claude Code automatically reads all `.md` files in `~/.claude/rules/` at session
 |----------|-------|
 | **Scope Control** | Minimal Footprint, Exploration Budget, Decide and Execute |
 | **Code Integrity** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4), Anti-Overengineering |
+| **Production Standards** | Production-ready baseline for all output |
 | **Verification** | Read Before Write, Edit Discipline |
 | **Uncertainty Protocol** | Surface Uncertainty, Scope Creep Guard |
 | **Session Resilience** | Anchor to Artifacts, Error Recovery |
+| **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
 | **Security Baseline** | Security Patterns (secrets, bare except, empty catch, unsanitized data, eval) |
-| **Development Standards** | Respect Intent Markers, Issue Prioritization |
-
-Each rule includes a `> Why:` rationale explaining which Opus 4.6 weakness it targets.
+| **CCO Operations** | Accounting, Auto Mode, Agent Output, Tool Prerequisites, Confidence Scoring, Skip Patterns, Severity Levels |
 
 ## Hard Limits
 

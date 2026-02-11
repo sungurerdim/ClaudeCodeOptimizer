@@ -1,23 +1,23 @@
-# CCO Commands
+# CCO Skills
 
-All CCO slash commands with flags, scopes, and examples.
+All CCO slash commands (skills) with flags, scopes, and examples.
 
 ---
 
 ## Quick Reference
 
-| Command | Purpose | Model | Key Flags |
-|---------|---------|-------|-----------|
-| `/cco-optimize` | Fix code issues | Opus | `--auto`, `--preview`, `--scope=X`, `--loop` |
-| `/cco-align` | Architecture gaps | Opus | `--auto`, `--preview` |
-| `/cco-commit` | Quality-gated commits | Opus | `--preview`, `--single`, `--staged-only` |
-| `/cco-research` | Multi-source research | Opus | `--quick`, `--deep` |
-| `/cco-docs` | Documentation gaps | Opus | `--auto`, `--preview`, `--scope=X`, `--update` |
-| `/cco-blueprint` | Project health + memory cleanup | Opus | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
-| `/cco-pr` | Release-please PRs | Opus | `--auto`, `--auto-merge`, `--preview`, `--draft` |
-| `/cco-update` | Update CCO | Opus | `--auto`, `--check` |
+| Skill | Purpose | Key Flags |
+|-------|---------|-----------|
+| `/cco-optimize` | Fix code issues | `--auto`, `--preview`, `--scope=X`, `--loop` |
+| `/cco-align` | Architecture gaps | `--auto`, `--preview` |
+| `/cco-commit` | Quality-gated commits | `--preview`, `--single`, `--staged-only` |
+| `/cco-research` | Multi-source research | `--quick`, `--deep` |
+| `/cco-docs` | Documentation gaps | `--auto`, `--preview`, `--scope=X`, `--update` |
+| `/cco-blueprint` | Project health + memory cleanup | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
+| `/cco-pr` | Release-please PRs | `--auto`, `--auto-merge`, `--preview`, `--draft` |
+| `/cco-update` | Update CCO | `--auto`, `--check` |
 
-**Model Rationale:** Opus for coding commands (fewer errors), Haiku for analysis agents (fast).
+6 skills auto-invoke on natural language. 2 require explicit `/command` invocation (blueprint, update).
 
 ---
 
@@ -116,7 +116,7 @@ Quality-gated atomic commits.
 
 {body}
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: {model} <noreply@anthropic.com>
 ```
 
 ---
@@ -180,7 +180,7 @@ Profile-based project health assessment, transformation, and progress tracking.
 /cco-blueprint --init              # Create/refresh profile only
 /cco-blueprint --preview           # Analyze and show dashboard, no changes
 /cco-blueprint --auto              # Unattended: all phases, no questions
-/cco-blueprint --refresh           # Re-scan profile (preserves history)
+/cco-blueprint --refresh           # Re-scan profile (preserves decisions)
 /cco-blueprint --scope=security    # Focus on specific area
 ```
 
@@ -191,7 +191,7 @@ Profile-based project health assessment, transformation, and progress tracking.
 3. **Dashboard** — Shows Project Map + health scores with current vs target gaps
 4. **Transform** — Applies fixes based on priorities and constraints from profile
 5. **Memory** — Cleans stale auto-memory entries using project context (deleted file refs, outdated commands, contradictions)
-6. **Track** — Updates scores and run history in profile for incremental improvement
+6. **Track** — Updates scores in profile for incremental improvement
 
 ### Health Dimensions (6)
 
@@ -266,11 +266,7 @@ Update CCO to the latest version.
 
 ### Accounting
 
-All operations report: `Applied: N | Failed: M | Needs Approval: D | Total: N+M+D`
-
-Formula: `applied + failed + needs_approval = total` (no silent skips, no declined category)
-
-Each command carries its own accounting formula and needs-approval flow inline (not referenced from global rules).
+Per CCO Rules: `applied + failed + needs_approval = total` (no silent skips)
 
 ### Recovery
 

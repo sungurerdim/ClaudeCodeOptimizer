@@ -1,6 +1,6 @@
 # Architecture
 
-How CCO works internally: rules, agents, and command flow.
+How CCO works internally: rules, agents, and skill flow.
 
 ---
 
@@ -29,22 +29,23 @@ How CCO works internally: rules, agents, and command flow.
 ClaudeCodeOptimizer/
 ├── rules/
 │   └── cco-rules.md            # Core rules (single source of truth)
-├── commands/                    # Slash commands (8 files)
-│   ├── cco-optimize.md
-│   ├── cco-align.md
-│   ├── cco-commit.md
-│   ├── cco-research.md
-│   ├── cco-docs.md
-│   ├── cco-blueprint.md
-│   ├── cco-pr.md
-│   └── cco-update.md
-├── agents/                      # Subagents (3 files)
+├── skills/                     # Skills (8 directories)
+│   ├── cco-optimize/SKILL.md
+│   ├── cco-align/SKILL.md
+│   ├── cco-commit/SKILL.md
+│   ├── cco-research/SKILL.md
+│   ├── cco-docs/SKILL.md
+│   ├── cco-blueprint/SKILL.md
+│   ├── cco-pr/SKILL.md
+│   └── cco-update/SKILL.md
+├── agents/                     # Subagents (3 files)
 │   ├── cco-agent-analyze.md
 │   ├── cco-agent-apply.md
 │   └── cco-agent-research.md
-├── install.sh                   # macOS/Linux installer
-├── install.ps1                  # Windows installer
-└── version.txt                  # Current version (SSOT, managed by release-please)
+├── extras/
+│   ├── installer/              # Go binary installer
+│   └── statusline/             # Optional statusline add-on
+└── version.txt                 # Current version (SSOT, managed by release-please)
 ```
 
 ### Installed Structure
@@ -53,8 +54,8 @@ ClaudeCodeOptimizer/
 ~/.claude/
 ├── rules/
 │   └── cco-rules.md            # Auto-loaded by Claude Code
-├── commands/
-│   ├── cco-optimize.md ... cco-update.md
+├── skills/
+│   ├── cco-optimize/SKILL.md ... cco-update/SKILL.md
 └── agents/
     ├── cco-agent-analyze.md ... cco-agent-research.md
 ```
@@ -69,62 +70,45 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 ---
 
-## Rules Architecture
+## Skill System
 
-CCO rules follow a "behavioral, not procedural" design. Rules define WHAT behavior is expected, not HOW to execute operations. Operational details (accounting formulas, approval flows, execution sequences) live in the commands and agents that use them.
+Skills use Claude Code's native skill mechanism with `SKILL.md` files in `~/.claude/skills/{name}/`. Frontmatter fields (`allowed-tools`, `description`) are enforced by Claude Code, unlike the legacy `commands/` directory.
 
-| Layer | Contains | Example |
-|-------|----------|---------|
-| Rules | Behavioral constraints | "Read before write" |
-| Commands | Operational procedures | Needs-approval flow, accounting |
-| Agents | Execution details | Confidence scoring, linter detection |
+6 skills have auto-invoke enabled (triggered by natural language), 2 require explicit invocation (`/cco-blueprint`, `/cco-update`).
+
+### Shared Patterns
+
+Common patterns (severity levels, accounting, skip patterns, confidence scoring, auto mode) are defined once in `rules/cco-rules.md` under CCO Operations. Skills reference them with `Per CCO Rules.`
+
+When updating these patterns, update the rules file — all skills and agents inherit automatically.
+
+---
 
 ## Agent System
 
 | Agent | Purpose | Model | Pattern |
 |-------|---------|-------|---------|
-| analyze | Read-only analysis, metrics, findings | Haiku | Conditional linters → Grep → Context reads → JSON |
-| apply | Write operations with verification | Opus | Validate input → Read → Apply → Verify → Cascade |
+| analyze | Read-only analysis, metrics, findings | Haiku | Linters → Grep → Context reads → JSON |
+| apply | Write operations with verification | Opus | Pre-check → Read → Apply → Verify → Cascade |
 | research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
 
 ### Agent Contracts
 
-**Input:** All agents receive parameters via the Task tool's prompt. Each agent documents its expected fields in its `## Input` section.
+| Agent | Input | Output |
+|-------|-------|--------|
+| analyze | `{scopes: string[], mode: "review"\|"auto"\|"audit"}` | `{findings[], scores{}, metrics{}, error?}` |
+| apply | `{findings[], fixAll?: boolean}` | `{applied, failed, needs_approval, total, error?}` |
+| research | `{query, depth: "standard"\|"deep"}` | `{sources[], synthesis, reliability_score, error?}` |
 
-| Agent | Input | Modes | Output |
-|-------|-------|-------|--------|
-| analyze | `{scopes: string[], mode: "review"\|"auto"\|"audit"}` | review (strategic), auto (tactical), audit (project-level) | `{findings[], scores{}, metrics{}, error?}` |
-| apply | `{findings[], fixAll?: boolean}` | — | `{applied, failed, needs_approval, total, error?}` |
-| research | `{query, depth: "standard"\|"deep"}` | — | `{sources[], synthesis, reliability_score, error?}` |
-
-**Error contract:** On failure, all agents return `{"error": "message"}` with empty arrays for data fields. Calling commands retry once on malformed output, then report as failed.
+**Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Output.
 
 ### File Manifest Sync
 
-The file lists in `install.sh`, `install.ps1`, and `commands/cco-update.md` must stay synchronized. When adding or removing a command/agent file, update all three locations.
+The file lists in `extras/installer/main.go` and `skills/cco-update/SKILL.md` must stay synchronized. When adding or removing a skill/agent file, update both locations.
 
 ---
 
-## Command Structure
-
-### Standard Section Order
-
-All commands follow this section order: Frontmatter → Description → Args/Flags → Context → Scopes (if applicable) → Execution Flow → Summary format.
-
-- Use `## Args` for commands with positional/named arguments
-- Use `## Flags` for commands with only boolean/option flags
-
-### Shared Patterns
-
-Plan Review, Needs-Approval Review, and Accounting are inlined in each command (self-containment principle). This duplication is intentional — each command carries its own operational context without cross-references. When updating these patterns, check all commands that use them:
-
-| Pattern | Used By |
-|---------|---------|
-| Plan Review | cco-optimize, cco-align, cco-blueprint, cco-docs |
-| Needs-Approval | cco-optimize, cco-align, cco-blueprint |
-| Accounting | cco-optimize, cco-align, cco-blueprint, cco-commit |
-
-## Command Flow
+## Skill Flow
 
 ### /cco-optimize
 
@@ -141,7 +125,7 @@ User: /cco-optimize → Setup → Analyze (parallel) → Plan Review → Apply �
 ```json
 {
   "id": "SEC-01", "scope": "security", "severity": "CRITICAL",
-  "title": "Hardcoded API key", "location": { "file": "src/config.py", "line": 42 },
+  "title": "Hardcoded API key", "location": "src/config.py:42",
   "fixable": true, "fix": "Move to environment variable"
 }
 ```
@@ -157,6 +141,8 @@ Invariant: `applied + failed + needs_approval = total`
 ---
 
 ## Model Strategy
+
+Agent model selection is specified in agent frontmatter (`model: haiku` / `model: opus`). Skills inherit the session model — no model lock-in.
 
 | Task | Model | Reason |
 |------|-------|--------|
