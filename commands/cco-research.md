@@ -13,7 +13,9 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research).
 
 ## Context
 
-- Current date: !`date +%Y-%m-%d`
+- Today's date: use the current date from system context
+
+Always include the current year in all web search queries. Never default to historical years from training data.
 
 ## Args
 

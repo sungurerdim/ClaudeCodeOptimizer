@@ -93,11 +93,13 @@ CCO rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Claude Code autom
 
 | Category | Key Rules |
 |----------|-----------|
-| **Focus and Discipline** | Decision Commitment, Exploration Restraint, Change Scope, File Discipline |
-| **Code Quality** | Complexity Limits (method ≤50 lines, nesting ≤3), Code Volume, Anti-Overengineering Guard |
-| **Security** | Security Patterns (no secrets in source, no bare except, no eval) |
-| **Workflow** | Uncertainty (stop & ask), Error Recovery, Scope Creep Detection |
-| **CCO Operations** | Agent Delegation, Accounting, No Deferrals, Confidence Scoring |
+| **Scope Control** | Minimal Footprint, Exploration Budget, Decide and Execute |
+| **Code Integrity** | Complexity Limits (method ≤50 lines, nesting ≤3), Anti-Overengineering |
+| **Verification** | Read Before Write, Edit Discipline |
+| **Uncertainty Protocol** | Surface Uncertainty (stop & ask), Scope Creep Guard |
+| **Session Resilience** | Anchor to Artifacts, Error Recovery |
+| **Security Baseline** | Security Patterns (no secrets in source, no bare except, no eval) |
+| **Development Standards** | Respect Intent Markers, Issue Prioritization |
 
 ### Hard Limits
 

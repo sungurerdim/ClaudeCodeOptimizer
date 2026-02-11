@@ -132,12 +132,21 @@ On error: If apply fails for a finding, count as failed, continue with next.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: Needs-Approval Flow.
+After apply, if needs_approval > 0:
+
+1. Display items table (ID, severity, issue, location, reason)
+2. Ask: Fix All / Review Each
+
+In --auto mode: fix everything except large architectural changes (module reorganization, framework migration, major API redesign).
 
 ### Phase 7: Summary
 
+Accounting: `applied + failed + needs_approval = total`. No declined category. Fix, flag for approval (architectural), or fail with technical reason.
+
 Gap summary (before/after for coupling, cohesion, complexity, coverage), applied/failed/total accounting table, effort category breakdown.
 
---auto mode: `cco-align: {OK|WARN|FAIL} | Gaps: N | Applied: N | Failed: N | Needs Approval: N | Total: N`
+--auto mode (no deferrals — never say "too complex", "might break", or "consider later"):
+
+`cco-align: {OK|WARN|FAIL} | Gaps: N | Applied: N | Failed: N | Needs Approval: N | Total: N`
 
 Status: OK (failed=0, no gap>20%), WARN (failed>0 or gap>20%), FAIL (CRITICAL gap or error).

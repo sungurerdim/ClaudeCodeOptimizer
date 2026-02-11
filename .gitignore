@@ -44,7 +44,11 @@ node_modules/
 # Go local build artifacts (bin/ is committed with pre-built binaries)
 extras/statusline/cco-statusline
 extras/statusline/cco-statusline.exe
+extras/statusline/statusline
+extras/statusline/statusline.exe
 extras/statusline/dist/
+extras/statusline/coverage.*
+extras/statusline/bin/statusline
 
 # Windows artifacts
 nul
