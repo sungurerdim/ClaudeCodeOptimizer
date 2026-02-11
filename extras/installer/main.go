@@ -371,7 +371,7 @@ func cleanupLegacy(base string) []string {
 		}
 	}
 
-	// Stale skill directories not in current v4 set
+	// Stale skill directories and v2 plugin symlinks in skills/
 	currentSkills := map[string]bool{
 		"cco-optimize":  true,
 		"cco-align":     true,
@@ -385,11 +385,18 @@ func cleanupLegacy(base string) []string {
 	skillsDir := filepath.Join(base, "skills")
 	if entries, err := os.ReadDir(skillsDir); err == nil {
 		for _, e := range entries {
-			if e.IsDir() && strings.HasPrefix(e.Name(), "cco-") && !currentSkills[e.Name()] {
-				path := "skills/" + e.Name()
+			name := e.Name()
+			if e.IsDir() && strings.HasPrefix(name, "cco-") && !currentSkills[name] {
+				path := "skills/" + name
 				if removeDirIfExists(base, path) {
 					removed = append(removed, path+"/")
 				}
+			}
+			// v2 plugin symlinks: cco:*.md files (not directories)
+			if !e.IsDir() && strings.HasPrefix(name, "cco:") && strings.HasSuffix(name, ".md") {
+				fullPath := filepath.Join(skillsDir, name)
+				os.Remove(fullPath)
+				removed = append(removed, "skills/"+name)
 			}
 		}
 	}

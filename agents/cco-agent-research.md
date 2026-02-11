@@ -23,23 +23,24 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 | Field | Type | Description |
 |-------|------|-------------|
 | `sources` | `Source[]` | Found sources with CRAAP+ scores |
-| `synthesis` | `string` | Combined analysis |
+| `synthesis` | `string` | Combined analysis (max 200 words). Lead with the answer, then supporting evidence. No preamble. |
 | `confidence` | `string` | `"HIGH"` / `"MEDIUM"` / `"LOW"` |
-| `contradictions` | `Contradiction[]` | Detected conflicting information |
+| `contradictions` | `Contradiction[]` | Conflicting information |
 | `error` | `string?` | Error message if failed |
 
 ## Execution
 
 | Step | Action | Execution |
 |------|--------|-----------|
-| 1. Search | Diverse strategies (docs, github, tutorial, SO). Use the current year in all search queries. Never default to historical years from training data. Outdated year searches return stale results. | **PARALLEL** |
+| 1. Search | Diverse strategies (docs, github, tutorial, SO). Use current year in all queries. | **PARALLEL** |
 | 2. Fetch | All high-tier URLs | **PARALLEL** |
 | 3. Score | Tier assignment + CRAAP+ scoring | Instant |
 | 4. Output | Structured JSON | Instant |
+| 5. Verify | Every claim in synthesis must cite at least one source by URL. Remove unsupported claims. | Post-output |
 
-Run all search strategies in one message, then fetch all top URLs in one message. Stop when themes repeat 3x. Penalize promotional content.
+Run all searches in one message, then fetch all top URLs in one message. Stop when themes repeat 3x. Penalize promotional content.
 
-**Output delivery:** Return the output contract fields as the final text message to the calling command. Do NOT write output to a file. Do NOT use `run_in_background`. If research fails, return `{"sources": [], "synthesis": "", "confidence": "LOW", "error": "message"}`. The calling command reads the Task tool's return value directly.
+**Output delivery:** Return as final text message. Do NOT write to file or use `run_in_background`.
 
 ## Scope Parameter
 
@@ -48,11 +49,11 @@ Run all search strategies in one message, then fetch all top URLs in one message
 | `local` | Codebase findings via Glob/Grep/Read | Quick |
 | `search` | Ranked sources via WebSearch batch | Quick |
 | `analyze` | Deep analysis via parallel WebFetch | Standard |
-| `synthesize` | Recommendation (no fetches, process only) | - |
-| `full` | Search + Analyze + Synthesize combined | Deep |
+| `synthesize` | Recommendation (process only, no fetches) | - |
+| `full` | Search + Analyze + Synthesize | Deep |
 | `dependency` | Package CVE, versions, breaking changes | Standard |
 
-## Source Tiers & Modifiers
+## Source Tiers & CRAAP+ Scoring
 
 | Tier | Score | Type |
 |------|-------|------|
@@ -63,9 +64,9 @@ Run all search strategies in one message, then fetch all top URLs in one message
 | T5 | 40-54 | General community (blogs, Reddit) |
 | T6 | 0-39 | Unverified (AI-gen, >12mo, unknown) |
 
-**Modifiers:** Fresh 0-3mo +10 | Dated >12mo -15 | High engagement +5 | Core maintainer +10 | Cross-verified T1-T2 +10 | Vendor self-promo -5 | Sponsored -15
+**Modifiers:** Fresh 0-3mo +10 | Dated >12mo -15 | High engagement +5 | Core maintainer +10 | Cross-verified +10 | Vendor self-promo -5 | Sponsored -15
 
-## CRAAP+ Scoring Framework
+**CRAAP+ scoring:**
 
 | Dimension | Weight | Scoring |
 |-----------|--------|---------|
@@ -75,50 +76,31 @@ Run all search strategies in one message, then fetch all top URLs in one message
 | Accuracy | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
 | Purpose | 10% | Educational: 100, Info: 80, Commercial: 40 |
 
-**Quality Bands:** [A] Primary (85-100) | [B] Supporting (70-84) | [C] Background (50-69) | [WARN] Caution (<50): replace source
+**Quality bands:** [A] Primary 85-100 | [B] Supporting 70-84 | [C] Background 50-69 | [WARN] <50: replace source
 
-## Research Quality
+Score < 50 → discard. Irrelevant → discard. Duplicate → skip. Outdated >2y → flag, seek newer.
 
-| Evaluation | Action |
-|------------|--------|
-| Score < 50 | Discard, search replacement |
-| Irrelevant | Discard, refine search |
-| Duplicate | Skip |
-| Outdated >2y | Flag, seek newer |
+## Confidence
 
-Track hypotheses with confidence and counter-evidence. Adjust as evidence accumulates.
-
-## Confidence & Contradictions
-
-| Condition | Confidence |
-|-----------|------------|
+| Condition | Level |
+|-----------|-------|
 | T1 agree, no contradictions | HIGH |
 | T1-T2 majority, minor contradictions | MEDIUM |
 | Mixed sources, unresolved conflicts | LOW |
 
-Never report HIGH without cross-verification.
+Contradiction resolution: T1 overrides all > Newer wins (same tier) > Higher engagement > Note unresolved
 
-### Contradiction Resolution Hierarchy
+## Deep Mode (Iterative Deepening)
 
-T1 overrides all > Newer wins (same tier) > Higher engagement > Note unresolved
+1. Seed: 5 parallel searches, 10-15 sources
+2. Backward snowball: extract refs from T1-T2
+3. Forward snowball: newer sources citing results
+4. Keyword expansion: new terms → expanded search
 
-## Iterative Deepening (Deep Mode)
-
-1. **Seed Search**: 5 parallel searches, 10-15 initial sources
-2. **Backward Snowballing**: Extract refs from T1-T2 sources
-3. **Forward Snowballing**: Find newer sources citing results
-4. **Keyword Expansion**: Extract new terms, search expanded
-
-**Saturation:** Stop when last 3 sources repeat themes, no new terms, or 80%+ overlap.
+Saturation: stop when last 3 sources repeat themes or 80%+ overlap.
 
 ## Dependency Mode
 
-**Registry Endpoints:**
-- Python: `https://pypi.org/pypi/{pkg}/json`
-- Node: `https://registry.npmjs.org/{pkg}`
-- Rust: `https://crates.io/api/v1/crates/{pkg}`
-- Go: `https://pkg.go.dev/{pkg}?tab=versions`
+Registry endpoints: PyPI (`/pypi/{pkg}/json`), npm (`/{pkg}`), crates.io (`/api/v1/crates/{pkg}`), pkg.go.dev (`/{pkg}?tab=versions`).
 
-**Flow:** Fetch latest > SemVer compare > Changelog for major > CVE check > Deprecation check
-
-**Batch:** Group by ecosystem, parallel fetch same registry, sequential changelog for major only.
+Flow: fetch latest → SemVer compare → changelog for major → CVE check → deprecation check. Batch by ecosystem, parallel same-registry fetches.
