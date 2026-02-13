@@ -1,5 +1,5 @@
 ---
-description: Documentation gap analysis - compare ideal vs current docs, generate missing content.
+description: Documentation gap analysis — compare ideal vs current docs, generate missing content. Use when documentation needs to be created, updated, or audited.
 argument-hint: "[--auto] [--preview] [--scope=<name>] [--update]"
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 ---
@@ -24,7 +24,7 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 ## Context
 
 - Git status: !`git status --short 2>/dev/null || echo ""`
-- Args: $ARGS
+- Args: $ARGUMENTS
 
 ## Scopes
 

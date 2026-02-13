@@ -1,5 +1,5 @@
 ---
-description: Fix security, hygiene, types, performance issues in code. Incremental code improvement with parallel analysis.
+description: Fix security, hygiene, types, performance issues in code. Use when code needs quality review, security audit, or cleanup.
 argument-hint: "[--auto] [--preview] [--scope=<name>]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 ---
@@ -22,7 +22,7 @@ For strategic architecture assessment, use `/cco-align`.
 ## Context
 
 - Git status: !`git status --short 2>/dev/null || echo ""`
-- Args: $ARGS
+- Args: $ARGUMENTS
 
 ## Execution Flow
 

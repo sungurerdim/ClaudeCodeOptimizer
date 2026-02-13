@@ -1,5 +1,5 @@
 ---
-description: Align codebase with ideal architecture - current vs ideal state gap analysis and strategic fixes.
+description: Align codebase with ideal architecture — gap analysis and strategic fixes. Use for architecture review, structural improvements, or design pattern evaluation.
 argument-hint: "[--auto] [--preview]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 ---

@@ -1,5 +1,5 @@
 ---
-description: Multi-source research with CRAAP+ reliability scoring and tiered synthesis.
+description: Multi-source research with CRAAP+ reliability scoring and tiered synthesis. Use when researching a topic, comparing technologies, or investigating solutions.
 argument-hint: "[--quick] [--deep]"
 allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 ---
@@ -57,7 +57,7 @@ AskUserQuestion([
 
 ### Phase 2: Parse Query
 
-Extract from $ARGS: concepts, date context, tech domain, comparison mode, search mode (troubleshoot/changelog/security).
+Extract from $ARGUMENTS: concepts, date context, tech domain, comparison mode, search mode (troubleshoot/changelog/security).
 
 ### Phase 3: Research [PARALLEL: up to 7 calls]
 
