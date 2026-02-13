@@ -12,6 +12,8 @@
 | Edits 5 files when asked for 1 fix | Scoped to the task |
 | Guesses requirements silently | Stops and asks |
 | Method grows to 200 lines | ≤50 lines, ≤3 nesting |
+| Hallucinates imports that don't exist | Verifies before writing |
+| Reports false positives | Reads context, discards FPs |
 
 ---
 
@@ -35,39 +37,69 @@ Restart Claude Code. Done.
 
 ## Quick Start
 
-```
-/cco-optimize   # Fix issues
-/cco-align      # Architecture gaps
-/cco-commit     # Quality-gated commits
-```
+1. **`/cco-blueprint --init`** — Create a project profile in CLAUDE.md (priorities, constraints, targets)
+2. **`/cco-optimize`** — Scan and fix security, quality, and hygiene issues
+3. **`/cco-commit`** — Quality-gated commit (auto-creates a feature branch if on main)
+4. **`/cco-pr`** — Create a PR with conventional commit title + auto-merge
 
 ---
 
 ## How It Works
 
-1. **Install** — Rules, skills, and agents are placed in `~/.claude/`
-2. **Rules auto-load** — `~/.claude/rules/cco-rules.md` is loaded into every session automatically
-3. **Use skills** — `/cco-optimize`, `/cco-align`, etc. (6 auto-invoke on natural language, 2 explicit)
-4. **Update** — `/cco-update` checks for new versions
+```
+~/.claude/
+├── rules/cco-rules.md          # Auto-loaded every session (passive)
+├── skills/cco-*/SKILL.md       # Slash commands (active)
+└── agents/cco-agent-*.md       # Specialized subagents
+```
 
-No hooks, no plugins, no dependencies. Just markdown files.
+**Passive — Rules** load automatically at session start. Scope control, complexity limits, verification, and security patterns are always active. No commands needed.
+
+**Active — Skills** are invoked via `/cco-*` slash commands. Each skill orchestrates a specific workflow (optimize, commit, PR, etc.).
+
+**Feature branch workflow:**
+
+```
+main → /cco-commit → feature branch → work → /cco-pr → main
+```
+
+`/cco-commit` detects when you're on main and creates a feature branch automatically. `/cco-pr` creates a conventional-commit PR for clean changelogs.
 
 ---
 
 ## Skills
 
-| Skill | Purpose |
-|-------|---------|
-| [`/cco-optimize`](docs/skills.md#cco-optimize) | Fix security, types, performance issues |
-| [`/cco-align`](docs/skills.md#cco-align) | Architecture and pattern analysis |
-| [`/cco-commit`](docs/skills.md#cco-commit) | Atomic commits with quality gates |
-| [`/cco-research`](docs/skills.md#cco-research) | Multi-source research with scoring |
-| [`/cco-docs`](docs/skills.md#cco-docs) | Documentation gap analysis |
-| [`/cco-blueprint`](docs/skills.md#cco-blueprint) | Project health assessment and transformation |
-| [`/cco-pr`](docs/skills.md#cco-pr) | Release-please compatible pull requests |
-| [`/cco-update`](docs/skills.md#cco-update) | Check and install updates |
+| Skill | What it does | Key Flags |
+|-------|-------------|-----------|
+| [`/cco-optimize`](docs/skills.md#cco-optimize) | Scan and fix security, types, performance, hygiene issues | `--auto`, `--preview`, `--scope=X`, `--loop` |
+| [`/cco-align`](docs/skills.md#cco-align) | Analyze architecture gaps and fix structural issues | `--auto`, `--preview` |
+| [`/cco-commit`](docs/skills.md#cco-commit) | Quality-gated atomic commits with branch management | `--preview`, `--single`, `--staged-only` |
+| [`/cco-pr`](docs/skills.md#cco-pr) | Create release-please compatible PRs with auto-merge | `--auto`, `--no-auto-merge`, `--draft` |
+| [`/cco-blueprint`](docs/skills.md#cco-blueprint) | Profile project health, set targets, track progress | `--auto`, `--init`, `--refresh`, `--scope=X` |
+| [`/cco-docs`](docs/skills.md#cco-docs) | Find documentation gaps and generate missing content | `--auto`, `--preview`, `--scope=X`, `--update` |
+| [`/cco-research`](docs/skills.md#cco-research) | Multi-source research with CRAAP+ reliability scoring | `--quick`, `--deep` |
+| [`/cco-update`](docs/skills.md#cco-update) | Check for updates and install latest version | `--auto`, `--check` |
 
 8 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
+
+---
+
+## What the Rules Enforce
+
+Rules are active in every session — no commands needed.
+
+| Category | What it does |
+|----------|-------------|
+| Scope Control | Every changed line traces to the request; unrelated issues mentioned, not fixed |
+| Complexity Limits | CC≤15, Method≤50 lines, File≤500 lines, Nesting≤3, Params≤4 |
+| Anti-Overengineering | No abstraction unless it solves a current problem in multiple places |
+| Production Standards | Security, privacy, performance, error handling applied by default |
+| Output Brevity | Concise responses; no unnecessary praise, filler, or emojis |
+| Verification | Read before write; verify imports and APIs exist before using |
+| Uncertainty Protocol | State confidence levels; ask before proceeding on ambiguous tasks |
+| Security Baseline | Flag secrets in source, bare catches, unsanitized data, eval/pickle |
+
+Full reference: [docs/rules.md](docs/rules.md)
 
 ---
 
@@ -100,25 +132,19 @@ Optional add-ons that complement CCO.
 
 Or re-run the installer:
 
-**macOS / Linux:**
 ```bash
-./cco install
-```
-
-**Windows:**
-```powershell
-.\cco.exe install
+./cco install        # macOS/Linux
+.\cco.exe install    # Windows
 ```
 
 ### Uninstall
-
-**Using Go binary:**
 
 ```bash
 ./cco uninstall
 ```
 
-**Manual:**
+<details>
+<summary>Manual removal</summary>
 
 ```bash
 rm -f ~/.claude/rules/cco-rules.md
@@ -126,64 +152,10 @@ rm -rf ~/.claude/skills/cco-*/
 rm -f ~/.claude/agents/cco-agent-*.md
 ```
 
-### Migrate
-
-<details>
-<summary>From v3 (commands)</summary>
-
-Run the v4 installer — it automatically migrates `commands/` to `skills/` and cleans up legacy files.
-
-```bash
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
-```
-
-Or use `/cco-update` if you already have v3 installed.
-
 </details>
 
 <details>
-<summary>From v2 (plugin)</summary>
-
-#### 1. Uninstall plugin
-
-```
-/plugin uninstall cco@ClaudeCodeOptimizer
-/plugin marketplace remove ClaudeCodeOptimizer
-```
-
-#### 2. Install v4
-
-**macOS / Linux:**
-```bash
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
-```
-
-**Windows:**
-```powershell
-irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile cco.exe; .\cco.exe install
-```
-
-</details>
-
-<details>
-<summary>From v1 (pip)</summary>
-
-#### 1. Uninstall pip package
-
-```bash
-pip uninstall claudecodeoptimizer
-```
-
-#### 2. Install v4
-
-```bash
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
-```
-
-</details>
-
-<details>
-<summary>Version history</summary>
+<summary>Migration from previous versions</summary>
 
 | Version | Distribution | Mechanism |
 |---------|-------------|-----------|
@@ -191,6 +163,12 @@ curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/do
 | v2.x | Claude Code plugin | Marketplace + hooks |
 | v3.x | Install script | curl/irm + rules/commands/agents |
 | **v4.x** | **Go binary** | **Single cross-platform binary + rules/skills/agents** |
+
+**From v3:** Run the v4 installer — it automatically migrates `commands/` to `skills/` and cleans up legacy files. Or use `/cco-update`.
+
+**From v2:** Uninstall plugin (`/plugin uninstall cco@ClaudeCodeOptimizer` + `/plugin marketplace remove ClaudeCodeOptimizer`), then run the v4 installer.
+
+**From v1:** Uninstall pip package (`pip uninstall claudecodeoptimizer`), then run the v4 installer.
 
 </details>
 
