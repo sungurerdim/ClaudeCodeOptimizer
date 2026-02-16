@@ -275,13 +275,49 @@ func runInstall() {
 				fmt.Printf("  - %s\n", item)
 			}
 		}
+		ensurePATH()
 		fmt.Println()
 		fmt.Println("Restart Claude Code to activate.")
-		fmt.Println("Run /cco-optimize to get started.")
+		fmt.Println()
+		fmt.Println("Quick Start:")
+		fmt.Println("  /cco-blueprint  — Create a project profile")
+		fmt.Println("  /cco-align      — Architecture gap analysis")
+		fmt.Println("  /cco-optimize   — Scan and fix issues")
 	} else {
 		fmt.Fprintf(os.Stderr, "Installation completed with %d error(s).\n", failed)
 		fmt.Fprintf(os.Stderr, "Re-run the installer or download files manually.\n")
 		os.Exit(1)
+	}
+}
+
+func ensurePATH() {
+	exe, err := os.Executable()
+	if err != nil {
+		return
+	}
+	binDir := filepath.Dir(exe)
+
+	// Check if binary's directory is already in PATH
+	pathEnv := os.Getenv("PATH")
+	sep := string(os.PathListSeparator)
+	for _, dir := range strings.Split(pathEnv, sep) {
+		if filepath.Clean(dir) == filepath.Clean(binDir) {
+			return
+		}
+	}
+
+	fmt.Println()
+	if runtime.GOOS == "windows" {
+		// Add to user PATH via setx
+		cmd := exec.Command("setx", "PATH", binDir+sep+"%PATH%")
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Add this to your PATH: %s\n", binDir)
+			return
+		}
+		fmt.Printf("Added %s to user PATH (restart your terminal to use 'cco' directly).\n", binDir)
+	} else {
+		fmt.Printf("Add this to your shell profile to use 'cco' directly:\n")
+		fmt.Printf("  export PATH=\"%s:$PATH\"\n", binDir)
 	}
 }
 
