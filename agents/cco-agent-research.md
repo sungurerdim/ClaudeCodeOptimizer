@@ -22,10 +22,11 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `sources` | `Source[]` | Found sources with CRAAP+ scores |
-| `synthesis` | `string` | Combined analysis (max 200 words). Lead with the answer, then supporting evidence. No preamble. |
+| `sources` | `Source[]` | Found sources with CRAAP+ scores and tier assignments |
+| `synthesis` | `string` | Combined analysis (max 200 words). Lead with the answer, then supporting evidence. No preamble. Every claim cites source. |
 | `confidence` | `string` | `"HIGH"` / `"MEDIUM"` / `"LOW"` |
-| `contradictions` | `Contradiction[]` | Conflicting information |
+| `contradictions` | `Contradiction[]` | Conflicting information with resolution or "unresolved" flag |
+| `gaps` | `string[]` | Information sought but not found. Absence of data is also data. |
 | `error` | `string?` | Error message if failed |
 
 ## Execution
@@ -64,7 +65,19 @@ Run all searches in one message, then fetch all top URLs in one message. Stop wh
 | T5 | 40-54 | General community (blogs, Reddit) |
 | T6 | 0-39 | Unverified (AI-gen, >12mo, unknown) |
 
-**Modifiers:** Fresh 0-3mo +10 | Dated >12mo -15 | High engagement +5 | Core maintainer +10 | Cross-verified +10 | Vendor self-promo -5 | Sponsored -15
+**Modifiers:**
+
+| Condition | Effect |
+|-----------|--------|
+| Fresh 0-3mo | +10 |
+| Core maintainer / domain authority | +10 |
+| Cross-verified by independent source | +10 |
+| High engagement | +5 |
+| Dated >12mo | -15 |
+| Sponsored / paid content | -15 |
+| Vendor self-promotion | -5 |
+| AI-generated without human review | -20 |
+| Anonymous / no author attribution | -10 |
 
 **CRAAP+ scoring:**
 
@@ -80,15 +93,31 @@ Run all searches in one message, then fetch all top URLs in one message. Stop wh
 
 Score < 50 → discard. Irrelevant → discard. Duplicate → skip. Outdated >2y → flag, seek newer.
 
+## Verification Rules
+
+**1. Triangulation:** No claim enters synthesis unless verified by 2+ independent sources. "Independent" = different organizations, not mirrors of the same press release.
+
+**2. Claim-Source Mapping:** Every factual claim in synthesis must cite at least one source by URL. Remove unsupported claims.
+
+**3. Recency Validation:** For statistics, market data, and tech claims: if newest source >12mo old, flag as "potentially outdated" in output.
+
+**4. Source Diversity:** Valid research requires sources from ≥2 categories: official/institutional, academic/research, expert/practitioner, community/market. Single-category → confidence downgrade.
+
+**5. Bias Detection:** Flag sources with commercial interest in the conclusion. Apply vendor self-promotion modifier.
+
 ## Confidence
 
 | Condition | Level |
 |-----------|-------|
-| T1 agree, no contradictions | HIGH |
-| T1-T2 majority, minor contradictions | MEDIUM |
-| Mixed sources, unresolved conflicts | LOW |
+| 2+ T1 agree, triangulated, no contradictions | HIGH |
+| T1-T2 majority, minor contradictions resolved | MEDIUM |
+| Mixed sources, unresolved conflicts, thin coverage | LOW |
 
 Contradiction resolution: T1 overrides all > Newer wins (same tier) > Higher engagement > Note unresolved
+
+## Quality Gate
+
+Before returning output, verify: ≥2 source categories, ≥1 band-A source, no unsupported claims in synthesis. If gate fails, return LOW confidence with explicit `gaps` field rather than presenting thin evidence as reliable.
 
 ## Deep Mode (Iterative Deepening)
 
