@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.0.0...v4.1.0) (2026-02-16)
+
+
+### Features
+
+* **skills:** expand scopes and improve agent integration ([#28](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/28)) ([c03964f](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/c03964f31e88c47780d2d0a4c9fbd769cd493c4f))
+
 ## [4.0.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v3.2.1...v4.0.0) (2026-02-11)
 
 
