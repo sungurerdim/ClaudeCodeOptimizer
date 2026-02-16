@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.1.0...v4.2.0) (2026-02-16)
+
+
+### Features
+
+* **installer:** install binary to ~/.local/bin with PATH setup ([#31](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/31)) ([fbfbd40](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/fbfbd403f07299a3a23266a6f214803f5758b6b7))
+
 ## [4.1.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.0.0...v4.1.0) (2026-02-16)
 
 
