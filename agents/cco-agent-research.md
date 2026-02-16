@@ -33,7 +33,7 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
 | Step | Action | Execution |
 |------|--------|-----------|
-| 1. Search | Diverse strategies (docs, github, tutorial, SO). Use current year in all queries. | **PARALLEL** |
+| 1. Search | Diverse strategies (docs, github, tutorial, SO). Use the current year in all search queries. Never default to historical years from training data. Outdated year searches return stale results. | **PARALLEL** |
 | 2. Fetch | All high-tier URLs | **PARALLEL** |
 | 3. Score | Tier assignment + CRAAP+ scoring | Instant |
 | 4. Output | Structured JSON | Instant |
@@ -41,7 +41,7 @@ Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
 Run all searches in one message, then fetch all top URLs in one message. Stop when themes repeat 3x. Penalize promotional content.
 
-**Output delivery:** Return as final text message. Do NOT write to file or use `run_in_background`.
+**Output delivery:** Return the output contract fields as the final text message to the calling command. Do NOT write output to a file. Do NOT use `run_in_background`. If research fails, return `{"sources": [], "synthesis": "", "confidence": "LOW", "contradictions": [], "gaps": [], "error": "message"}`. The calling command reads the Task tool's return value directly.
 
 ## Scope Parameter
 
@@ -113,6 +113,8 @@ Score < 50 → discard. Irrelevant → discard. Duplicate → skip. Outdated >2y
 | T1-T2 majority, minor contradictions resolved | MEDIUM |
 | Mixed sources, unresolved conflicts, thin coverage | LOW |
 
+Never report HIGH without cross-verification.
+
 Contradiction resolution: T1 overrides all > Newer wins (same tier) > Higher engagement > Note unresolved
 
 ## Quality Gate
@@ -130,6 +132,10 @@ Saturation: stop when last 3 sources repeat themes or 80%+ overlap.
 
 ## Dependency Mode
 
-Registry endpoints: PyPI (`/pypi/{pkg}/json`), npm (`/{pkg}`), crates.io (`/api/v1/crates/{pkg}`), pkg.go.dev (`/{pkg}?tab=versions`).
+**Registry Endpoints:**
+- Python: `https://pypi.org/pypi/{pkg}/json`
+- Node: `https://registry.npmjs.org/{pkg}`
+- Rust: `https://crates.io/api/v1/crates/{pkg}`
+- Go: `https://pkg.go.dev/{pkg}?tab=versions`
 
-Flow: fetch latest → SemVer compare → changelog for major → CVE check → deprecation check. Batch by ecosystem, parallel same-registry fetches.
+**Flow:** Fetch latest → SemVer compare → Changelog for major → CVE check → Deprecation check. Batch by ecosystem, parallel fetch same registry, sequential changelog for major only.
