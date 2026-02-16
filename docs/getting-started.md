@@ -10,12 +10,12 @@ Your first 10 minutes with CCO.
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
+mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile cco.exe; .\cco.exe install
+$b="$HOME\.local\bin"; New-Item $b -ItemType Directory -Force >$null; irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile "$b\cco.exe"; & "$b\cco.exe" install
 ```
 
 ### Using /cco-update
@@ -60,7 +60,7 @@ Or re-run the Go installer binary.
 
 Using Go binary:
 ```bash
-./cco uninstall
+cco uninstall
 ```
 
 Manual removal:
@@ -74,7 +74,23 @@ rm ~/.claude/agents/cco-agent-*.md
 
 ## First 10 Minutes
 
-### Step 1: Quick Wins
+### Step 1: Create a Project Profile
+
+```
+/cco-blueprint
+```
+
+Creates a project profile in CLAUDE.md — priorities, constraints, targets, and current scores. If no profile exists, starts the init flow automatically.
+
+### Step 2: Architecture Gap Analysis
+
+```
+/cco-align
+```
+
+Shows gap analysis between current state and ideal architecture. Use `--preview` for analysis without changes.
+
+### Step 3: Scan and Fix Issues
 
 ```
 /cco-optimize
@@ -83,14 +99,6 @@ rm ~/.claude/agents/cco-agent-*.md
 Auto-fixes safe issues: unused imports, missing type hints, simple security fixes, formatting.
 
 Risky changes (auth, schema, API) ask for approval. Use `--auto` for unattended mode or `--scope=security` for a specific scope.
-
-### Step 2: Architecture Check (Optional)
-
-```
-/cco-align
-```
-
-Shows gap analysis between current state and ideal architecture. Use `--preview` for analysis without changes.
 
 ---
 

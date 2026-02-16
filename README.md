@@ -22,13 +22,13 @@
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o cco && chmod +x cco && ./cco install
+mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile cco.exe; .\cco.exe install
+$b="$HOME\.local\bin"; New-Item $b -ItemType Directory -Force >$null; irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile "$b\cco.exe"; & "$b\cco.exe" install
 ```
 
 Restart Claude Code. Done.
@@ -37,10 +37,9 @@ Restart Claude Code. Done.
 
 ## Quick Start
 
-1. **`/cco-blueprint --init`** — Create a project profile in CLAUDE.md (priorities, constraints, targets)
-2. **`/cco-optimize`** — Scan and fix security, quality, and hygiene issues
-3. **`/cco-commit`** — Quality-gated commit (auto-creates a feature branch if on main)
-4. **`/cco-pr`** — Create a PR with conventional commit title + auto-merge
+1. **`/cco-blueprint`** — Create a project profile in CLAUDE.md (priorities, constraints, targets)
+2. **`/cco-align`** — Architecture gap analysis
+3. **`/cco-optimize`** — Scan and fix security, quality, and hygiene issues
 
 ---
 
@@ -133,14 +132,14 @@ Optional add-ons that complement CCO.
 Or re-run the installer:
 
 ```bash
-./cco install        # macOS/Linux
-.\cco.exe install    # Windows
+cco install        # macOS/Linux
+cco.exe install    # Windows
 ```
 
 ### Uninstall
 
 ```bash
-./cco uninstall
+cco uninstall
 ```
 
 <details>

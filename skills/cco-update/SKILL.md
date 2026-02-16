@@ -44,46 +44,18 @@ AskUserQuestion([{
 }])
 ```
 
-### Step 3: Ensure Binary & Run
+### Step 3: Run Install One-liner
 
-The `cco install` binary handles everything: download files, legacy cleanup, timestamp update.
+Detect platform, run the appropriate install one-liner:
 
-**3a. Check if `cco` is on PATH**
-
+**macOS / Linux:**
 ```bash
-# Windows
-where cco 2>nul
-
-# macOS/Linux
-which cco 2>/dev/null
+mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
 ```
 
-If found → skip to 3c.
-
-**3b. Download binary (if not on PATH)**
-
-Download to temp location from GitHub releases:
-
-```bash
-# Windows (PowerShell)
-irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile "$env:TEMP\cco.exe"
-
-# macOS
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-darwin-$(uname -m) -o /tmp/cco && chmod +x /tmp/cco
-
-# Linux
-curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-linux-$(uname -m) -o /tmp/cco && chmod +x /tmp/cco
-```
-
-Use the temp path for the next step.
-
-**3c. Run installer**
-
-```bash
-cco install        # if on PATH
-# or
-/tmp/cco install   # temp path (macOS/Linux)
-$env:TEMP\cco.exe install  # temp path (Windows)
+**Windows (PowerShell):**
+```powershell
+$b="$HOME\.local\bin"; New-Item $b -ItemType Directory -Force >$null; irm https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-windows-amd64.exe -OutFile "$b\cco.exe"; & "$b\cco.exe" install
 ```
 
 ### Step 4: Verify & Summary
