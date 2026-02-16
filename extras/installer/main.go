@@ -420,7 +420,7 @@ func updateTimestamp(base string) {
 		}
 	}
 
-	os.WriteFile(rulesPath, []byte(strings.Join(lines, "\n")), 0644)
+	_ = os.WriteFile(rulesPath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
 func runUninstall() {
@@ -439,7 +439,7 @@ func runUninstall() {
 
 	fmt.Print("Remove all CCO files? [y/N] ")
 	var answer string
-	fmt.Scanln(&answer)
+	_, _ = fmt.Scanln(&answer)
 
 	if strings.ToLower(answer) == "y" {
 		removeAll(base)
@@ -464,7 +464,7 @@ func runUninstall() {
 
 	for _, g := range groups {
 		fmt.Printf("Remove %s? (%s) [y/N] ", g.name, g.display)
-		fmt.Scanln(&answer)
+		_, _ = fmt.Scanln(&answer)
 		if strings.ToLower(answer) != "y" {
 			continue
 		}
@@ -498,7 +498,7 @@ func runUninstall() {
 	}
 	if _, err := os.Stat(statuslineBin); err == nil {
 		fmt.Print("Remove statusline binary? [y/N] ")
-		fmt.Scanln(&answer)
+		_, _ = fmt.Scanln(&answer)
 		if strings.ToLower(answer) == "y" {
 			os.Remove(statuslineBin)
 			fmt.Printf("  - %s\n", statuslineBin)

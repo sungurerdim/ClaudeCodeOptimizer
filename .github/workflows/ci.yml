@@ -3,8 +3,17 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'LICENSE'
+      - '.claude/**'
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -62,20 +71,15 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Format check
-        run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Error: Go files not formatted. Run 'gofmt -w .'"
-            gofmt -d .
-            exit 1
-          fi
-          echo "Go formatting OK"
-
-      - name: Vet
-        run: go vet ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: extras/statusline
+          args: --enable gofmt
 
       - name: Test
-        run: go test -v ./...
+        run: go test -v -race ./...
 
       - name: Build
         run: go build -ldflags="-s -w" -o cco-statusline .
@@ -93,17 +97,12 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Format check
-        run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Error: Go files not formatted. Run 'gofmt -w .'"
-            gofmt -d .
-            exit 1
-          fi
-          echo "Go formatting OK"
-
-      - name: Vet
-        run: go vet ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: extras/installer
+          args: --enable gofmt
 
       - name: Build
         run: go build -ldflags="-s -w" -o cco .

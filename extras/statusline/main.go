@@ -96,7 +96,7 @@ func execGit(args ...string) (string, bool) {
 		return strings.TrimRight(string(out), "\n"), true
 	case <-time.After(timeout):
 		if cmd.Process != nil {
-			cmd.Process.Kill()
+			_ = cmd.Process.Kill()
 			<-done // wait for goroutine to finish after kill
 		}
 		return "", false

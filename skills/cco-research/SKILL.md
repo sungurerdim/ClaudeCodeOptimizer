@@ -1,5 +1,5 @@
 ---
-description: Multi-source research with CRAAP+ reliability scoring and tiered synthesis.
+description: Multi-source research with CRAAP+ reliability scoring and tiered synthesis. Use when researching a topic, comparing technologies, or investigating solutions.
 argument-hint: "[--quick] [--deep]"
 allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 ---
@@ -22,6 +22,8 @@ Hybrid: Local (Glob/Grep) + Web (cco-agent-research).
 | `--deep` | All tiers, resumable |
 
 Without flags: ask depth question.
+
+**Do NOT:** Fabricate sources or URLs, present T5/T6 sources without confidence caveat, skip contradiction resolution when sources disagree, or synthesize without citing specific source tiers.
 
 ## Execution Flow
 
@@ -57,27 +59,27 @@ AskUserQuestion([
 
 ### Phase 2: Parse Query
 
-Extract from $ARGS: concepts, date context, tech domain, comparison mode, search mode (troubleshoot/changelog/security).
+Extract from $ARGUMENTS: concepts, date context, tech domain, comparison mode, search mode (troubleshoot/changelog/security).
 
 ### Phase 3: Research [PARALLEL: up to 7 calls]
 
 Launch parallel Task calls to cco-agent-research:
 
-| Track | When |
-|-------|------|
-| Local codebase | If focus includes local |
-| T1: Official docs | Always |
-| T2: GitHub/changelogs | Always |
-| T3: Technical blogs | Standard+ |
-| T4: Community (SO/Reddit) | Standard+ |
-| Security (NVD/CVE/Snyk) | If security query |
-| Comparison A/B | If comparison detected |
+| Track | Agent scope | When |
+|-------|------------|------|
+| Local codebase | scope: local, patterns: [...] | If focus includes local |
+| T1: Official docs | scope: search, allowed_domains: [official sites] | Always |
+| T2: GitHub/changelogs | scope: search, allowed_domains: [github.com] | Always |
+| T3: Technical blogs | scope: search | Standard+ |
+| T4: Community (SO/Reddit) | scope: search, allowed_domains: [stackoverflow.com, reddit.com] | Standard+ |
+| Security (NVD/CVE/Snyk) | scope: dependency | If security query |
+| Comparison A/B | scope: full | If comparison detected |
 
 ### Phase 4: Synthesize
 
 Validate agent outputs. Malformed → retry once, exclude on second failure.
 
-T1-T2 sources → cco-agent-research for conflict resolution. T3+ → aggregate locally.
+T1-T2 sources → cco-agent-research (scope: synthesize) for conflict resolution. T3+ → aggregate locally.
 
 **Mandatory saturation gate:** After each search batch: if 3+ T1/T2 sources agree → skip remaining lower-tier searches, proceed to synthesis. This check is not optional.
 
@@ -89,9 +91,9 @@ Executive summary, evidence hierarchy (primary T1-T2, supporting T3-T4), contrad
 
 | Tier | Sources | Score |
 |------|---------|-------|
-| T1 | Official docs, specs | 90-100 |
-| T2 | GitHub, changelogs | 80-90 |
-| T3 | Major blogs, tutorials | 70-80 |
-| T4 | Stack Overflow, forums | 60-70 |
-| T5 | Personal blogs | 50-60 |
-| T6 | Unknown | Skip |
+| T1 | Official docs, specs | 95-100 |
+| T2 | GitHub, changelogs | 85-94 |
+| T3 | Major blogs, tutorials | 70-84 |
+| T4 | Stack Overflow, forums | 55-69 |
+| T5 | Personal blogs | 40-54 |
+| T6 | Unknown | <40 (discard) |
