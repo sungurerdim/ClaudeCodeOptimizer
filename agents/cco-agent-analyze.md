@@ -15,6 +15,15 @@ Comprehensive codebase analysis with severity scoring. Returns structured JSON.
 |-------|------|----------|-------------|
 | `scopes` | `string[]` | Yes | Scope IDs to analyze |
 | `mode` | `string` | Yes | `"review"`, `"auto"`, or `"audit"` |
+| `context` | `object` | No | Blueprint profile context: projectType, stack, qualityTarget, dataSensitivity, constraints. When provided, use for stack-specific pattern detection and severity calibration. When absent, detect from codebase. |
+
+## Mode Behavior
+
+| Mode | Primary caller | Also used by | Mindset | Scope |
+|------|---------------|-------------|---------|-------|
+| `auto` | cco-optimize | cco-blueprint (Track A, D) | Tactical. Find fixable issues in individual files. Prefer small, safe, auto-applicable fixes. Flag only what can be acted on now. | Optimize scopes only |
+| `review` | cco-align | cco-blueprint (Track B, C) | Strategic. Evaluate patterns across the codebase. Flag structural issues even if not auto-fixable. Question consistency, not just correctness. | Review scopes only |
+| `audit` | cco-blueprint (Track E) | — | Assessment. Score and measure. Report state without suggesting fixes. Focus on metrics (coupling, cohesion, complexity, coverage). | Audit scopes only |
 
 ## Output Schema
 
@@ -74,11 +83,12 @@ Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
 | Scope | ID Range | Focus |
 |-------|----------|-------|
 | architecture | ARC-01 to ARC-15 | Coupling/cohesion scores, circular deps, layer violations, god classes, feature envy, dependency direction |
-| patterns | PAT-01 to PAT-12 | Inconsistent error handling/logging/async, SOLID/DRY violations, primitive obsession, data clumps |
-| testing | TST-01 to TST-10 | Coverage by module, critical path coverage, test ratio, missing edge cases, flaky tests, isolation |
-| maintainability | MNT-01 to MNT-12 | Complexity hotspots, cognitive complexity, long methods/params, deep nesting, magic in logic, hardcoded config |
-| ai-architecture | AIA-01 to AIA-10 | Over-engineering (interface with 1 impl), local solutions, architectural drift, pattern inconsistency |
+| patterns | PAT-01 to PAT-15 | Inconsistent error handling/logging/async, SOLID/DRY violations, primitive obsession, data clumps, framework-specific anti-patterns (DI bypass, manual validation vs framework validators, sync-in-async, non-idiomatic middleware/decorator usage — detected from stack in blueprint profile or codebase) |
+| testing | TST-01 to TST-10 | Coverage by module vs threshold (from blueprint or 80% default), critical path test existence (auth, payment, data flow, error paths), test-to-code ratio, missing negative/boundary tests, test isolation issues (shared state, execution order dependency), mock vs real dependency balance, flaky test indicators (sleep, time-dependent, network calls) |
+| maintainability | MNT-01 to MNT-12 | Cyclomatic complexity >15, cognitive complexity >20, methods >50 lines, >4 parameters, nesting >3 levels, magic numbers/strings in business logic, hardcoded config that should be env/settings, boolean parameter flags (control coupling), temporal coupling (must-call-in-order without enforcement) |
+| ai-architecture | AIA-01 to AIA-10 | Over-engineering (interface with 1 impl, abstract class with 1 subclass, factory for 1 type, generic wrapper around single use case), local-only solutions presented as reusable (single-caller utility modules, config for 1 value), architectural drift (module violating its own established pattern), pattern inconsistency (same problem solved 3+ different ways across codebase) |
 | functional-completeness | FUN-01 to FUN-18 | Missing CRUD/pagination/filter, incomplete error handling, state transition gaps, caching/indexing strategy |
+| production-readiness | PRD-01 to PRD-07 | Health/readiness probe completeness, graceful shutdown handling, config validation at startup, secret injection method (env vs hardcoded), container/deployment hygiene (Dockerfile best practices, compose config), observability hooks (structured logging, metrics endpoints, trace propagation), scaling bottlenecks (stateful components, connection pool limits, single points of failure) |
 
 ### Audit Scopes (project-level assessment)
 

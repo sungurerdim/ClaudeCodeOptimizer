@@ -1,5 +1,5 @@
 ---
-description: Documentation gap analysis - compare ideal vs current docs, generate missing content.
+description: Documentation gap analysis — compare ideal vs current docs, generate missing content. Use when documentation needs to be created, updated, or audited.
 argument-hint: "[--auto] [--preview] [--scope=<name>] [--update]"
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 ---
@@ -24,7 +24,7 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 ## Context
 
 - Git status: !`git status --short 2>/dev/null || echo ""`
-- Args: $ARGS
+- Args: $ARGUMENTS
 
 ## Scopes
 
@@ -75,7 +75,7 @@ In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
 ### Phase 2: Analysis [PARALLEL with Phase 1]
 
-Delegate to cco-agent-analyze (scope: docs): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Error Handling. Fallback: file existence checks.
+Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
 
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
 
@@ -100,12 +100,28 @@ Display plan (target files, sections, sources). Ask: Generate All (recommended) 
 
 ### Phase 5: Generate Documentation
 
-Delegate to cco-agent-apply (scope=docs). Extract from actual source files. Apply: brevity, examples, scannability, actionability. Avoid: filler, "this document explains...", long paragraphs. On error: count as failed, continue.
+Delegate to cco-agent-apply (scope: docs, operations: [{action, scope, file, sections, sources, projectType}]). Extract from actual source files. Apply: brevity, examples, scannability, actionability. Avoid: filler, "this document explains...", long paragraphs. On error: count as failed, continue.
 
 **Source mandate:** Every documented flag, endpoint, or config value MUST have Grep/Read verification before inclusion. Never document features from memory or inference.
 
 ### Phase 6: Summary
 
-Per CCO Rules: Accounting. Gap summary (before/after), files generated, applied/failed/total.
+Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category.
+
+Interactive output format:
+
+```
+cco-docs complete
+=================
+| Scope     | Status   | File            | Lines |
+|-----------|----------|-----------------|-------|
+| readme    | Updated  | README.md       |   +12 |
+| api       | Created  | docs/api.md     |    85 |
+| dev       | Skipped  | CONTRIBUTING.md |     — |
+
+Applied: 2 | Failed: 0 | Total: 2
+```
+
+Gap summary (before/after), files generated, applied/failed/total.
 
 --auto: `cco-docs: {OK|WARN|FAIL} | Applied: N | Failed: N | Total: N`

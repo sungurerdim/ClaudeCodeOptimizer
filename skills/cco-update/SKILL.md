@@ -1,7 +1,8 @@
 ---
-description: Check for updates and upgrade CCO to the latest version
+description: Check for updates and upgrade CCO to the latest version.
 argument-hint: "[--auto] [--check]"
 allowed-tools: WebFetch, Read, Edit, Bash, AskUserQuestion
+disable-model-invocation: true
 ---
 
 # /cco-update
