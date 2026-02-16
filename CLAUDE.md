@@ -34,11 +34,14 @@ Toolchain: gofmt + go vet | GitHub Actions CI | No container
 ### Current Scores
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Security | 90 | OK |
+| Security & Privacy | 90 | OK |
 | Code Quality | 86 | OK |
 | Architecture | 76 | WARN |
+| Performance | 88 | OK |
+| Resilience | 82 | OK |
+| Testing | 70 | WARN |
 | Stack Health | 86 | OK |
 | DX | 78 | WARN |
 | Documentation | 81 | WARN |
-| Overall | 84 | WARN |
+| Overall | 82 | WARN |
 <!-- cco-blueprint-end -->

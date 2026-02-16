@@ -10,6 +10,10 @@ allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 
 For strategic architecture assessment, use `/cco-align`.
 
+**Scope boundary:** Tactical, file-level fixes within current architecture. Finds repeated code blocks, unnecessary abstractions, missing types — but does NOT question architectural decisions or suggest pattern changes. For architectural assessment, use `/cco-align`.
+
+**Do NOT:** Suggest architectural changes, question technology choices, add new abstractions, refactor working code outside the target scopes, or create new files. If an issue requires architectural change, report as `needs_approval` with reason.
+
 ## Args
 
 | Flag | Effect |
@@ -66,11 +70,13 @@ Launch scope groups as parallel Task calls to cco-agent-analyze:
 - Performance: performance
 - AI Cleanup: ai-hygiene, doc-sync
 
-Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Error Handling.
+Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+
+**Gate:** If findings = 0 after analysis → skip Phase 3-4, go directly to Phase 5 with: `cco-optimize: OK | No issues found | Scopes: {scoped list}`
 
 ### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 
-Per CCO Rules: Plan Review Protocol.
+Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask: Fix All / By Severity / Review Each / Report Only. If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
 ### Phase 4: Apply [SYNCHRONOUS]
 
@@ -80,7 +86,7 @@ Send findings to cco-agent-apply. Group by file. Count findings, not locations. 
 
 **Phase gate:** After Phase 4 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
 
-Per CCO Rules: if needs_approval > 0, display items table and ask Fix All / Review Each.
+Per CCO Rules: if needs_approval > 0, display items table (ID, severity, issue, location, reason) and ask Fix All / Review Each.
 
 ### Phase 4.6: Loop [--loop flag only]
 
@@ -88,13 +94,32 @@ If applied > 0: re-run Phase 2 scoped to modified files → re-run Phase 4. Max 
 
 ### Phase 5: Summary
 
-Per CCO Rules: Accounting, Auto Mode, Severity Levels.
+Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category. Auto Mode — no questions, no deferrals, fix everything except large architectural changes.
+
+Interactive output format:
+
+```
+cco-optimize complete
+=====================
+| Scope          | Findings | Fixed | Failed |
+|----------------|----------|-------|--------|
+| security       |     3    |   3   |   0    |
+| hygiene        |     5    |   4   |   1    |
+| types          |     2    |   2   |   0    |
+| Total          |    10    |   9   |   1    |
+
+Failed:
+  [MEDIUM] HYG-12: Unused import in services/api/handlers.py:15
+    Reason: Import used by test mock path
+
+Applied: 9 | Failed: 1 | Needs Approval: 0 | Total: 10
+```
 
 --auto: `cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
 
-Interactive: table with counts, failed items list, stash reminder if applicable.
-
 Status: OK (failed=0), WARN (failed>0 no CRITICAL), FAIL (CRITICAL unfixed or error).
+
+Next: `/cco-commit` (commit fixes) | `/cco-align` (check architecture) | `/cco-blueprint` (track progress)
 
 ## Scopes (9 scopes, 97 checks)
 

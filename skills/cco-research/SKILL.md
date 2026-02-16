@@ -23,6 +23,8 @@ Hybrid: Local (Glob/Grep) + Web (cco-agent-research).
 
 Without flags: ask depth question.
 
+**Do NOT:** Fabricate sources or URLs, present T5/T6 sources without confidence caveat, skip contradiction resolution when sources disagree, or synthesize without citing specific source tiers.
+
 ## Execution Flow
 
 Setup → Parse Query → Research [PARALLEL] → Synthesize → Output

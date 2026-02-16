@@ -57,9 +57,12 @@ Toolchain: {tools} | {CI} | {container}
 ### Current Scores
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Security | {n} | {OK/WARN} |
+| Security & Privacy | {n} | {OK/WARN} |
 | Code Quality | {n} | {OK/WARN} |
 | Architecture | {n} | {OK/WARN} |
+| Performance | {n} | {OK/WARN} |
+| Resilience | {n} | {OK/WARN} |
+| Testing | {n} | {OK/WARN} |
 | Stack Health | {n} | {OK/WARN} |
 | DX | {n} | {OK/WARN} |
 | Documentation | {n} | {OK/WARN} |
@@ -234,12 +237,14 @@ AskUserQuestion([{
 
 | Track | Agent Call |
 |-------|-----------|
-| A: Code Quality | cco-agent-analyze: security, hygiene, types, simplify, performance, robustness, privacy (mode: auto) |
-| B: Architecture | cco-agent-analyze: architecture, patterns, testing, maintainability (mode: auto) |
+| A: Code Quality | cco-agent-analyze: security, hygiene, types, simplify, performance, robustness, privacy (mode: auto, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
+| B: Architecture | cco-agent-analyze: architecture, patterns, testing, maintainability, production-readiness (mode: auto, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
 | C: Documentation | cco-agent-analyze: doc-sync (mode: auto) |
 | D: Audit | cco-agent-analyze: stack-assessment, dependency-health, dx-quality, project-structure (mode: audit) |
 
-All tracks run with `--preview`. Per CCO Rules: Agent Error Handling.
+Context fields are read from the blueprint profile. This enables stack-specific pattern detection, privacy severity calibration, and quality target alignment.
+
+All tracks run with `--preview`. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
 
 ### Phase 3.5: Project Map
 
@@ -260,14 +265,17 @@ Calculate health scores:
 
 | Dimension | Weight | Source |
 |-----------|--------|--------|
-| Security | 25%* | security + privacy + robustness |
-| Code Quality | 20% | hygiene + types + simplify + performance |
-| Architecture | 20% | architecture + patterns + maintainability |
-| Stack Health | 15% | stack-assessment + dependency-health |
-| DX | 10% | dx-quality + project-structure |
-| Documentation | 10% | doc-sync |
+| Security & Privacy | 18%* | optimize: security + privacy |
+| Code Quality | 14% | optimize: hygiene + types + simplify |
+| Architecture | 14% | align: architecture + patterns + maintainability |
+| Performance | 10% | optimize: performance |
+| Resilience | 10% | optimize: robustness + align: functional-completeness |
+| Testing | 10% | align: testing |
+| Stack Health | 10% | audit: stack-assessment + dependency-health |
+| DX | 7% | audit: dx-quality + project-structure |
+| Documentation | 7% | docs results |
 
-*Sensitive data profiles: Security → 35%, others decrease proportionally.
+*Sensitive data profiles: Security & Privacy increases to 28%, others decrease proportionally.
 
 Prioritize 80/20: Quick Win → Moderate → Complex → Major.
 
@@ -281,7 +289,7 @@ Send findings to cco-agent-apply in priority order: CRITICAL/security → Code q
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: if needs_approval > 0, display items table and ask Fix All / Review Each.
+Per CCO Rules: if needs_approval > 0, display items table (ID, severity, issue, location, reason) and ask Fix All / Review Each.
 
 ### Phase 7: Update Profile
 
@@ -310,9 +318,11 @@ In --auto: silent cleanup. Interactive: confirm if >5 entries removed. Partial c
 
 ### Phase 8: Summary
 
-Per CCO Rules: Accounting, Auto Mode.
+Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category. Auto Mode — no questions, no deferrals, fix everything except large architectural changes.
 
-Before/After delta table, accounting (applied/failed/needs_approval/total), next steps.
+Before/After delta table (9 dimensions), accounting (applied/failed/needs_approval/total), next steps.
+
+Next: `/cco-blueprint --preview` (check progress) | `/cco-optimize` (fix issues) | `/cco-align` (fix structure)
 
 --auto: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Total: {n}`
 
