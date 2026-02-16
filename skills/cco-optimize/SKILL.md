@@ -64,7 +64,7 @@ AskUserQuestion([{
 
 ### Phase 2: Analyze [PARALLEL: 4 calls]
 
-Launch scope groups as parallel Task calls to cco-agent-analyze:
+Launch scope groups as parallel Task calls to cco-agent-analyze (mode: auto):
 - Security & Privacy: security, robustness, privacy
 - Code Quality: hygiene, types, simplify
 - Performance: performance
@@ -80,7 +80,7 @@ Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, ti
 
 ### Phase 4: Apply [SYNCHRONOUS]
 
-Send findings to cco-agent-apply. Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
+Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
 
 ### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 

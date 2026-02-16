@@ -238,9 +238,10 @@ AskUserQuestion([{
 | Track | Agent Call |
 |-------|-----------|
 | A: Code Quality | cco-agent-analyze: security, hygiene, types, simplify, performance, robustness, privacy (mode: auto, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
-| B: Architecture | cco-agent-analyze: architecture, patterns, testing, maintainability, production-readiness (mode: auto, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
-| C: Documentation | cco-agent-analyze: doc-sync (mode: auto) |
-| D: Audit | cco-agent-analyze: stack-assessment, dependency-health, dx-quality, project-structure (mode: audit) |
+| B: Architecture | cco-agent-analyze: architecture, patterns, testing, maintainability (mode: review, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
+| C: Production | cco-agent-analyze: production-readiness (mode: review, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
+| D: Documentation | cco-agent-analyze: doc-sync (mode: auto) |
+| E: Audit | cco-agent-analyze: stack-assessment, dependency-health, dx-quality, project-structure (mode: audit) |
 
 Context fields are read from the blueprint profile. This enables stack-specific pattern detection, privacy severity calibration, and quality target alignment.
 
@@ -285,7 +286,7 @@ Display blueprint dashboard: project info, health scores table (Current/Target/G
 
 ### Phase 6: Apply [SKIP if --preview]
 
-Send findings to cco-agent-apply in priority order: CRITICAL/security → Code quality → Architecture → Documentation. Per CCO Rules: on error, count as failed, continue.
+Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) in priority order: CRITICAL/security → Code quality → Architecture → Documentation. Per CCO Rules: on error, count as failed, continue.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 

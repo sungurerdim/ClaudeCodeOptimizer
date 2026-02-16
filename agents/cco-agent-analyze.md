@@ -19,11 +19,11 @@ Comprehensive codebase analysis with severity scoring. Returns structured JSON.
 
 ## Mode Behavior
 
-| Mode | Called by | Mindset | Scope |
-|------|-----------|---------|-------|
-| `auto` | cco-optimize | Tactical. Find fixable issues in individual files. Prefer small, safe, auto-applicable fixes. Flag only what can be acted on now. | Optimize scopes only |
-| `review` | cco-align | Strategic. Evaluate patterns across the codebase. Flag structural issues even if not auto-fixable. Question consistency, not just correctness. | Review scopes only |
-| `audit` | cco-blueprint | Assessment. Score and measure. Report state without suggesting fixes. Focus on metrics (coupling, cohesion, complexity, coverage). | Audit scopes only |
+| Mode | Primary caller | Also used by | Mindset | Scope |
+|------|---------------|-------------|---------|-------|
+| `auto` | cco-optimize | cco-blueprint (Track A, D) | Tactical. Find fixable issues in individual files. Prefer small, safe, auto-applicable fixes. Flag only what can be acted on now. | Optimize scopes only |
+| `review` | cco-align | cco-blueprint (Track B, C) | Strategic. Evaluate patterns across the codebase. Flag structural issues even if not auto-fixable. Question consistency, not just correctness. | Review scopes only |
+| `audit` | cco-blueprint (Track E) | — | Assessment. Score and measure. Report state without suggesting fixes. Focus on metrics (coupling, cohesion, complexity, coverage). | Audit scopes only |
 
 ## Output Schema
 

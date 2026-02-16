@@ -75,7 +75,7 @@ In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
 ### Phase 2: Analysis [PARALLEL with Phase 1]
 
-Delegate to cco-agent-analyze (scope: docs): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
+Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
 
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
 
@@ -100,7 +100,7 @@ Display plan (target files, sections, sources). Ask: Generate All (recommended) 
 
 ### Phase 5: Generate Documentation
 
-Delegate to cco-agent-apply (scope=docs). Extract from actual source files. Apply: brevity, examples, scannability, actionability. Avoid: filler, "this document explains...", long paragraphs. On error: count as failed, continue.
+Delegate to cco-agent-apply (scope: docs, operations: [{action, scope, file, sections, sources, projectType}]). Extract from actual source files. Apply: brevity, examples, scannability, actionability. Avoid: filler, "this document explains...", long paragraphs. On error: count as failed, continue.
 
 **Source mandate:** Every documented flag, endpoint, or config value MUST have Grep/Read verification before inclusion. Never document features from memory or inference.
 

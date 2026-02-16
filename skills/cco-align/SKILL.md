@@ -48,19 +48,23 @@ AskUserQuestion([{
   question: "Which areas should be reviewed?",
   header: "Scopes",
   options: [
-    { label: "Structure (Recommended)", description: "architecture + patterns + production-readiness" },
+    { label: "Structure (Recommended)", description: "architecture + patterns" },
     { label: "Quality (Recommended)", description: "testing + maintainability" },
+    { label: "Production Readiness", description: "production-readiness" },
     { label: "Completeness & Data", description: "functional-completeness + ai-architecture" }
   ],
   multiSelect: true
 }])
 ```
 
-### Phase 2: Analyze [PARALLEL: 3 calls]
+### Phase 2: Analyze [PARALLEL: 4 calls]
 
-Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review):
-- Structure: architecture, patterns, production-readiness
+If blueprint profile exists in CLAUDE.md, read context (projectType, stack, qualityTarget, dataSensitivity, constraints) and pass to agent calls.
+
+Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review, context: from profile if available):
+- Structure: architecture, patterns
 - Quality: testing, maintainability
+- Production: production-readiness
 - Completeness: functional-completeness, ai-architecture
 
 Merge findings. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
@@ -87,7 +91,7 @@ Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, ti
 
 ### Phase 6: Apply
 
-Send to cco-agent-apply. Count findings, not locations. On error: count as failed, continue.
+Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count findings, not locations. On error: count as failed, continue.
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
