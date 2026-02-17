@@ -24,9 +24,9 @@ Run `git diff main...HEAD` and describe what that diff shows.
 
 ## Context
 
-- Branch: !`git branch --show-current 2>/dev/null || echo ""`
-- Commits on branch: !`git log --oneline main..HEAD 2>/dev/null || echo ""`
-- Existing PR: !`gh pr list --head $(git branch --show-current) --json number,title,state,url -L1 2>/dev/null`
+- Branch: !`git branch --show-current 2>/dev/null | cat`
+- Commits on branch: !`git log --oneline main..HEAD 2>/dev/null | cat`
+- Existing PR: !`gh pr list --head "$(git branch --show-current 2>/dev/null)" --json number,title,state,url -L1 2>/dev/null | cat`
 
 ## Flags
 
