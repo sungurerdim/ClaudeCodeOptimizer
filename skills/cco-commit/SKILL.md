@@ -14,12 +14,12 @@ allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null || echo ""`
-- Branch: !`git branch --show-current 2>/dev/null || echo ""`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo ""`
-- All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null || echo ""`
-- Staged only: !`git diff --cached --shortstat 2>/dev/null || echo ""`
-- Unpushed commits: !`git log @{upstream}..HEAD --oneline 2>/dev/null || echo ""`
+- Git status: !`git status --short 2>/dev/null | cat`
+- Branch: !`git branch --show-current 2>/dev/null | cat`
+- Recent commits: !`git log --oneline -5 2>/dev/null | cat`
+- All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null | cat`
+- Staged only: !`git diff --cached --shortstat 2>/dev/null | cat`
+- Unpushed commits: !`git log @{upstream}..HEAD --oneline 2>/dev/null | cat`
 
 **Scope:** All uncommitted changes included by default (staged + unstaged + untracked). Use `--staged-only` for staged changes only.
 
