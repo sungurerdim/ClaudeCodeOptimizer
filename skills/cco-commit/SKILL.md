@@ -41,27 +41,26 @@ Pre-checks → Analyze → Execute → Verify → Summary
 
 **1.2 Main branch guard [ON MAIN ONLY]:** If on `main` or `master`:
 
-1. Check existing feature branches: `git branch --list 'feat/*' 'fix/*' 'chore/*' 'refactor/*' 'docs/*' 'ci/*' 'test/*' 'perf/*' --sort=-committerdate`
-2. Analyze changes to classify scope and generate branch candidates
-3. Ask user:
+1. Check for `dev` branch: `git branch --list 'dev'`
+2. Ask user:
 
 ```javascript
 AskUserQuestion([{
   question: "You're on main. Where should these changes go?",
   header: "Branch",
   options: [
-    // Up to 2 existing branches (most recent first):
-    { label: "{existing-branch}", description: "Continue on this branch ({n} commits ahead)" },
-    // Up to 2 new branch candidates:
-    { label: "New: {type}/{description}", description: "{n} files — {summary}" },
+    // If dev branch exists:
+    { label: "dev (Recommended)", description: "Continue on dev ({n} commits ahead)" },
+    // If dev branch does not exist:
+    { label: "Create dev (Recommended)", description: "New working branch for accumulated changes" },
     // Always last:
-    { label: "Commit on main", description: "Not recommended for release-please repos" }
+    { label: "Commit on main", description: "Direct commit, skip branch workflow" }
   ],
   multiSelect: false
 }])
 ```
 
-Branch naming: `{type}/{short-description}`, all lowercase, hyphens, max 50 chars.
+Use `dev` as the default working branch. Accumulate changes there, create one PR when ready. The PR title (not branch name) determines version impact.
 
 **1.3 Conflict check:** `UU`/`AA`/`DD` in status → stop.
 
