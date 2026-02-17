@@ -95,14 +95,14 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v2.1.6
           working-directory: extras/installer
           args: --config ../../.golangci.yml
 
       - name: Lint statusline
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v2.1.6
           working-directory: extras/statusline
           args: --config ../../.golangci.yml
 

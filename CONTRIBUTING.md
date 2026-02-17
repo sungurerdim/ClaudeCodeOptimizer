@@ -49,6 +49,9 @@ Update `README.md` and `docs/` if counts change.
 ## Pull Request Guidelines
 
 1. **Run validation** before submitting:
+
+   > **Windows:** Use Git Bash or WSL for verification commands.
+
    ```bash
    # Verify all files exist
    ls rules/cco-rules.md

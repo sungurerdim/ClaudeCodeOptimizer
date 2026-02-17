@@ -46,6 +46,15 @@ Fix security, quality, and hygiene issues.
 | Doc-Sync | README outdated, comment-code drift |
 | Simplify | Nested conditionals, god functions |
 
+### Args
+
+| Flag | Description |
+|------|-------------|
+| `--auto` | Unattended: fix all, no questions |
+| `--preview` | Report only, no fixes |
+| `--scope=X` | Focus on specific scope |
+| `--loop` | Re-run until clean or max 3 iterations. Combines with `--auto`. |
+
 ### Flow
 
 Setup → Analyze (parallel scopes) → Plan Review → Apply → Summary

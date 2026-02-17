@@ -5,6 +5,8 @@ linters:
     - staticcheck
     - unused
     - gofmt
+    - misspell
+    - ineffassign
 
 issues:
   exclude-dirs:
