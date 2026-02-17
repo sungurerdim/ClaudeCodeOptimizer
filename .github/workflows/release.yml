@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and upload binaries for (e.g. v4.2.2). Leave empty for normal release-please flow.'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -13,6 +18,7 @@ permissions:
 jobs:
   release-please:
     name: Release Please
+    if: inputs.tag == ''
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -53,7 +59,9 @@ jobs:
   upload-binaries:
     name: Upload Binaries
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: >-
+      always() &&
+      (needs.release-please.outputs.release_created == 'true' || inputs.tag != '')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,4 +84,4 @@ jobs:
           args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ needs.release-please.outputs.tag_name }}
+          GORELEASER_CURRENT_TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
