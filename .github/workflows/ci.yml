@@ -61,7 +61,7 @@ jobs:
         run: |
           FAIL=0
           # Extract skill paths from installer (only from var skillFiles block)
-          INSTALLER_SKILLS=$(sed -n '/^var skillFiles/,/^}/p' extras/installer/main.go | grep -oP '"skills/cco-[^"]+/SKILL\.md"' | tr -d '"' | sort)
+          INSTALLER_SKILLS=$(sed -n '/^var skillFiles/,/^}/p' extras/installer/manifest.go | grep -oP '"skills/cco-[^"]+/SKILL\.md"' | tr -d '"' | sort)
           REPO_SKILLS=$(ls -d skills/cco-*/SKILL.md 2>/dev/null | sort)
           if [ "$INSTALLER_SKILLS" != "$REPO_SKILLS" ]; then
             echo "Error: Installer skillFiles out of sync with repository"
@@ -70,7 +70,7 @@ jobs:
             FAIL=1
           fi
           # Extract agent paths from installer (only from var agentFiles block)
-          INSTALLER_AGENTS=$(sed -n '/^var agentFiles/,/^}/p' extras/installer/main.go | grep -oP '"agents/cco-agent-[^"]+"' | tr -d '"' | sort)
+          INSTALLER_AGENTS=$(sed -n '/^var agentFiles/,/^}/p' extras/installer/manifest.go | grep -oP '"agents/cco-agent-[^"]+"' | tr -d '"' | sort)
           REPO_AGENTS=$(ls agents/cco-agent-*.md 2>/dev/null | sort)
           if [ "$INSTALLER_AGENTS" != "$REPO_AGENTS" ]; then
             echo "Error: Installer agentFiles out of sync with repository"
@@ -93,14 +93,14 @@ jobs:
           cache: false
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1.6
           working-directory: extras/installer
           args: --config ../../.golangci.yml
 
       - name: Lint statusline
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1.6
           working-directory: extras/statusline
