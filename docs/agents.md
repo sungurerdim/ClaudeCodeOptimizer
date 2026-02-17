@@ -37,7 +37,7 @@ Need changes?
 Read-only analysis agent. Returns structured JSON with findings, scores, and metrics.
 
 - **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
-- **6 review scopes** (77 checks): architecture, patterns, testing, maintainability, ai-architecture, functional-completeness
+- **7 review scopes** (87 checks): architecture, patterns, testing, maintainability, ai-architecture, functional-completeness, production-readiness
 - **4 audit scopes** (40 checks): stack-assessment, dependency-health, dx-quality, project-structure
 - Platform filtering, skip patterns, false positive handling
 - Per CCO Rules: Confidence Scoring, Severity Levels, Skip Patterns

@@ -15,6 +15,8 @@ import (
 
 const repo = "sungurerdim/ClaudeCodeOptimizer"
 
+var httpClient = &http.Client{Timeout: 30 * time.Second}
+
 var rulesFiles = []string{
 	"rules/cco-rules.md",
 }
@@ -108,11 +110,15 @@ func claudeDir() string {
 
 func resolveLatestTag() string {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/tags?per_page=1", repo)
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return "main"
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "main"
+	}
 
 	var tags []struct {
 		Name string `json:"name"`
@@ -125,7 +131,7 @@ func resolveLatestTag() string {
 
 func downloadFile(baseURL, path string) (string, error) {
 	url := fmt.Sprintf("%s/%s", baseURL, path)
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
@@ -160,7 +166,9 @@ func writeFile(base, path, content string) error {
 func removeIfExists(base, path string) bool {
 	fullPath := filepath.Join(base, filepath.FromSlash(path))
 	if _, err := os.Stat(fullPath); err == nil {
-		os.Remove(fullPath)
+		if err := os.Remove(fullPath); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove %s: %v\n", path, err)
+		}
 		return true
 	}
 	return false
@@ -169,7 +177,9 @@ func removeIfExists(base, path string) bool {
 func removeDirIfExists(base, path string) bool {
 	fullPath := filepath.Join(base, filepath.FromSlash(path))
 	if info, err := os.Stat(fullPath); err == nil && info.IsDir() {
-		os.RemoveAll(fullPath)
+		if err := os.RemoveAll(fullPath); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove directory %s: %v\n", path, err)
+		}
 		return true
 	}
 	return false
@@ -204,29 +214,27 @@ func runInstall() {
 	fmt.Printf("  Source verified (%s)\n", ref)
 
 	// Download and install all files
-	failed := 0
-	allFiles := make([]struct {
+	type installFile struct {
 		path  string
 		group string
-	}, 0)
+	}
+
+	failed := 0
+	var allFiles []installFile
 
 	for _, f := range rulesFiles {
-		allFiles = append(allFiles, struct {
-			path  string
-			group string
-		}{f, "rules"})
+		allFiles = append(allFiles, installFile{f, "rules"})
 	}
 	for _, f := range skillFiles {
-		allFiles = append(allFiles, struct {
-			path  string
-			group string
-		}{f, "skills"})
+		allFiles = append(allFiles, installFile{f, "skills"})
 	}
 	for _, f := range agentFiles {
-		allFiles = append(allFiles, struct {
-			path  string
-			group string
-		}{f, "agents"})
+		allFiles = append(allFiles, installFile{f, "agents"})
+	}
+
+	// Critical files that must succeed for a valid installation
+	criticalFiles := map[string]bool{
+		"rules/cco-rules.md": true,
 	}
 
 	currentGroup := ""
@@ -240,12 +248,20 @@ func runInstall() {
 		content, err := downloadFile(baseURL, f.path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "  ! %s (%v)\n", f.path, err)
+			if criticalFiles[f.path] {
+				fmt.Fprintf(os.Stderr, "\nCritical file failed. Installation aborted.\n")
+				os.Exit(1)
+			}
 			failed++
 			continue
 		}
 
 		if err := writeFile(base, f.path, content); err != nil {
 			fmt.Fprintf(os.Stderr, "  ! %s (%v)\n", f.path, err)
+			if criticalFiles[f.path] {
+				fmt.Fprintf(os.Stderr, "\nCritical file write failed. Installation aborted.\n")
+				os.Exit(1)
+			}
 			failed++
 			continue
 		}
@@ -326,9 +342,13 @@ func cleanupLegacy(base string) []string {
 
 	// v1.x pip cleanup (best-effort, skip if pip not available)
 	if pipPath, err := exec.LookPath("pip"); err == nil {
-		cmd := exec.Command(pipPath, "uninstall", "claudecodeoptimizer", "-y")
-		if err := cmd.Run(); err == nil {
-			removed = append(removed, "pip:claudecodeoptimizer")
+		// Check if package is actually installed before attempting uninstall
+		checkCmd := exec.Command(pipPath, "show", "claudecodeoptimizer")
+		if checkCmd.Run() == nil {
+			cmd := exec.Command(pipPath, "uninstall", "claudecodeoptimizer", "-y")
+			if err := cmd.Run(); err == nil {
+				removed = append(removed, "pip:claudecodeoptimizer")
+			}
 		}
 	}
 
@@ -431,7 +451,9 @@ func cleanupLegacy(base string) []string {
 			// v2 plugin symlinks: cco:*.md files (not directories)
 			if !e.IsDir() && strings.HasPrefix(name, "cco:") && strings.HasSuffix(name, ".md") {
 				fullPath := filepath.Join(skillsDir, name)
-				os.Remove(fullPath)
+				if err := os.Remove(fullPath); err != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to remove %s: %v\n", "skills/"+name, err)
+				}
 				removed = append(removed, "skills/"+name)
 			}
 		}
@@ -456,7 +478,9 @@ func updateTimestamp(base string) {
 		}
 	}
 
-	_ = os.WriteFile(rulesPath, []byte(strings.Join(lines, "\n")), 0644)
+	if err := os.WriteFile(rulesPath, []byte(strings.Join(lines, "\n")), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to update timestamp: %v\n", err)
+	}
 }
 
 func runUninstall() {

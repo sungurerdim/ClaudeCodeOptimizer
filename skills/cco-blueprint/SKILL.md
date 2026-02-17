@@ -245,7 +245,11 @@ AskUserQuestion([{
 
 Context fields are read from the blueprint profile. This enables stack-specific pattern detection, privacy severity calibration, and quality target alignment.
 
+**Agent invocation:** Launch ALL 5 tracks as Task calls in a SINGLE message WITHOUT `run_in_background`. This executes them in parallel and returns results directly. Do NOT use `run_in_background` for Task calls — it causes empty output files and late completion notifications. Wait for ALL agent results before proceeding to Phase 3.5.
+
 All tracks run with `--preview`. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+
+**Phase gate:** Do NOT proceed to Phase 3.5/4 until all 5 agent tracks have returned results or failed. Verify each track produced output before consolidation.
 
 ### Phase 3.5: Project Map
 
@@ -290,7 +294,22 @@ Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) i
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: if needs_approval > 0, display items table (ID, severity, issue, location, reason) and ask Fix All / Review Each.
+**Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
+
+If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
+
+```javascript
+AskUserQuestion([{
+  question: "There are items that need your approval. How would you like to proceed?",
+  header: "Approval",
+  options: [
+    { label: "Fix All (Recommended)", description: "Apply all needs-approval items" },
+    { label: "Review Each", description: "Review and decide on each item individually" },
+    { label: "Skip All", description: "Leave needs-approval items unfixed" }
+  ],
+  multiSelect: false
+}])
+```
 
 ### Phase 7: Update Profile
 

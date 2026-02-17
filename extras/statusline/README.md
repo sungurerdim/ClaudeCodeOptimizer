@@ -5,7 +5,7 @@ Optional status line for Claude Code that shows git, model, and session info at 
 ## What it shows
 
 ```
-ClaudeCodeOptimizer:dev  ·  v3.0.0
+ClaudeCodeOptimizer:dev  ·  v4.2.0
 △ 2 ▽ 0  ·  mod 1  ·  add 0  ·  del 0  ·  mv 0
 Sungur  ·  CC 1.0.80  ·  Opus 4.6  ·  45K 22%
 ```
