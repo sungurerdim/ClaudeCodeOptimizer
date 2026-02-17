@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.2](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.2.1...v4.2.2) (2026-02-17)
+
+
+### Bug Fixes
+
+* **skills:** use pipe pattern for reliable skill context evaluation ([#47](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/47)) ([bf6c977](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/bf6c9777ba0168302e875216f0b198afcf4ad381))
+
 ## [4.2.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.2.0...v4.2.1) (2026-02-17)
 
 
