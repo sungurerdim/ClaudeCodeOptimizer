@@ -32,7 +32,7 @@ Rule categories: Scope Control, Code Integrity, Production Standards, Verificati
 1. Create `skills/cco-{name}/SKILL.md` with YAML frontmatter
 2. Update `extras/installer/main.go` file manifest
 3. Update `skills/cco-update/SKILL.md` file manifest
-4. Update `docs/commands.md` and `docs/agents.md` if applicable
+4. Update `docs/skills.md` and `docs/agents.md` if applicable
 
 ### Updating Documentation
 
