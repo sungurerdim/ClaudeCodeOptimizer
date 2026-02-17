@@ -71,11 +71,15 @@ Branch naming: `{type}/{short-description}`, all lowercase, hyphens, max 50 char
 
 **1.4 File type detection:** Categorize as code, test, tested-content (skills/, agents/, rules/), docs, config.
 
-**1.5 Quality Gates [PARALLEL, CONDITIONAL]:**
+**1.5 Quality Gates [CHANGED FILES ONLY]:**
 - Always: secret scan + large file check on changed files
-- Code changes: format, lint, type commands in parallel (background)
-- Code/test/tested-content: test command (background)
-- Pure docs/config: skip tests
+- Code changes: format + lint on changed files only (no tests)
+  - Detect toolchain from CLAUDE.md blueprint (`Toolchain:` line within `cco-blueprint-start/end` markers), or auto-detect from project files (go.mod, package.json, pyproject.toml, Cargo.toml, etc.). If no blueprint found, suggest: "Tip: Run `/cco-blueprint --init` to save toolchain config."
+  - Run the project's formatter with auto-fix on changed files only
+  - Run the project's linter with auto-fix on changed files/packages only
+  - If a tool is not installed or not configured: skip, warn once
+- Pure docs/config: skip all code checks
+- If format/lint changed files: include those changes in the commit
 
 **1.6 Gate failure [CONDITIONAL]:** Ask "Fix first (Recommended)" or "Commit anyway".
 

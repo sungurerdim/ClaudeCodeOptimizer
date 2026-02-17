@@ -80,3 +80,33 @@ jobs:
           fi
           if [ "$FAIL" -eq 1 ]; then exit 1; fi
           echo "Manifests in sync"
+
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: false
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: extras/installer
+          args: --config ../../.golangci.yml
+
+      - name: Lint statusline
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: extras/statusline
+          args: --config ../../.golangci.yml
+
+      - name: Test
+        run: |
+          cd extras/installer && go test -race -count=1 ./...
+          cd ../../extras/statusline && go test -race -count=1 ./...

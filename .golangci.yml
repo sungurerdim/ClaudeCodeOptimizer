@@ -1,0 +1,11 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gofmt
+
+issues:
+  exclude-dirs:
+    - dist
