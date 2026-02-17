@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.2.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.2.0...v4.2.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* agent invocation gates and false positive prevention ([#34](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/34)) ([7eed4c8](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/7eed4c8daabcaa35f44f63d4091865883aacb11b))
+* **ci:** bypass release-please release creation with gh CLI fallback ([#38](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/38)) ([49a48fe](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/49a48fe17418b389fa8c3832ff27bd253cb1b22d))
+* **ci:** revert to simple release-please workflow ([#39](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/39)) ([08860ab](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/08860ab10a76c82192b8a99438641945ec12bbaa))
+* **ci:** scope manifest-sync regex to var blocks and fix test errcheck ([#35](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/35)) ([04c748e](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/04c748e78dd1a0498a0c34713aba35dbe36db5f9))
+
 ## [4.2.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.1.0...v4.2.0) (2026-02-16)
 
 
