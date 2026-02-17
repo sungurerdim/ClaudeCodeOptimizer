@@ -9,6 +9,11 @@
       "include-component-in-tag": false,
       "extra-files": [
         "rules/cco-rules.md"
+      ],
+      "changelog-sections": [
+        {"type": "feat", "section": "Features"},
+        {"type": "fix", "section": "Bug Fixes"},
+        {"type": "perf", "section": "Performance"}
       ]
     }
   }
