@@ -14,44 +14,14 @@ jobs:
     name: Release Please
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.create-release.outputs.release_created }}
-      tag_name: ${{ steps.create-release.outputs.tag_name }}
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          skip-github-release: true
-
-      - uses: actions/checkout@v4
-
-      - name: Create GitHub Release
-        id: create-release
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(jq -r '."."' .release-please-manifest.json)
-          TAG="v${VERSION}"
-
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" &>/dev/null; then
-            echo "Release $TAG already exists"
-            exit 0
-          fi
-
-          # Only create if the release PR for this version is merged
-          PR=$(gh pr list --state merged --search "chore(main): release ${VERSION}" --json number --jq '.[0].number // empty' --repo "$GITHUB_REPOSITORY")
-          if [ -z "$PR" ]; then
-            echo "No merged release PR for $VERSION"
-            exit 0
-          fi
-
-          echo "Creating release $TAG from merged PR #$PR"
-          BODY=$(gh pr view "$PR" --json body --jq '.body' --repo "$GITHUB_REPOSITORY" | sed -n '/^## \[/,/^---/{ /^---/d; p; }')
-          gh release create "$TAG" --title "$TAG" --notes "$BODY" --target main --repo "$GITHUB_REPOSITORY"
-
-          echo "release_created=true" >> "$GITHUB_OUTPUT"
-          echo "tag_name=$TAG" >> "$GITHUB_OUTPUT"
 
   upload-binaries:
     name: Upload Binaries
@@ -92,6 +62,6 @@ jobs:
 
       - name: Upload release assets
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ needs.release-please.outputs.tag_name }}" dist/* --repo "$GITHUB_REPOSITORY"
