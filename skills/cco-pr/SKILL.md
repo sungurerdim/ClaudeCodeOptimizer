@@ -27,7 +27,7 @@ The PR title becomes the squash commit message on main → release-please reads 
 
 ## Execution Flow
 
-Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → Summary
+Validate → Quality Gates → Analyze → Build PR → [Review] → Create → [Merge Setup] → Summary
 
 ### Phase 1: Validate
 
@@ -35,12 +35,39 @@ Validate → Analyze → Build PR → [Review] → Create → [Merge Setup] → 
 2. `git fetch origin main`
 3. If on main/master → stop: "Create a branch first."
 4. If no commits ahead of base → stop: "No commits to create PR for."
-5. If unpushed commits → `git push -u origin {branch}`
-6. If PR already exists → show URL, ask: Update / Skip
-7. If branch behind main → ask rebase (--auto: rebase automatically, abort on conflict)
-8. Verify repo settings (single API call): `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
+5. If branch behind main → ask rebase (--auto: rebase automatically, abort on conflict)
+6. Verify repo settings (single API call): `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
    - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true
    - Mismatch → ask to fix (--auto: fix automatically via `gh api -X PATCH`)
+
+### Phase 1.5: Quality Gates [ENTIRE PROJECT]
+
+Run format, lint, and test across the **entire project** (not just changed files). Auto-fix all fixable issues.
+
+**1. Detect toolchain:**
+- Primary: read CLAUDE.md blueprint profile (`Toolchain:` line within `cco-blueprint-start/end` markers)
+- If no blueprint: auto-detect from project files (go.mod, package.json, pyproject.toml, Cargo.toml, Makefile, etc.) and suggest: "Tip: Run `/cco-blueprint --init` to save toolchain config for faster future runs."
+- Multi-language projects: run gates for each detected language
+
+**2. Run format → lint → test (in order, stop on failure):**
+
+For each detected language, use the project's configured or standard tools:
+
+| Step | What to run |
+|------|------------|
+| Format | The project's formatter with auto-fix (e.g. gofmt, prettier, ruff format, rustfmt, clang-format) |
+| Lint | The project's linter with auto-fix (e.g. golangci-lint --fix, eslint --fix, ruff check --fix, clippy) |
+| Test | The project's test runner (e.g. go test, npm test, pytest, cargo test) |
+
+If a tool is not installed or not configured: skip that step, warn once.
+For mono-repos / multi-module projects: run in each module directory.
+
+**3. If files changed by format/lint:** stage and commit with `chore: format and lint fixes`.
+
+**4. If tests fail:** stop and report. Do NOT create PR with failing tests.
+
+**5. If unpushed commits → `git push -u origin {branch}`**
+**6. If PR already exists → show URL, ask: Update / Skip**
 
 ### Phase 2: Analyze [ALL commits on branch]
 

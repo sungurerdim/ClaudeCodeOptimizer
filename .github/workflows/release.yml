@@ -28,14 +28,18 @@ jobs:
       # on release PRs. Create check runs via Checks API to satisfy branch
       # protection. Release PRs only bump versions — code was validated on
       # the feature PR that triggered the release.
+      # Uses 'prs' (not 'prs_created') to also handle updated release PRs.
       - name: Satisfy required checks for release PR
-        if: steps.release.outputs.prs_created == 'true'
+        if: >-
+          steps.release.outputs.prs != '' &&
+          steps.release.outputs.prs != '[]' &&
+          steps.release.outputs.releases_created != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_BRANCH=$(echo '${{ steps.release.outputs.prs }}' | jq -r '.[0].headBranchName')
           SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$PR_BRANCH" --jq '.object.sha')
-          for CHECK in "Validate" "Manifest Sync"; do
+          for CHECK in "Validate" "Manifest Sync" "Go"; do
             gh api "repos/$GITHUB_REPOSITORY/check-runs" \
               -X POST \
               -f name="$CHECK" \
@@ -57,6 +61,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23'
+          cache: false
 
       - uses: goreleaser/goreleaser-action@v6
         with:
