@@ -41,6 +41,9 @@ htmlcov/
 # Node (legacy)
 node_modules/
 
+# GoReleaser output
+dist/
+
 # Go statusline build artifacts
 extras/statusline/cco-statusline
 extras/statusline/cco-statusline.exe

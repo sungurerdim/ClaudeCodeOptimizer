@@ -58,33 +58,10 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Build installer binaries
-        working-directory: extras/installer
-        run: |
-          LDFLAGS="-s -w"
-          GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-darwin-amd64 .
-          GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-darwin-arm64 .
-          GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-linux-amd64 .
-          GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-linux-arm64 .
-          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-windows-amd64.exe .
-
-      - name: Build statusline binaries
-        working-directory: extras/statusline
-        run: |
-          LDFLAGS="-s -w"
-          GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-darwin-amd64 .
-          GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-darwin-arm64 .
-          GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-linux-amd64 .
-          GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-linux-arm64 .
-          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o ../../dist/cco-statusline-windows-amd64.exe .
-
-      - name: Generate checksums
-        run: |
-          cd dist
-          sha256sum * > checksums-sha256.txt
-
-      - name: Upload release assets
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "${{ needs.release-please.outputs.tag_name }}" dist/* --repo "$GITHUB_REPOSITORY"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ needs.release-please.outputs.tag_name }}
