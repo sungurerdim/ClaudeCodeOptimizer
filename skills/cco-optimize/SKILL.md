@@ -25,7 +25,7 @@ For strategic architecture assessment, use `/cco-align`.
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null || echo ""`
+- Git status: !`git status --short 2>/dev/null | cat`
 - Args: $ARGUMENTS
 
 ## Execution Flow
