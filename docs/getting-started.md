@@ -33,8 +33,8 @@ If you already have CCO installed, update to v4:
 ~/.claude/
 ├── rules/
 │   └── cco-rules.md            # Core rules (auto-loaded)
-├── skills/
-│   ├── cco-optimize/SKILL.md   # 8 skills
+├── skills/                        # 8 skills
+│   ├── cco-optimize/SKILL.md
 │   ├── cco-align/SKILL.md
 │   ├── cco-commit/SKILL.md
 │   ├── cco-research/SKILL.md
@@ -170,7 +170,7 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 | Research a topic | `/cco-research "your question"` |
 | Update CCO | `/cco-update` |
 
-See [Commands](skills.md) for full documentation.
+See [Skills](skills.md) for full documentation.
 
 ---
 

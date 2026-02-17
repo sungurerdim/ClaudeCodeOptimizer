@@ -104,7 +104,7 @@ func TestRemoveDirIfExists(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	t.Run("successful download with valid content", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "---\nname: test\n---\n# Content")
+			_, _ = fmt.Fprint(w, "---\nname: test\n---\n# Content")
 		}))
 		defer server.Close()
 
@@ -131,7 +131,7 @@ func TestDownloadFile(t *testing.T) {
 
 	t.Run("rejects invalid content without frontmatter", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "<html>Not a CCO file</html>")
+			_, _ = fmt.Fprint(w, "<html>Not a CCO file</html>")
 		}))
 		defer server.Close()
 
@@ -139,8 +139,8 @@ func TestDownloadFile(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for non-CCO content")
 		}
-		if !strings.Contains(err.Error(), "not a CCO file") {
-			t.Errorf("error should mention CCO file validation, got: %v", err)
+		if !strings.Contains(err.Error(), "missing YAML frontmatter") {
+			t.Errorf("error should mention frontmatter validation, got: %v", err)
 		}
 	})
 
@@ -177,7 +177,7 @@ func TestResolveLatestTag(t *testing.T) {
 
 	t.Run("falls back to main on empty tags", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "[]")
+			_, _ = fmt.Fprint(w, "[]")
 		}))
 		defer server.Close()
 

@@ -1,11 +1,18 @@
+version: "2"
+
 linters:
+  default: none
   enable:
     - errcheck
     - govet
     - staticcheck
     - unused
-    - gofmt
+    - misspell
+    - ineffassign
+  exclusions:
+    paths:
+      - "dist/"
 
-issues:
-  exclude-dirs:
-    - dist
+formatters:
+  enable:
+    - gofmt

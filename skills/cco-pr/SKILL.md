@@ -26,7 +26,7 @@ Run `git diff main...HEAD` and describe what that diff shows.
 
 - Branch: !`git branch --show-current 2>/dev/null || echo ""`
 - Commits on branch: !`git log --oneline main..HEAD 2>/dev/null || echo ""`
-- Existing PR: !`gh pr view --json number,title,state,url 2>/dev/null || echo "none"`
+- Existing PR: !`gh pr list --head $(git branch --show-current) --json number,title,state,url -L1 2>/dev/null`
 
 ## Flags
 
@@ -120,14 +120,19 @@ git log main..HEAD --oneline  # commit titles — only for type classification
 
 Display: branch, title, type → bump effect, body preview.
 
+Populate each option's `markdown` field with the PR body preview (title + summary + changes). This lets the user see exactly what will be created before confirming.
+
 ```javascript
 AskUserQuestion([{
   question: "Create this pull request?",
   header: "PR Action",
   options: [
-    { label: "Create + Auto-merge (Recommended)", description: "Squash + delete branch when checks pass" },
-    { label: "Create PR only", description: "Merge manually later" },
-    { label: "Create as draft", description: "Draft PR for further work" },
+    { label: "Create + Auto-merge (Recommended)", description: "Squash + delete branch when checks pass",
+      markdown: "{title}\n\n{body}\n\n── auto-merge: squash + delete branch" },
+    { label: "Create PR only", description: "Merge manually later",
+      markdown: "{title}\n\n{body}\n\n── merge: manual" },
+    { label: "Create as draft", description: "Draft PR for further work",
+      markdown: "{title}\n\n{body}\n\n── status: draft" },
     { label: "Cancel", description: "Don't create PR" }
   ],
   multiSelect: false

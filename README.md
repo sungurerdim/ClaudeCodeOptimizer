@@ -74,7 +74,7 @@ main → /cco-commit → feature branch → work → /cco-pr → main
 | [`/cco-optimize`](docs/skills.md#cco-optimize) | Scan and fix security, types, performance, hygiene issues | `--auto`, `--preview`, `--scope=X`, `--loop` |
 | [`/cco-align`](docs/skills.md#cco-align) | Analyze architecture gaps and fix structural issues | `--auto`, `--preview` |
 | [`/cco-commit`](docs/skills.md#cco-commit) | Quality-gated atomic commits with branch management | `--preview`, `--single`, `--staged-only` |
-| [`/cco-pr`](docs/skills.md#cco-pr) | Create release-please compatible PRs with auto-merge | `--auto`, `--no-auto-merge`, `--draft` |
+| [`/cco-pr`](docs/skills.md#cco-pr) | Create release-please compatible PRs with auto-merge | `--auto`, `--preview`, `--no-auto-merge`, `--draft` |
 | [`/cco-blueprint`](docs/skills.md#cco-blueprint) | Profile project health, set targets, track progress | `--auto`, `--init`, `--refresh`, `--scope=X` |
 | [`/cco-docs`](docs/skills.md#cco-docs) | Find documentation gaps and generate missing content | `--auto`, `--preview`, `--scope=X`, `--update` |
 | [`/cco-research`](docs/skills.md#cco-research) | Multi-source research with CRAAP+ reliability scoring | `--quick`, `--deep` |

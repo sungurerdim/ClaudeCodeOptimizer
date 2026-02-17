@@ -131,10 +131,14 @@ AskUserQuestion([
     question: "What quality level should this project meet?",
     header: "Quality",
     options: [
-      { label: "Prototype", description: "Minimal checks" },
-      { label: "MVP", description: "Ship fast with basics covered" },
-      { label: "Production (Recommended)", description: "Full quality gates" },
-      { label: "Enterprise", description: "Compliance and audits required" }
+      { label: "Prototype", description: "Minimal checks",
+        markdown: "All thresholds relaxed 30%\n────────────────────────────\nScopes:  Core checks only\n         (security, hygiene)\nSkip:    Architecture, docs,\n         ai-hygiene\nFocus:   Get it working" },
+      { label: "MVP", description: "Ship fast with basics covered",
+        markdown: "All thresholds relaxed 15%\n────────────────────────────\nScopes:  Security + quality\n         + performance\nSkip:    ai-hygiene\nFocus:   Ship with basics" },
+      { label: "Production (Recommended)", description: "Full quality gates",
+        markdown: "Standard thresholds\n────────────────────────────\nScopes:  All 9 scopes\nChecks:  97 total checks\nFocus:   Full quality gates\n         OWASP security scan" },
+      { label: "Enterprise", description: "Compliance and audits required",
+        markdown: "All thresholds strict +10%\n────────────────────────────\nScopes:  All 9 + compliance\nChecks:  97+ with audits\nFocus:   Regulatory compliance\n         Audit trail required" }
     ],
     multiSelect: false
   },
@@ -286,7 +290,24 @@ Prioritize 80/20: Quick Win → Moderate → Complex → Major.
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
-Display blueprint dashboard: project info, health scores table (Current/Target/Gap/Status), findings summary with quick wins. Action options: Fix all (recommended) / Critical+high only / Quick wins only / Report only.
+Display blueprint dashboard: project info, health scores table (Current/Target/Gap/Status), findings summary with quick wins. Then ask with markdown previews showing scope per option:
+
+```javascript
+AskUserQuestion([{
+  question: "{totalFindings} findings. How would you like to proceed?",
+  header: "Action",
+  options: [
+    { label: "Fix All (Recommended)", description: "Apply all fixable findings",
+      markdown: "{dashboard + full findings table}" },
+    { label: "Critical+High only", description: "Fix only CRITICAL and HIGH severity",
+      markdown: "{filtered findings table: CRITICAL + HIGH only}" },
+    { label: "Quick wins only", description: "Apply only low-effort high-impact fixes",
+      markdown: "{filtered findings table: quick wins only}" },
+    { label: "Report Only", description: "No fixes, scores saved to profile" }
+  ],
+  multiSelect: false
+}])
+```
 
 ### Phase 6: Apply [SKIP if --preview]
 

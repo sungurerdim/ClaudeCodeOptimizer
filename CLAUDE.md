@@ -13,14 +13,15 @@
 ```
 Entry: extras/installer/ (Go binary) → GitHub release download → ~/.claude/
 Modules:
-  rules/        → Core rules (1 file, auto-loaded)
-  skills/       → Slash skills (8 directories, each with SKILL.md)
-  agents/       → Subagents (3 files)
-  extras/       → Optional add-ons (statusline: Go, installer: Go)
-  docs/         → Documentation (5 files)
-  .github/      → CI/CD (2 workflows)
+  rules/           → Core rules (1 file, auto-loaded)
+  skills/          → Slash skills (8 directories, each with SKILL.md)
+  agents/          → Subagents (3 files)
+  extras/          → Optional add-ons (statusline: Go, installer: Go)
+  docs/            → Documentation (5 files)
+  .github/         → CI/CD (2 workflows)
+  .claude/commands → Custom commands (1 file)
 External: GitHub API (tags), release-please, gitleaks
-Toolchain: gofmt + go vet | GitHub Actions CI | No container
+Toolchain: gofmt + go vet + golangci-lint | GoReleaser | GitHub Actions CI | No container
 ```
 
 ### Ideal Metrics
@@ -34,12 +35,12 @@ Toolchain: gofmt + go vet | GitHub Actions CI | No container
 ### Current Scores
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Security & Privacy | 92 | OK |
+| Security & Privacy | 90 | OK |
 | Code Quality | 88 | OK |
-| Architecture | 78 | WARN |
+| Architecture | 76 | WARN |
 | Performance | 90 | OK |
 | Resilience | 80 | WARN |
-| Testing | 75 | WARN |
+| Testing | 72 | WARN |
 | Stack Health | 87 | OK |
 | DX | 80 | WARN |
 | Documentation | 84 | WARN |

@@ -91,7 +91,26 @@ Categorize by effort/impact: Quick Win → Moderate → Complex → Major.
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
-Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask: Fix All / By Severity / Review Each / Report Only. If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
+Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews showing scope per option:
+
+```javascript
+AskUserQuestion([{
+  question: "{totalFindings} findings. How would you like to proceed?",
+  header: "Action",
+  options: [
+    { label: "Fix All (Recommended)", description: "Apply all fixable findings",
+      markdown: "{full findings table: ID | Severity | Title | Location}" },
+    { label: "By Severity", description: "Choose which severity levels to fix",
+      markdown: "CRITICAL: {n}\nHIGH:     {n}\nMEDIUM:   {n}\nLOW:      {n}" },
+    { label: "Review Each", description: "Decide on each finding individually",
+      markdown: "{full findings table}" },
+    { label: "Report Only", description: "No fixes, just save the report" }
+  ],
+  multiSelect: false
+}])
+```
+
+If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
 ### Phase 6: Apply
 
