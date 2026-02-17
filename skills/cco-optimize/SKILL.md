@@ -64,13 +64,17 @@ AskUserQuestion([{
 
 ### Phase 2: Analyze [PARALLEL: 4 calls]
 
-Launch scope groups as parallel Task calls to cco-agent-analyze (mode: auto):
+Launch scope groups as parallel Task calls to cco-agent-analyze (mode: auto) in a SINGLE message WITHOUT `run_in_background`:
 - Security & Privacy: security, robustness, privacy
 - Code Quality: hygiene, types, simplify
 - Performance: performance
 - AI Cleanup: ai-hygiene, doc-sync
 
+**Agent invocation:** Send ALL 4 Task calls in one message. Do NOT use `run_in_background` for Task calls. Wait for ALL results before proceeding.
+
 Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+
+**Phase gate:** Do NOT proceed to Phase 3 until all 4 agent groups have returned results or failed.
 
 **Gate:** If findings = 0 after analysis → skip Phase 3-4, go directly to Phase 5 with: `cco-optimize: OK | No issues found | Scopes: {scoped list}`
 
@@ -86,7 +90,20 @@ Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). 
 
 **Phase gate:** After Phase 4 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
 
-Per CCO Rules: if needs_approval > 0, display items table (ID, severity, issue, location, reason) and ask Fix All / Review Each.
+If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
+
+```javascript
+AskUserQuestion([{
+  question: "There are items that need your approval. How would you like to proceed?",
+  header: "Approval",
+  options: [
+    { label: "Fix All (Recommended)", description: "Apply all needs-approval items" },
+    { label: "Review Each", description: "Review and decide on each item individually" },
+    { label: "Skip All", description: "Leave needs-approval items unfixed" }
+  ],
+  multiSelect: false
+}])
+```
 
 ### Phase 4.6: Loop [--loop flag only]
 

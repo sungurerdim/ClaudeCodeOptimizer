@@ -58,6 +58,36 @@ jobs:
           if [ "$FAIL" -eq 1 ]; then exit 1; fi
           echo "All versions consistent: $VERSION"
 
+  manifest-sync:
+    name: Manifest Sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify file manifests match repository
+        run: |
+          FAIL=0
+          # Extract skill paths from installer
+          INSTALLER_SKILLS=$(grep -oP '"skills/cco-[^"]+/SKILL\.md"' extras/installer/main.go | tr -d '"' | sort)
+          REPO_SKILLS=$(ls -d skills/cco-*/SKILL.md 2>/dev/null | sort)
+          if [ "$INSTALLER_SKILLS" != "$REPO_SKILLS" ]; then
+            echo "Error: Installer skillFiles out of sync with repository"
+            echo "Installer: $INSTALLER_SKILLS"
+            echo "Repo: $REPO_SKILLS"
+            FAIL=1
+          fi
+          # Extract agent paths from installer
+          INSTALLER_AGENTS=$(grep -oP '"agents/cco-agent-[^"]+"' extras/installer/main.go | tr -d '"' | sort)
+          REPO_AGENTS=$(ls agents/cco-agent-*.md 2>/dev/null | sort)
+          if [ "$INSTALLER_AGENTS" != "$REPO_AGENTS" ]; then
+            echo "Error: Installer agentFiles out of sync with repository"
+            echo "Installer: $INSTALLER_AGENTS"
+            echo "Repo: $REPO_AGENTS"
+            FAIL=1
+          fi
+          if [ "$FAIL" -eq 1 ]; then exit 1; fi
+          echo "Manifests in sync"
+
   go-statusline:
     name: Go (statusline)
     runs-on: ubuntu-latest
@@ -74,12 +104,17 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.62.2
           working-directory: extras/statusline
           args: --enable gofmt
 
       - name: Test
-        run: go test -v -race ./...
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Coverage
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
+          echo "Coverage: $COVERAGE"
 
       - name: Build
         run: go build -ldflags="-s -w" -o cco-statusline .
@@ -100,7 +135,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.62.2
           working-directory: extras/installer
           args: --enable gofmt
 
@@ -124,7 +159,7 @@ jobs:
   auto-merge:
     name: Auto Merge
     if: github.event_name == 'pull_request'
-    needs: [validate, go-statusline, go-installer, security]
+    needs: [validate, manifest-sync, go-statusline, go-installer, security]
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge

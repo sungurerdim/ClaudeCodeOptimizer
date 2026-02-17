@@ -61,13 +61,17 @@ AskUserQuestion([{
 
 If blueprint profile exists in CLAUDE.md, read context (projectType, stack, qualityTarget, dataSensitivity, constraints) and pass to agent calls.
 
-Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review, context: from profile if available):
+Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review, context: from profile if available) in a SINGLE message WITHOUT `run_in_background`:
 - Structure: architecture, patterns
 - Quality: testing, maintainability
 - Production: production-readiness
 - Completeness: functional-completeness, ai-architecture
 
+**Agent invocation:** Send ALL 4 Task calls in one message. Do NOT use `run_in_background` for Task calls. Wait for ALL results before proceeding.
+
 Merge findings. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+
+**Phase gate:** Do NOT proceed to Phase 3 until all 4 agent groups have returned results or failed.
 
 **Gate:** If findings = 0 → skip Phase 5-6, display gap analysis (Phase 3-4) with: `cco-align: OK | No structural issues | Gaps: {metric table}`
 
@@ -95,7 +99,22 @@ Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count fin
 
 ### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-Per CCO Rules: if needs_approval > 0, display items table (ID, severity, issue, location, reason) and ask Fix All / Review Each.
+**Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
+
+If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
+
+```javascript
+AskUserQuestion([{
+  question: "There are items that need your approval. How would you like to proceed?",
+  header: "Approval",
+  options: [
+    { label: "Fix All (Recommended)", description: "Apply all needs-approval items" },
+    { label: "Review Each", description: "Review and decide on each item individually" },
+    { label: "Skip All", description: "Leave needs-approval items unfixed" }
+  ],
+  multiSelect: false
+}])
+```
 
 ### Phase 7: Summary
 
