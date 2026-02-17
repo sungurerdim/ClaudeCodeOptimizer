@@ -145,6 +145,8 @@ When findings > 0 and not --auto, display plan table before asking:
 
 1. Action: Fix All / By Severity / Review Each / Report Only
 2. If "By Severity": severity filter (multiselect) — CRITICAL / HIGH / MEDIUM / LOW
+3. Use `markdown` preview on each option to show the findings that would be affected (full table for Fix All, filtered for By Severity, etc.)
+4. If the user's response includes annotations (notes), use them to adjust behavior — e.g., "skip test coverage items" filters findings before apply
 
 After apply, if needs_approval > 0 and not --auto: display items table (ID, severity, issue, location, reason), ask Fix All / Review Each.
 

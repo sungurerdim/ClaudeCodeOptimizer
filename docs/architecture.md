@@ -23,6 +23,18 @@ How CCO works internally: rules, agents, and skill flow.
             cco-agent-analyze  cco-agent-apply
 ```
 
+### Layer Dependencies
+
+```
+Rules (passive, read-only)
+  ↓ defines constants, principles, shared vocabulary
+Skills (orchestration)
+  ↓ invokes with context
+Agents (execution, pure processors)
+```
+
+**Direction:** Rules → Skills → Agents (one-way). Skills read rules and invoke agents. Agents never invoke skills or modify rules. Skills should not bypass agents for write operations.
+
 ## Repository Structure
 
 ```
@@ -82,6 +94,19 @@ Common patterns (severity levels, accounting, skip patterns, confidence scoring,
 
 When updating these patterns, update the rules file — all skills and agents inherit automatically.
 
+### CLI Flag Conventions
+
+| Flag | Meaning | Available In |
+|------|---------|-------------|
+| `--auto` | No questions, fix everything, single-line summary | optimize, align, blueprint |
+| `--preview` | Analyze only, no fixes applied | optimize, align, blueprint |
+| `--scope=X` | Limit to specific scopes (comma-separated) | optimize, blueprint |
+| `--loop` | Re-run until clean, max 3 iterations | optimize |
+| `--init` | Create profile only | blueprint |
+| `--refresh` | Re-scan profile, preserve decisions | blueprint |
+
+Scope names are consistent across skills: `security`, `hygiene`, `types`, `performance`, `ai-hygiene`, `robustness`, `privacy`, `doc-sync`, `simplify`, `architecture`, `patterns`, `testing`, `maintainability`, `ai-architecture`, `functional-completeness`, `production-readiness`.
+
 ---
 
 ## Agent System
@@ -101,6 +126,26 @@ When updating these patterns, update the rules file — all skills and agents in
 | research | `{query, depth: "standard"\|"deep"}` | `{sources[], synthesis, reliability_score, error?}` |
 
 **Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Output.
+
+### Scope Groups
+
+Skills invoke agents using these standard groupings:
+
+| Group | Agent | Mode | Scopes |
+|-------|-------|------|--------|
+| Code Quality | analyze | auto | security, robustness, privacy, hygiene, types, simplify, performance |
+| Architecture | analyze | review | architecture, patterns, testing, maintainability |
+| Production | analyze | review | production-readiness, functional-completeness, ai-architecture |
+| Documentation | analyze | auto | doc-sync |
+| Audit | analyze | audit | stack-assessment, dependency-health, dx-quality, project-structure |
+
+### Orchestration Pattern
+
+1. Launch all scope groups as parallel Task calls in a **single message** (no `run_in_background`)
+2. Wait for ALL agent results before proceeding (phase gate)
+3. Validate agent JSON output; retry once on malformed response
+4. On second failure, continue with remaining groups; score failed dimensions as N/A
+5. Merge findings, deduplicate by file:line (keep highest severity)
 
 ### File Manifest Sync
 
@@ -149,6 +194,21 @@ Agent model selection is specified in agent frontmatter (`model: haiku` / `model
 | Detection & Analysis | Haiku | Fast, read-only |
 | Code fixes & Synthesis | Opus | Fewer errors on edits |
 | Research | Haiku + Opus | Haiku search, Opus synthesis |
+
+---
+
+## Error Handling
+
+| Tier | Behavior | Example |
+|------|----------|---------|
+| Warning | Log to stderr, continue execution | Failed to remove optional file |
+| Recoverable | Attempt fallback, log if fallback used | `fmt.Scanln` EOF → default "n" |
+| Fatal | Exit with non-zero code | Cannot resolve latest tag, download failure |
+
+| Module | Warnings | Recoverable | Fatal |
+|--------|----------|-------------|-------|
+| Installer | `os.Remove` in legacy cleanup | `fmt.Scanln` EOF, partial download retry | Tag resolution, network errors |
+| Statusline | Git command failures → fallback | JSON parse → error display | None (always renders) |
 
 ---
 
