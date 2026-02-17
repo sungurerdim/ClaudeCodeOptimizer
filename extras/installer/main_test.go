@@ -139,8 +139,8 @@ func TestDownloadFile(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for non-CCO content")
 		}
-		if !strings.Contains(err.Error(), "not a CCO file") {
-			t.Errorf("error should mention CCO file validation, got: %v", err)
+		if !strings.Contains(err.Error(), "missing YAML frontmatter") {
+			t.Errorf("error should mention frontmatter validation, got: %v", err)
 		}
 	})
 
