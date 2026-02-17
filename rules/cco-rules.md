@@ -154,7 +154,7 @@ Validate agent output. On malformed/missing response, retry once. On second fail
 
 ### Parallel Execution
 
-ALWAYS batch independent tool calls into a single message. Never issue sequential calls when no data dependency exists. Self-check before each message: could any of these calls run simultaneously? If yes → batch them. Use `run_in_background` for long Bash commands; collect via TaskOutput before producing output.
+ALWAYS batch independent tool calls into a single message. Never issue sequential calls when no data dependency exists. Self-check before each message: could any of these calls run simultaneously? If yes → batch them. Use `run_in_background` for long Bash commands only; collect via TaskOutput before producing output. NEVER use `run_in_background` for Task (agent) calls — multiple Task calls in a single message already execute in parallel and return results directly.
 
 ### Severity Levels
 
