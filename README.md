@@ -1,5 +1,6 @@
 # Claude Code Optimizer (CCO)
 
+[![GitHub release](https://img.shields.io/github/v/release/sungurerdim/ClaudeCodeOptimizer)](https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **Structured guardrails for Claude Code.** Every rule tuned to how the model actually thinks — minimal touch, maximum impact.
@@ -108,6 +109,7 @@ Full reference: [docs/rules.md](docs/rules.md)
 - [Skills](docs/skills.md) — Flags, scopes, and examples
 - [Agents](docs/agents.md) — Specialized agents
 - [Rules](docs/rules.md) — Full rules reference
+- [Architecture](docs/architecture.md) — System design and structure
 
 ---
 
