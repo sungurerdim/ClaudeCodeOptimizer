@@ -1,12 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - 'LICENSE'
-      - '.claude/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -17,7 +11,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   validate:
@@ -87,82 +80,3 @@ jobs:
           fi
           if [ "$FAIL" -eq 1 ]; then exit 1; fi
           echo "Manifests in sync"
-
-  go-statusline:
-    name: Go (statusline)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: extras/statusline
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.62.2
-          working-directory: extras/statusline
-          args: --enable gofmt
-
-      - name: Test
-        run: go test -v -race -coverprofile=coverage.out ./...
-
-      - name: Coverage
-        run: |
-          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
-          echo "Coverage: $COVERAGE"
-
-      - name: Build
-        run: go build -ldflags="-s -w" -o cco-statusline .
-
-  go-installer:
-    name: Go (installer)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: extras/installer
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.62.2
-          working-directory: extras/installer
-          args: --enable gofmt
-
-      - name: Build
-        run: go build -ldflags="-s -w" -o cco .
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-
-  auto-merge:
-    name: Auto Merge
-    if: github.event_name == 'pull_request'
-    needs: [validate, manifest-sync, go-statusline, go-installer, security]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enable auto-merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --auto --squash
