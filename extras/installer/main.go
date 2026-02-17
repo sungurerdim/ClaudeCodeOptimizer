@@ -185,11 +185,30 @@ func removeDirIfExists(base, path string) bool {
 	return false
 }
 
+func extractVersion(content string) string {
+	for _, line := range strings.Split(content, "\n") {
+		if strings.HasPrefix(line, "cco_version:") {
+			v := strings.TrimSpace(strings.TrimPrefix(line, "cco_version:"))
+			if idx := strings.Index(v, "#"); idx > 0 {
+				v = strings.TrimSpace(v[:idx])
+			}
+			return v
+		}
+	}
+	return ""
+}
+
 func runInstall() {
 	base := claudeDir()
 
 	fmt.Println("CCO Installer")
 	fmt.Println("=============")
+
+	// Detect currently installed version
+	currentVersion := ""
+	if content, err := os.ReadFile(filepath.Join(base, "rules", "cco-rules.md")); err == nil {
+		currentVersion = extractVersion(string(content))
+	}
 
 	// Resolve latest release tag
 	ref := resolveLatestTag()
@@ -210,8 +229,22 @@ func runInstall() {
 		fmt.Fprintf(os.Stderr, "  Check the repository for updates: https://github.com/%s\n", repo)
 		os.Exit(1)
 	}
-	_ = testContent
+
+	newVersion := extractVersion(testContent)
 	fmt.Printf("  Source verified (%s)\n", ref)
+
+	// Show version info
+	if currentVersion != "" && newVersion != "" {
+		if currentVersion == newVersion {
+			fmt.Printf("  Version: v%s (already up to date)\n", currentVersion)
+		} else {
+			fmt.Printf("  Update: v%s → v%s\n", currentVersion, newVersion)
+		}
+	} else if currentVersion != "" {
+		fmt.Printf("  Installed: v%s\n", currentVersion)
+	} else if newVersion != "" {
+		fmt.Printf("  Version: v%s (fresh install)\n", newVersion)
+	}
 
 	// Download and install all files
 	type installFile struct {
@@ -278,7 +311,11 @@ func runInstall() {
 	// Summary
 	fmt.Println()
 	if failed == 0 {
-		fmt.Printf("CCO installed successfully! (%s)\n", ref)
+		if currentVersion != "" && newVersion != "" && currentVersion != newVersion {
+			fmt.Printf("CCO updated successfully! (v%s → v%s)\n", currentVersion, newVersion)
+		} else {
+			fmt.Printf("CCO installed successfully! (%s)\n", ref)
+		}
 		fmt.Println()
 		fmt.Printf("Installed to: %s%c\n", base, filepath.Separator)
 		fmt.Println("  rules/cco-rules.md")

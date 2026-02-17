@@ -6,9 +6,21 @@ allowed-tools: Read, Grep, Glob, Bash, AskUserQuestion
 
 # /cco-pr
 
-**Smart Pull Requests** — Conventional commit title + clean body for release-please compatibility.
+**Smart Pull Requests** — Conventional commit title + clean body for release-please.
 
-The PR title becomes the squash commit message on main → release-please reads it → changelog entry. PR title IS the changelog entry.
+## Pipeline
+
+```
+PR title  →  squash merge on main  →  release-please reads title  →  changelog + version bump
+```
+
+The PR title IS the changelog entry. The PR body becomes the squash commit body. Everything must be accurate and minimal.
+
+## Golden Rule
+
+**The PR describes the net diff between main and HEAD — nothing else.** Not the journey of individual commits, not session decisions, not what was tried and reverted. If commit A added something and commit B removed it, the net effect is zero — do not mention it.
+
+Run `git diff main...HEAD` and describe what that diff shows.
 
 ## Context
 
@@ -27,100 +39,86 @@ The PR title becomes the squash commit message on main → release-please reads 
 
 ## Execution Flow
 
-Validate → Quality Gates → Analyze → Build PR → [Review] → Create → [Merge Setup] → Summary
+Validate → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → Summary
 
 ### Phase 1: Validate
 
-1. Verify `git` and `gh` are available. Missing → stop with install link.
+1. Verify `git` and `gh` available
 2. `git fetch origin main`
-3. If on main/master → stop: "Create a branch first."
-4. If no commits ahead of base → stop: "No commits to create PR for."
-5. If branch behind main → ask rebase (--auto: rebase automatically, abort on conflict)
-6. Verify repo settings (single API call): `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
+3. On main/master → stop: "Create a branch first."
+4. No commits ahead → stop: "No commits to create PR for."
+5. Branch behind main → ask rebase (--auto: rebase automatically, abort on conflict)
+6. Unpushed commits → `git push -u origin {branch}`
+7. PR already exists → show URL, ask: Update / Skip
+8. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
    - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true
-   - Mismatch → ask to fix (--auto: fix automatically via `gh api -X PATCH`)
+   - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
 
-### Phase 1.5: Quality Gates [ENTIRE PROJECT]
+### Phase 2: Quality Gates [ENTIRE PROJECT]
 
-Run format, lint, and test across the **entire project** (not just changed files). Auto-fix all fixable issues.
+Run format, lint, and test across the **entire project**. Auto-fix all fixable issues.
 
-**1. Detect toolchain:**
-- Primary: read CLAUDE.md blueprint profile (`Toolchain:` line within `cco-blueprint-start/end` markers)
-- If no blueprint: auto-detect from project files (go.mod, package.json, pyproject.toml, Cargo.toml, Makefile, etc.) and suggest: "Tip: Run `/cco-blueprint --init` to save toolchain config for faster future runs."
-- Multi-language projects: run gates for each detected language
+**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files + suggest `/cco-blueprint --init`.
 
-**2. Run format → lint → test (in order, stop on failure):**
+**Run in order (stop on failure):**
+1. **Format** — project's formatter with auto-fix (gofmt, prettier, ruff format, rustfmt, etc.)
+2. **Lint** — project's linter with auto-fix (golangci-lint --fix, eslint --fix, ruff check --fix, etc.)
+3. **Test** — project's test runner (go test, npm test, pytest, etc.)
 
-For each detected language, use the project's configured or standard tools:
+Multi-module projects: run in each module directory. Tool unavailable: skip, warn once.
 
-| Step | What to run |
-|------|------------|
-| Format | The project's formatter with auto-fix (e.g. gofmt, prettier, ruff format, rustfmt, clang-format) |
-| Lint | The project's linter with auto-fix (e.g. golangci-lint --fix, eslint --fix, ruff check --fix, clippy) |
-| Test | The project's test runner (e.g. go test, npm test, pytest, cargo test) |
+If format/lint changed files → stage and commit as `chore: format and lint fixes`.
+If tests fail → stop. Do NOT create PR with failing tests.
 
-If a tool is not installed or not configured: skip that step, warn once.
-For mono-repos / multi-module projects: run in each module directory.
-
-**3. If files changed by format/lint:** stage and commit with `chore: format and lint fixes`.
-
-**4. If tests fail:** stop and report. Do NOT create PR with failing tests.
-
-**5. If unpushed commits → `git push -u origin {branch}`**
-**6. If PR already exists → show URL, ask: Update / Skip**
-
-### Phase 2: Analyze [ALL commits on branch]
+### Phase 3: Analyze
 
 ```bash
-git log main..HEAD --format="%H %s"
-git diff main...HEAD --stat
+git diff main...HEAD          # THE source of truth for PR content
+git diff main...HEAD --stat   # file-level summary
+git log main..HEAD --oneline  # commit titles — only for type classification
 ```
 
-**Diff-over-messages:** Build PR body from `git diff main...HEAD`, NOT from commit messages. Commit messages inform type classification only.
+**Net diff principle:** The PR describes `git diff main...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
 
-**Commit classification:**
-1. Scan ALL commit titles for conventional commit types
-2. Dominant type: any `feat` → feat (minor), fix only → fix (patch), only chore/docs/ci/etc → dominant (no bump)
-3. Breaking change: exclamation in type OR `BREAKING CHANGE:` in commit body → append `!` to PR type
+**Type classification:**
+1. Scan commit titles for conventional types
+2. Any `feat` commit → PR type is `feat` (minor bump)
+3. Only `fix` commits → PR type is `fix` (patch bump)
+4. Only non-bumping types → PR type is the dominant one (no bump)
+5. `!` in any commit type or `BREAKING CHANGE:` in any commit body → append `!`
 
-**Scope:** directory where >50% of changes occurred. No majority → omit.
+**Anti-bump rules (release-please reads PR title for changelog):**
+- `feat` = user can now DO something new they couldn't before. Internal improvement → `refactor`/`chore`
+- `fix` = something was BROKEN for end users. Preventive improvement → `refactor`/`chore`
+- When uncertain → prefer non-bumping type
+- **Type ≠ scope.** `ci: fix config` = no bump. `fix(ci): fix config` = patch bump. Use the correct TYPE.
+- CI, docs, tests, config, tooling → always `ci:`, `docs:`, `test:`, `chore:` — never `feat`/`fix`
 
-**Title:** `{type}({scope}): {summary}` ≤70 chars
-
-**Anti-bump rules (CRITICAL for release-please):**
-- `feat` = user can now DO something new. Internal → `refactor`/`chore`
-- Improving existing behavior is NOT `feat` → `refactor`/`perf`/`chore`
-- Docs, tests, CI, config, dev tooling are NEVER `feat`/`fix`
-- `fix` = something was BROKEN. Preventive → `refactor`/`chore`
-- Uncertain → prefer non-bumping type
-
-**Body constraints:** Summary: 1-3 bullets, max 15 words per bullet. Changes: max 5 grouped items. Test plan: 2-4 items. Total body: max 30 lines.
+**Title:** `{type}({scope}): {summary}` — max 70 chars. Scope: directory with >50% of changes, omit if no majority.
 
 **Body:**
 
 ```markdown
 ## Summary
-- {1-3 bullet points — what changed and why}
+- {1-3 bullets — net changes vs main, max 15 words each}
 
 ## Changes
-- {key changes grouped by area}
+- {grouped by area, max 5 items — only what's in the final diff}
 
 ## Breaking Changes
 - {only if breaking — what breaks + migration path}
-
-## Test plan
-- [ ] {verification steps}
-
-Co-Authored-By: {model} <noreply@anthropic.com>
 ```
 
-If breaking changes present, append `BREAKING CHANGE: {description}` footer after Co-Authored-By for release-please.
+**Body rules:**
+- Describe the net diff, not the commit history
+- No `## Test plan` — CI is the test plan
+- No `Co-Authored-By` in body — commits already have it, GitHub auto-includes on squash merge
+- Breaking changes: add `BREAKING CHANGE: {description}` as the last line
+- Max 20 lines total
 
-Body rules: summarize logical change (not per-commit list), single Co-Authored-By trailer.
+### Phase 4: Review [SKIP if --auto]
 
-### Phase 3: Review [SKIP if --auto]
-
-Display PR plan (branch, title, type, bump effect, body preview).
+Display: branch, title, type → bump effect, body preview.
 
 ```javascript
 AskUserQuestion([{
@@ -136,7 +134,7 @@ AskUserQuestion([{
 }])
 ```
 
-### Phase 4: Create
+### Phase 5: Create
 
 ```bash
 gh pr create --title "{title}" --body "{body}" [--draft]
@@ -144,20 +142,20 @@ gh pr create --title "{title}" --body "{body}" [--draft]
 
 On error: display title and body for manual creation.
 
-### Phase 5: Merge Setup [DEFAULT]
+### Phase 6: Merge Setup [DEFAULT]
 
-Skip when: `--no-auto-merge`, `--draft`, or user selected "Create PR only" / "Create as draft".
+Skip when: `--no-auto-merge`, `--draft`, user selected "Create PR only" or "Create as draft".
 
 ```bash
 gh pr merge {number} --auto --squash
 ```
 
-If auto-merge unsupported (no branch protection): `gh pr merge {number} --squash`
+If auto-merge unsupported: `gh pr merge {number} --squash`
 
-After merge setup: `git checkout main && git pull origin main`, delete local feature branch with `git branch -d {branch}`.
+After merge: `git checkout main && git pull origin main`, delete local branch.
 
-### Phase 6: Summary
+### Phase 7: Summary
 
-PR URL, title, type → bump effect, auto-merge status, draft status. If auto-merge enabled: "You are now on main." If disabled: "Review and merge via GitHub."
+PR URL, title, type → bump effect, auto-merge status. Auto-merge enabled: "You are now on main." Disabled: "Merge via GitHub."
 
---auto: `cco-pr: {OK|FAIL} | {pr_url} | {type} → {bump} | auto-merge: {on|off}`
+--auto output: `cco-pr: {OK|FAIL} | {url} | {type} → {bump} | auto-merge: {on|off}`
