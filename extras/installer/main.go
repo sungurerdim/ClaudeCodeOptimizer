@@ -55,8 +55,8 @@ func runInstall() {
 		fmt.Println("  Proceeding with fresh install...")
 		fmt.Println()
 	}
-	os.WriteFile(stateFile, []byte("installing"), 0644)
-	defer os.Remove(stateFile)
+	_ = os.WriteFile(stateFile, []byte("installing"), 0644)
+	defer func() { _ = os.Remove(stateFile) }()
 
 	fmt.Println("CCO Installer")
 	fmt.Println("=============")

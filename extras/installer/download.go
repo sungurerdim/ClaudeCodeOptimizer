@@ -27,7 +27,7 @@ func resolveLatestTag() string {
 	if err != nil {
 		return "main"
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return "main"
@@ -52,7 +52,7 @@ func downloadFile(baseURL, path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return "", fmt.Errorf("HTTP %d for %s", resp.StatusCode, path)

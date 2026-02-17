@@ -104,7 +104,7 @@ func TestRemoveDirIfExists(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	t.Run("successful download with valid content", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "---\nname: test\n---\n# Content")
+			_, _ = fmt.Fprint(w, "---\nname: test\n---\n# Content")
 		}))
 		defer server.Close()
 
@@ -131,7 +131,7 @@ func TestDownloadFile(t *testing.T) {
 
 	t.Run("rejects invalid content without frontmatter", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "<html>Not a CCO file</html>")
+			_, _ = fmt.Fprint(w, "<html>Not a CCO file</html>")
 		}))
 		defer server.Close()
 
@@ -177,7 +177,7 @@ func TestResolveLatestTag(t *testing.T) {
 
 	t.Run("falls back to main on empty tags", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "[]")
+			_, _ = fmt.Fprint(w, "[]")
 		}))
 		defer server.Close()
 
