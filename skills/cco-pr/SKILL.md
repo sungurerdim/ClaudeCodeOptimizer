@@ -20,12 +20,12 @@ The PR title IS the changelog entry. The PR body becomes the squash commit body.
 
 **The PR describes the net diff between main and HEAD — nothing else.** Not the journey of individual commits, not session decisions, not what was tried and reverted. If commit A added something and commit B removed it, the net effect is zero — do not mention it.
 
-Run `git diff main...HEAD` and describe what that diff shows.
+Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describe what that diff shows.
 
 ## Context
 
 - Branch: !`git branch --show-current 2>/dev/null | cat`
-- Commits on branch: !`git log --oneline main..HEAD 2>/dev/null | cat`
+- Commits on branch: !`git log --oneline $(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo main)..HEAD 2>/dev/null | cat`
 - Existing PR: !`gh pr list --head "$(git branch --show-current 2>/dev/null)" --json number,title,state,url -L1 2>/dev/null | cat`
 
 ## Flags
@@ -39,20 +39,27 @@ Run `git diff main...HEAD` and describe what that diff shows.
 
 ## Execution Flow
 
-Validate → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → Summary
+Validate → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → [Cleanup] → Summary
 
 ### Phase 1: Validate
 
-1. Verify `git` and `gh` available
-2. `git fetch origin main`
-3. On main/master → stop: "Create a branch first."
-4. No commits ahead → stop: "No commits to create PR for."
-5. Branch behind main → ask rebase (--auto: rebase automatically, abort on conflict)
-6. Unpushed commits → `git push -u origin {branch}`
-7. PR already exists → show URL, ask: Update / Skip
-8. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
-   - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true
-   - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
+**Steps 1-4 are independent — run in parallel. Steps 12-13 are independent of 8-11 — start in parallel with step 8.**
+
+1. Verify `git` available → not found: stop with "git is required"
+2. Verify `gh` available → not found: stop with "gh CLI is required (https://cli.github.com)"
+3. Verify `gh auth status` → not authenticated: stop with "Run `gh auth login` first"
+4. Verify git repo: `git rev-parse --git-dir` → not a repo: stop with "Not a git repository"
+5. Detect base branch: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'` → fallback to `main`, then `master`, then stop
+6. Verify not detached HEAD: `git branch --show-current` → empty: stop with "Detached HEAD — checkout a branch first"
+7. On {base} → stop: "Create a branch first. Use `/cco-commit` to start."
+8. `git fetch origin {base}`
+9. No commits ahead of {base} → stop: "No commits to create PR for."
+10. Branch behind {base} → ask rebase (--auto: rebase automatically, abort on conflict)
+11. Unpushed commits → `git push -u origin {branch}`
+12. PR already exists → show URL, ask: Update / Skip
+13. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
+    - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true
+    - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
 
 ### Phase 2: Quality Gates [ENTIRE PROJECT]
 
@@ -73,12 +80,11 @@ If tests fail → stop. Do NOT create PR with failing tests.
 ### Phase 3: Analyze
 
 ```bash
-git diff main...HEAD          # THE source of truth for PR content
-git diff main...HEAD --stat   # file-level summary
-git log main..HEAD --oneline  # commit titles — only for type classification
+git diff {base}...HEAD          # THE source of truth — also derive file summary from this
+git log {base}..HEAD --oneline  # commit titles — only for type classification
 ```
 
-**Net diff principle:** The PR describes `git diff main...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
+**Net diff principle:** The PR describes `git diff {base}...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
 
 **Type classification:**
 1. Scan commit titles for conventional types
@@ -157,7 +163,35 @@ gh pr merge {number} --auto --squash
 
 If auto-merge unsupported: `gh pr merge {number} --squash`
 
-After merge: `git checkout main && git pull origin main`, delete local branch.
+After merge: `git checkout {base} && git pull origin {base}`, delete local branch.
+
+### Phase 6.1: Branch Cleanup [AFTER MERGE ONLY]
+
+Skip when: merge not completed, `--draft`, or user selected "Create PR only".
+
+**Steps 1-2 are independent — run in parallel:**
+
+1. Detect merged branches: `git branch --merged {base} | grep -v '^\*' | grep -v '{base}'`
+2. Detect remote merged branches: `git branch -r --merged origin/{base} | grep -v '{base}' | grep -v 'HEAD' | sed 's/origin\///'`
+3. Combine unique results, exclude current branch
+
+If merged branches found:
+
+```javascript
+AskUserQuestion([{
+  question: "{n} merged branch(es) found. Clean up?",
+  header: "Cleanup",
+  options: [
+    { label: "Delete all (Recommended)", description: "{branch-list}" },
+    { label: "Skip", description: "Keep merged branches" }
+  ],
+  multiSelect: false
+}])
+```
+
+On "Delete all": `git branch -d {branch}` for each local, `git push origin --delete {branch}` for remote-only. On error: warn and continue.
+
+--auto: delete all silently.
 
 ### Phase 7: Summary
 

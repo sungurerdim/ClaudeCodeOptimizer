@@ -45,6 +45,8 @@ Setup → Analysis → Gap Analysis → [Plan] → Generate → Summary
 
 ### Phase 1: Setup [SKIP if --auto]
 
+**Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for docs).
+
 ```javascript
 AskUserQuestion([
   {

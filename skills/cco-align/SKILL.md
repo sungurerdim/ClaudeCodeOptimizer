@@ -43,6 +43,8 @@ Setup → Analyze → Gap Analysis → Recommendations → [Plan] → Apply → 
 
 ### Phase 1: Setup [SKIP if --auto]
 
+**Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for align).
+
 ```javascript
 AskUserQuestion([{
   question: "Which areas should be reviewed?",
@@ -116,7 +118,7 @@ If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
 Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count findings, not locations. On error: count as failed, continue.
 
-### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
 **Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
 

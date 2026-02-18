@@ -14,8 +14,7 @@ allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null | cat`
-- Branch: !`git branch --show-current 2>/dev/null | cat`
+- Status + branch: !`git status --short --branch 2>/dev/null | cat`
 - Recent commits: !`git log --oneline -5 2>/dev/null | cat`
 - All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null | cat`
 - Staged only: !`git diff --cached --shortstat 2>/dev/null | cat`
@@ -37,7 +36,14 @@ Pre-checks → Analyze → Execute → Verify → Summary
 
 ### Phase 1: Pre-checks
 
-**1.1 Prerequisites:** Verify `git` available. `git fetch origin main 2>/dev/null` (best-effort).
+**1.1 Prerequisites:**
+1. Verify `git` available → not found: stop with "git is required"
+
+**Steps 2-4 are independent — run in parallel:**
+
+2. Verify git repo: `git rev-parse --git-dir` → not a repo: stop with "Not a git repository. Run `git init` first."
+3. Verify not detached HEAD: `git branch --show-current` → empty: stop with "Detached HEAD — checkout a branch first"
+4. `git fetch origin 2>/dev/null` (best-effort, no stop on failure)
 
 **1.2 Main branch guard [ON MAIN ONLY]:** If on `main` or `master`:
 
@@ -78,6 +84,8 @@ Use `dev` as the default working branch. Accumulate changes there, create one PR
 Run `git diff` (or `git diff --cached` for `--staged-only`). This is the **only input** for building the commit message.
 
 **Amend detection (unpushed commits only):**
+
+First: check if upstream tracking exists: `git rev-parse @{upstream} 2>/dev/null`. If no upstream, treat ALL local commits as unpushed (compare against base branch instead: `git log {base}..HEAD`).
 
 | Condition | Action |
 |-----------|--------|

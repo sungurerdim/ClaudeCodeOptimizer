@@ -34,6 +34,8 @@ Setup → Analyze → Gate → [Plan] → Apply → Summary
 
 ### Phase 1: Setup [SKIP if --auto]
 
+**Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for optimize).
+
 ```javascript
 AskUserQuestion([
   {
@@ -105,7 +107,7 @@ If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
 
-### Phase 4.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 4.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
 **Phase gate:** After Phase 4 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
 
@@ -124,7 +126,7 @@ AskUserQuestion([{
 }])
 ```
 
-### Phase 4.6: Loop [--loop flag only]
+### Phase 4.2: Loop [--loop flag only]
 
 If applied > 0: re-run Phase 2 scoped to modified files → re-run Phase 4. Max 3 iterations. Summary shows per-iteration breakdown.
 
