@@ -42,8 +42,9 @@ jobs:
           steps.release.outputs.releases_created != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRS_JSON: ${{ steps.release.outputs.prs }}
         run: |
-          PR_BRANCH=$(echo '${{ steps.release.outputs.prs }}' | jq -r '.[0].headBranchName')
+          PR_BRANCH=$(echo "$PRS_JSON" | jq -r '.[0].headBranchName')
           SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$PR_BRANCH" --jq '.object.sha')
           for CHECK in "Validate" "Manifest Sync" "Go"; do
             gh api "repos/$GITHUB_REPOSITORY/check-runs" \

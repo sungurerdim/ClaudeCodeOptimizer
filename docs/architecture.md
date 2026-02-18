@@ -98,8 +98,8 @@ When updating these patterns, update the rules file — all skills and agents in
 
 | Flag | Meaning | Available In |
 |------|---------|-------------|
-| `--auto` | No questions, fix everything, single-line summary | optimize, align, blueprint |
-| `--preview` | Analyze only, no fixes applied | optimize, align, blueprint |
+| `--auto` | No questions, fix everything, single-line summary | optimize, align, blueprint, pr |
+| `--preview` | Analyze only, no fixes applied | optimize, align, blueprint, pr, commit |
 | `--scope=X` | Limit to specific scopes (comma-separated) | optimize, blueprint |
 | `--loop` | Re-run until clean, max 3 iterations | optimize |
 | `--init` | Create profile only | blueprint |
@@ -123,7 +123,7 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 |-------|-------|--------|
 | analyze | `{scopes: string[], mode: "review"\|"auto"\|"audit"}` | `{findings[], scores{}, metrics{}, error?}` |
 | apply | `{findings[], fixAll?: boolean}` | `{applied, failed, needs_approval, total, error?}` |
-| research | `{query, depth: "standard"\|"deep"}` | `{sources[], synthesis, reliability_score, error?}` |
+| research | `{query, depth: "standard"\|"deep"}` | `{sources[], synthesis, confidence, contradictions[], gaps[], error?}` |
 
 **Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Output.
 
@@ -149,7 +149,7 @@ Skills invoke agents using these standard groupings:
 
 ### File Manifest Sync
 
-The file lists in `extras/installer/main.go` and `skills/cco-update/SKILL.md` must stay synchronized. When adding or removing a skill/agent file, update both locations.
+The file list in `extras/installer/manifest.go` is the single source of truth for installed files. When adding or removing a skill/agent file, update `manifest.go`.
 
 ---
 
@@ -193,7 +193,7 @@ Agent model selection is specified in agent frontmatter (`model: haiku` / `model
 |------|-------|--------|
 | Detection & Analysis | Haiku | Fast, read-only |
 | Code fixes & Synthesis | Opus | Fewer errors on edits |
-| Research | Haiku + Opus | Haiku search, Opus synthesis |
+| Research | Haiku | Read-only research and synthesis |
 
 ---
 

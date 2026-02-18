@@ -149,6 +149,7 @@ func removeIfExists(base, path string) bool {
 	if _, err := os.Stat(fullPath); err == nil {
 		if err := os.Remove(fullPath); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to remove %s: %v\n", path, err)
+			return false
 		}
 		return true
 	}

@@ -65,9 +65,9 @@ cco uninstall
 
 Manual removal:
 ```bash
-rm ~/.claude/rules/cco-rules.md
+rm -f ~/.claude/rules/cco-rules.md
 rm -rf ~/.claude/skills/cco-*/
-rm ~/.claude/agents/cco-agent-*.md
+rm -f ~/.claude/agents/cco-agent-*.md
 ```
 
 ---

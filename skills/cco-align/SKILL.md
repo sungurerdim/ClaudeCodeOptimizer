@@ -114,13 +114,13 @@ AskUserQuestion([{
 
 If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
-### Phase 6: Apply
+### Phase 6: Apply [SKIP if --preview]
 
 Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count findings, not locations. On error: count as failed, continue.
 
 ### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-**Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
+**Phase gate:** After Phase 6 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
 
 If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
 
@@ -139,7 +139,7 @@ AskUserQuestion([{
 
 ### Phase 7: Summary
 
-Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category. Auto Mode — no questions, no deferrals, fix everything except large architectural changes.
+Per CCO Rules: Accounting, Auto Mode.
 
 Interactive output format:
 
