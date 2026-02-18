@@ -67,7 +67,7 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 13. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
     - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true
     - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
-    - Detect branch protection: `gh api repos/{owner}/{repo}/branches/{base}/protection 2>/dev/null` → 404 means no protection → skip `auto_merge` check, use direct merge in Phase 6
+    - Detect branch protection: `gh api repos/{owner}/{repo}/branches/{base}/protection --jq '.required_status_checks.contexts' 2>/dev/null` — non-empty output = protected, empty/error = no protection. Note: `gh api` may return non-zero exit code even on success; check stdout content, not exit code.
 14. Stale branch scan: `git for-each-ref --sort=committerdate refs/heads/ --format='%(refname:short) %(committerdate:relative)' --no-merged={base}` — exclude current branch, cross-reference with `gh pr list --state open --json headRefName --jq '.[].headRefName'`
     - Branches with no open PR and last commit >7 days ago → display: "Possibly forgotten: {branch} ({age}). Create PR or delete?"
     - --auto: skip (informational only)
@@ -90,12 +90,11 @@ If tests fail → stop. Do NOT create PR with failing tests.
 
 ### Phase 3: Analyze
 
-**Both commands are independent — run in parallel:**
-
 ```bash
-git diff {base}...HEAD          # THE source of truth — also derive file summary from this
-git log {base}..HEAD --oneline  # commit titles — only for type classification
+git diff {base}...HEAD          # THE source of truth for PR content and file summary
 ```
+
+Commit titles for type classification: use from Context section (already resolved at skill load). Do NOT re-run `git log` — it is redundant.
 
 **Net diff principle:** The PR describes `git diff {base}...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
 
@@ -201,7 +200,7 @@ gh pr merge {number} --auto --squash
 
 **Without branch protection (direct merge):**
 
-1. Check CI status: `gh pr checks {number} --jq '.[].state' 2>/dev/null`
+1. Check CI status: `gh pr checks {number} --json name,state --jq '.[].state' 2>/dev/null`
    - Any `FAILURE` → interactive: warn "CI checks failing. Merge anyway?"; --auto: merge anyway (CI is advisory without branch protection)
    - Otherwise → proceed
 2. `gh pr merge {number} --squash`
@@ -214,8 +213,8 @@ Skip when: merge not completed, `--draft`, or user selected "Create PR only".
 
 **Steps 1-2 are independent — run in parallel:**
 
-1. Detect merged branches: `git branch --merged {base} | grep -v '^\*' | grep -v '{base}'`
-2. Detect remote merged branches: `git branch -r --merged origin/{base} | grep -v '{base}' | grep -v 'HEAD' | sed 's/origin\///'`
+1. Detect merged branches: `git branch --merged {base} | grep -vE '^\*|{base}$' || true`
+2. Detect remote merged branches: `git branch -r --merged origin/{base} | grep -vE '{base}|HEAD' | sed 's/origin\///' || true`
 3. Combine unique results, exclude current branch
 
 If merged branches found:
