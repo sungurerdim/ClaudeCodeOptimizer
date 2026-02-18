@@ -21,7 +21,7 @@ disable-model-invocation: true
 
 ## Context
 
-- Git status: !`git status --short --branch 2>/dev/null | cat`
+- Git status: !`git status --short --branch`
 - Args: $ARGUMENTS
 
 ## CLAUDE.md Profile Format
