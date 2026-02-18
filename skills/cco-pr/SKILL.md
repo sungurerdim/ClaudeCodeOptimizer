@@ -20,12 +20,12 @@ The PR title IS the changelog entry. The PR body becomes the squash commit body.
 
 **The PR describes the net diff between main and HEAD — nothing else.** Not the journey of individual commits, not session decisions, not what was tried and reverted. If commit A added something and commit B removed it, the net effect is zero — do not mention it.
 
-Run `git diff main...HEAD` and describe what that diff shows.
+Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describe what that diff shows.
 
 ## Context
 
-- Branch: !`git branch --show-current 2>/dev/null | cat`
-- Commits on branch: !`git log --oneline main..HEAD 2>/dev/null | cat`
+- Status: !`git status --short --branch 2>/dev/null | cat`
+- Commits on branch: !`git log --oneline $(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo main)..HEAD 2>/dev/null | cat`
 - Existing PR: !`gh pr list --head "$(git branch --show-current 2>/dev/null)" --json number,title,state,url -L1 2>/dev/null | cat`
 
 ## Flags
@@ -39,26 +39,44 @@ Run `git diff main...HEAD` and describe what that diff shows.
 
 ## Execution Flow
 
-Validate → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → Summary
+Validate → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → [Cleanup] → Summary
 
 ### Phase 1: Validate
 
-1. Verify `git` and `gh` available
-2. `git fetch origin main`
-3. On main/master → stop: "Create a branch first."
-4. No commits ahead → stop: "No commits to create PR for."
-5. Branch behind main → ask rebase (--auto: rebase automatically, abort on conflict)
-6. Unpushed commits → `git push -u origin {branch}`
-7. PR already exists → show URL, ask: Update / Skip
-8. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
-   - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true
-   - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
+**Steps 1-4 are independent — run in parallel. Steps 12-14 are independent of 8-11 — start in parallel with step 8.**
+
+**Batch hints (minimize calls):**
+- Steps 1, 4, 6: derive from context — if status returned output with branch name, git+repo+branch are verified
+- Steps 2-3 → single runtime call: `gh auth status 2>&1` (verifies both gh available and authenticated)
+- Steps 9+10 → single call: `git rev-list --left-right --count origin/{base}...HEAD` (left=behind, right=ahead)
+- Step 11: derive from context — `[ahead N]` in status output = unpushed commits exist, no separate call needed
+- Steps 12-14 → parallel: 3 calls in one message
+
+1. Verify `git` available → not found: stop with "git is required"
+2. Verify `gh` available → not found: stop with "gh CLI is required (https://cli.github.com)"
+3. Verify `gh auth status` → not authenticated: stop with "Run `gh auth login` first"
+4. Verify git repo: `git rev-parse --git-dir` → not a repo: stop with "Not a git repository"
+5. Detect base branch: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'` → fallback to `main`, then `master`, then stop
+6. Verify not detached HEAD: `git branch --show-current` → empty: stop with "Detached HEAD — checkout a branch first"
+7. On {base} → stop: "Create a branch first. Use `/cco-commit` to start."
+8. `git fetch origin {base}`
+9. No commits ahead of {base} → stop: "No commits to create PR for."
+10. Branch behind {base} → ask rebase (--auto: rebase automatically, abort on conflict)
+11. Unpushed commits → `git push -u origin {branch}`
+12. PR already exists → show URL, ask: Update / Skip
+13. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
+    - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true
+    - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
+    - Detect branch protection: `gh api repos/{owner}/{repo}/branches/{base}/protection 2>/dev/null` → 404 means no protection → skip `auto_merge` check, use direct merge in Phase 6
+14. Stale branch scan: `git for-each-ref --sort=committerdate refs/heads/ --format='%(refname:short) %(committerdate:relative)' --no-merged={base}` — exclude current branch, cross-reference with `gh pr list --state open --json headRefName --jq '.[].headRefName'`
+    - Branches with no open PR and last commit >7 days ago → display: "Possibly forgotten: {branch} ({age}). Create PR or delete?"
+    - --auto: skip (informational only)
 
 ### Phase 2: Quality Gates [ENTIRE PROJECT]
 
 Run format, lint, and test across the **entire project**. Auto-fix all fixable issues.
 
-**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files + suggest `/cco-blueprint --init`.
+**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet/test, `pyproject.toml` → ruff/pytest, `Cargo.toml` → cargo clippy/test, `Makefile` → make targets. Tool not found → skip silently.
 
 **Run in order (stop on failure):**
 1. **Format** — project's formatter with auto-fix (gofmt, prettier, ruff format, rustfmt, etc.)
@@ -72,25 +90,45 @@ If tests fail → stop. Do NOT create PR with failing tests.
 
 ### Phase 3: Analyze
 
+**Both commands are independent — run in parallel:**
+
 ```bash
-git diff main...HEAD          # THE source of truth for PR content
-git diff main...HEAD --stat   # file-level summary
-git log main..HEAD --oneline  # commit titles — only for type classification
+git diff {base}...HEAD          # THE source of truth — also derive file summary from this
+git log {base}..HEAD --oneline  # commit titles — only for type classification
 ```
 
-**Net diff principle:** The PR describes `git diff main...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
+**Net diff principle:** The PR describes `git diff {base}...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
 
-**Type classification:**
-1. Scan commit titles for conventional types
-2. Any `feat` commit → PR type is `feat` (minor bump)
-3. Only `fix` commits → PR type is `fix` (patch bump)
-4. Only non-bumping types → PR type is the dominant one (no bump)
-5. `!` in any commit type or `BREAKING CHANGE:` in any commit body → append `!`
+**Type classification (net diff is source of truth, not commit history):**
+1. Scan commit titles for conventional types as **initial signal**
+2. Validate against `git diff {base}...HEAD` — the net diff overrides commit types:
+   - New user-facing capability in the final diff? → `feat`
+   - Broken behavior fixed in the final diff? → `fix`
+   - Neither? → dominant non-bumping type from commits
+3. If commits say `feat` but net diff shows only internal restructuring → PR type is `refactor`/`chore`
+4. `!` in any commit type or `BREAKING CHANGE:` in any commit body → append `!`
 
-**Anti-bump rules (release-please reads PR title for changelog):**
-- `feat` = user can now DO something new they couldn't before. Internal improvement → `refactor`/`chore`
-- `fix` = something was BROKEN for end users. Preventive improvement → `refactor`/`chore`
-- When uncertain → prefer non-bumping type
+**Anti-bump rules (PR title = changelog entry = version bump):**
+
+Litmus test — both must be YES for a bump:
+
+| Question | YES | NO |
+|----------|-----|----|
+| Can end users do something they **couldn't** before? | `feat` | `refactor`/`chore` |
+| Was something **broken** for end users and now works? | `fix` | `refactor`/`chore` |
+
+Common misclassifications:
+
+| Change | Looks like | Actually |
+|--------|-----------|----------|
+| Add internal helper/utility | feat | refactor |
+| Improve existing feature's code | feat | refactor/perf |
+| Harden edge cases / add guards | fix | chore |
+| Update skill/agent/rule prompts | feat | chore |
+| Update dependencies | fix | chore |
+| CI, docs, tests, config | feat/fix | ci/docs/test/chore |
+
+- When uncertain → **always** prefer non-bumping type
 - **Type ≠ scope.** `ci: fix config` = no bump. `fix(ci): fix config` = patch bump. Use the correct TYPE.
 - CI, docs, tests, config, tooling → always `ci:`, `docs:`, `test:`, `chore:` — never `feat`/`fix`
 
@@ -118,9 +156,13 @@ git log main..HEAD --oneline  # commit titles — only for type classification
 
 ### Phase 4: Review [SKIP if --auto]
 
-Display: branch, title, type → bump effect, body preview.
+Display: branch, title, body preview, version annotation.
 
-Populate each option's `markdown` field with the PR body preview (title + summary + changes). This lets the user see exactly what will be created before confirming.
+**Version annotation** — append to each option's markdown as the first `──` line:
+- All signals agree: `── version: {type} → {effect}`
+- Net diff overrode commits or borderline: `── version: ~{type} → {effect} (estimated)`
+
+Effects: `feat` → minor bump, `fix` → patch bump, `feat!`/`fix!` → major bump, anything else → no bump.
 
 ```javascript
 AskUserQuestion([{
@@ -128,11 +170,11 @@ AskUserQuestion([{
   header: "PR Action",
   options: [
     { label: "Create + Auto-merge (Recommended)", description: "Squash + delete branch when checks pass",
-      markdown: "{title}\n\n{body}\n\n── auto-merge: squash + delete branch" },
+      markdown: "{title}\n\n{body}\n\n── version: {type} → {effect}\n── auto-merge: squash + delete branch" },
     { label: "Create PR only", description: "Merge manually later",
-      markdown: "{title}\n\n{body}\n\n── merge: manual" },
+      markdown: "{title}\n\n{body}\n\n── version: {type} → {effect}\n── merge: manual" },
     { label: "Create as draft", description: "Draft PR for further work",
-      markdown: "{title}\n\n{body}\n\n── status: draft" },
+      markdown: "{title}\n\n{body}\n\n── version: {type} → {effect}\n── status: draft" },
     { label: "Cancel", description: "Don't create PR" }
   ],
   multiSelect: false
@@ -151,13 +193,48 @@ On error: display title and body for manual creation.
 
 Skip when: `--no-auto-merge`, `--draft`, user selected "Create PR only" or "Create as draft".
 
+**With branch protection (from step 13):**
+
 ```bash
 gh pr merge {number} --auto --squash
 ```
 
-If auto-merge unsupported: `gh pr merge {number} --squash`
+**Without branch protection (direct merge):**
 
-After merge: `git checkout main && git pull origin main`, delete local branch.
+1. Check CI status: `gh pr checks {number} --jq '.[].state' 2>/dev/null`
+   - Any `FAILURE` → interactive: warn "CI checks failing. Merge anyway?"; --auto: merge anyway (CI is advisory without branch protection)
+   - Otherwise → proceed
+2. `gh pr merge {number} --squash`
+
+After merge: `git checkout {base} && git pull origin {base}`, delete local branch.
+
+### Phase 6.1: Branch Cleanup [AFTER MERGE ONLY]
+
+Skip when: merge not completed, `--draft`, or user selected "Create PR only".
+
+**Steps 1-2 are independent — run in parallel:**
+
+1. Detect merged branches: `git branch --merged {base} | grep -v '^\*' | grep -v '{base}'`
+2. Detect remote merged branches: `git branch -r --merged origin/{base} | grep -v '{base}' | grep -v 'HEAD' | sed 's/origin\///'`
+3. Combine unique results, exclude current branch
+
+If merged branches found:
+
+```javascript
+AskUserQuestion([{
+  question: "{n} merged branch(es) found. Clean up?",
+  header: "Cleanup",
+  options: [
+    { label: "Delete all (Recommended)", description: "{branch-list}" },
+    { label: "Skip", description: "Keep merged branches" }
+  ],
+  multiSelect: false
+}])
+```
+
+On "Delete all": `git branch -d {branch}` for each local, `git push origin --delete {branch}` for remote-only. On error: warn and continue.
+
+--auto: delete all silently.
 
 ### Phase 7: Summary
 

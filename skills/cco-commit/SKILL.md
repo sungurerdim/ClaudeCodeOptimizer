@@ -14,8 +14,7 @@ allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null | cat`
-- Branch: !`git branch --show-current 2>/dev/null | cat`
+- Status + branch: !`git status --short --branch 2>/dev/null | cat`
 - Recent commits: !`git log --oneline -5 2>/dev/null | cat`
 - All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null | cat`
 - Staged only: !`git diff --cached --shortstat 2>/dev/null | cat`
@@ -37,12 +36,21 @@ Pre-checks → Analyze → Execute → Verify → Summary
 
 ### Phase 1: Pre-checks
 
-**1.1 Prerequisites:** Verify `git` available. `git fetch origin main 2>/dev/null` (best-effort).
+**1.1 Prerequisites:**
+1. Verify `git` available → not found: stop with "git is required"
 
-**1.2 Main branch guard [ON MAIN ONLY]:** If on `main` or `master`:
+**Steps 2-4 are independent — run in parallel:**
 
-1. Check existing feature branches: `git branch --list 'feat/*' 'fix/*' 'chore/*' 'refactor/*' 'docs/*' 'ci/*' 'test/*' 'perf/*' --sort=-committerdate`
-2. Analyze changes to classify scope and generate branch candidates
+2. Verify git repo: `git rev-parse --git-dir` → not a repo: stop with "Not a git repository. Run `git init` first."
+3. Verify not detached HEAD: `git branch --show-current` → empty: stop with "Detached HEAD — checkout a branch first"
+4. `git fetch origin 2>/dev/null` (best-effort, no stop on failure)
+
+**1.2 Branch management:**
+
+**On main/master:**
+
+1. Scan feature branches: `git branch --list 'feat/*' 'fix/*' 'chore/*' 'refactor/*' 'docs/*' 'ci/*' 'test/*' 'perf/*' --sort=-committerdate`
+2. Early-analyze uncommitted changes to classify type and scope
 3. Ask user:
 
 ```javascript
@@ -50,25 +58,47 @@ AskUserQuestion([{
   question: "You're on main. Where should these changes go?",
   header: "Branch",
   options: [
-    // Up to 2 existing branches (most recent first):
-    { label: "{existing-branch}", description: "Continue on this branch ({n} commits ahead)" },
-    // Up to 2 new branch candidates:
-    { label: "New: {type}/{description}", description: "{n} files — {summary}" },
-    // Always last:
-    { label: "Commit on main", description: "Not recommended for release-please repos" }
+    // Up to 2 existing branches (best scope match first, most recent second):
+    { label: "{branch}", description: "{n} commits ahead · last: {relative time}" },
+    // 1 new branch suggestion from change analysis:
+    { label: "New: {type}/{desc} (Recommended)", description: "{n} files — {scope summary}" },
+    // Always last — if release-please config found, description: "Not recommended — bypasses changelog pipeline"
+    { label: "Commit on main", description: "Direct commit, skip branch workflow" }
   ],
   multiSelect: false
 }])
 ```
 
-Branch naming: `{type}/{short-description}`, all lowercase, hyphens, max 50 chars.
+| Decision | Action |
+|----------|--------|
+| Existing branch | `git checkout {branch}` — uncommitted changes carry over |
+| New branch | `git checkout -b {type}/{desc}` |
+| Commit on main | Proceed normally |
+
+Branch naming: `{type}/{short-description}`, lowercase, hyphens, max 50 chars.
+
+**On feature branch:** If changes don't match branch scope (e.g., on `feat/add-login` but changes are all CI files), ask:
+
+```javascript
+AskUserQuestion([{
+  question: "Changes don't seem related to this branch ({branch}). Continue?",
+  header: "Scope",
+  options: [
+    { label: "Continue here (Recommended)", description: "Include in current branch" },
+    { label: "New branch", description: "Create {type}/{desc} from {base}" }
+  ],
+  multiSelect: false
+}])
+```
+
+If "New branch": stash, checkout {base}, create branch, pop stash.
 
 **1.3 Conflict check:** `UU`/`AA`/`DD` in status → stop.
 
 **1.4 Quality Gates [CHANGED FILES ONLY]:**
 - Always: secret scan + large file check
 - Code files: format + lint (no tests) on changed files only
-  - Detect toolchain from CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`) or auto-detect from project files. No blueprint → suggest `/cco-blueprint --init`.
+  - Detect toolchain: first check CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet, `pyproject.toml` → ruff, `Cargo.toml` → cargo clippy, `Makefile` → make lint. Tool not found → skip silently.
   - Run formatter then linter with auto-fix. Skip if tool unavailable.
 - Docs/config only: skip code checks
 - If format/lint modified files: include those changes in the commit
@@ -79,6 +109,8 @@ Branch naming: `{type}/{short-description}`, all lowercase, hyphens, max 50 char
 Run `git diff` (or `git diff --cached` for `--staged-only`). This is the **only input** for building the commit message.
 
 **Amend detection (unpushed commits only):**
+
+First: check if upstream tracking exists: `git rev-parse @{upstream} 2>/dev/null`. If no upstream, treat ALL local commits as unpushed (compare against base branch instead: `git log {base}..HEAD`).
 
 | Condition | Action |
 |-----------|--------|
@@ -116,11 +148,29 @@ Stage files → build message → commit.
 | `ci` | none | CI/CD pipeline changes |
 
 **Anti-bump rules (release-please reads these types):**
-- `feat` = user can now DO something new they couldn't before. Internal improvement → `refactor`/`chore`
-- `fix` = something was BROKEN for end users. Preventive improvement → `refactor`/`chore`
-- When uncertain → prefer non-bumping type
-- **Type ≠ scope.** `ci: fix config` = no bump. `fix(ci): fix config` = patch bump. Use the correct TYPE for the change category, not `fix`/`feat` with a scope qualifier.
-- CI, docs, tests, config, tooling → always use their own type (`ci:`, `docs:`, `test:`, `chore:`), never `feat`/`fix`
+
+Litmus test — both must be YES for a bump:
+
+| Question | YES | NO |
+|----------|-----|----|
+| Can end users do something they **couldn't** before? | `feat` | `refactor`/`chore` |
+| Was something **broken** for end users and now works? | `fix` | `refactor`/`chore` |
+
+Common misclassifications:
+
+| Change | Looks like | Actually |
+|--------|-----------|----------|
+| Add internal helper/utility | feat | refactor |
+| Improve existing feature's code | feat | refactor/perf |
+| Harden edge cases / add guards | fix | chore |
+| Add missing types/validation | fix | chore |
+| Update skill/agent/rule prompts | feat | chore |
+| Update dependencies | fix | chore |
+| CI, docs, tests, config | feat/fix | ci/docs/test/chore |
+
+- When uncertain → **always** prefer non-bumping type
+- **Type ≠ scope.** `ci: fix config` = no bump. `fix(ci): fix config` = patch bump. Use the correct TYPE.
+- CI, docs, tests, config, tooling → always their own type, never `feat`/`fix`
 
 **Message construction:**
 1. Read `git diff` — this is the sole input
