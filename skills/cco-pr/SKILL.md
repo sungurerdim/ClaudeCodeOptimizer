@@ -26,7 +26,7 @@ Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describ
 
 - Status: !`git status --short --branch`
 - Commits on branch: !`git log --oneline main..HEAD`
-- Existing PR: !`gh pr view --json number,title,state,url 2>/dev/null`
+- Existing PR: !`gh pr view --json number,title,state,url 2>/dev/null || echo "none"`
 
 ## Flags
 
