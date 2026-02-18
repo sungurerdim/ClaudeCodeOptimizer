@@ -25,8 +25,7 @@ Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describ
 ## Context
 
 - Status: !`git status --short --branch`
-- Commits on branch: !`git log --oneline main..HEAD`
-- Existing PR: !`gh pr view --json number,title,state,url 2>/dev/null`
+- Commits on branch: !`git log --oneline -20`
 
 ## Flags
 
@@ -56,7 +55,7 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 2. Verify `gh` available → not found: stop with "gh CLI is required (https://cli.github.com)"
 3. Verify `gh auth status` → not authenticated: stop with "Run `gh auth login` first"
 4. Verify git repo: `git rev-parse --git-dir` → not a repo: stop with "Not a git repository"
-5. Detect base branch: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'` → fallback to `main`, then `master`, then stop
+5. Detect base branch: `gh api repos/{owner}/{repo} --jq .default_branch` → fallback to `main`, then `master`, then stop
 6. Verify not detached HEAD: `git branch --show-current` → empty: stop with "Detached HEAD — checkout a branch first"
 7. On {base} → stop: "Create a branch first. Use `/cco-commit` to start."
 8. `git fetch origin {base}`
@@ -205,16 +204,23 @@ gh pr merge {number} --auto --squash
    - Otherwise → proceed
 2. `gh pr merge {number} --squash`
 
-After merge: `git checkout {base} && git pull origin {base}`, delete local branch.
+**After merge setup (always, including --auto):**
+
+```bash
+git checkout {base} && git pull origin {base}
+git branch -d {branch}                          # safe: changes already pushed
+```
+
+User is now on {base}. With auto-merge: squash commit arrives on next `git pull` after CI passes. With direct merge: already included in the pull above.
 
 ### Phase 6.1: Branch Cleanup [AFTER MERGE ONLY]
 
-Skip when: merge not completed, `--draft`, or user selected "Create PR only".
+Skip when: `--draft`, or user selected "Create PR only" or "Create as draft".
 
 **Steps 1-2 are independent — run in parallel:**
 
-1. Detect merged branches: `git branch --merged {base} | grep -vE '^\*|{base}$' || true`
-2. Detect remote merged branches: `git branch -r --merged origin/{base} | grep -vE '{base}|HEAD' | sed 's/origin\///' || true`
+1. Detect merged branches: `git branch --merged {base} --format='%(refname:short)' --no-column` — filter out {base} and current branch in logic
+2. Detect remote merged branches: `git branch -r --merged origin/{base} --format='%(refname:lstrip=3)' --no-column` — filter out {base} and HEAD in logic
 3. Combine unique results, exclude current branch
 
 If merged branches found:

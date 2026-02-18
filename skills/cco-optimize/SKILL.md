@@ -103,7 +103,7 @@ AskUserQuestion([{
 
 If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
-### Phase 4: Apply [SYNCHRONOUS]
+### Phase 4: Apply [SYNCHRONOUS, SKIP if --preview]
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
 
@@ -132,7 +132,7 @@ If applied > 0: re-run Phase 2 scoped to modified files → re-run Phase 4. Max 
 
 ### Phase 5: Summary
 
-Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category. Auto Mode — no questions, no deferrals, fix everything except large architectural changes.
+Per CCO Rules: Accounting, Auto Mode.
 
 Interactive output format:
 

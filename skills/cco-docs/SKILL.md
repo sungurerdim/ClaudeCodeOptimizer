@@ -75,7 +75,7 @@ AskUserQuestion([
 
 In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
-### Phase 2: Analysis [PARALLEL with Phase 1]
+### Phase 2: Analysis
 
 Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
 
@@ -100,7 +100,7 @@ Missing docs = HIGH, incomplete (<70%) = MEDIUM.
 
 Display plan (target files, sections, sources). Ask: Generate All (recommended) / High Priority Only / Abort.
 
-### Phase 5: Generate Documentation
+### Phase 5: Generate Documentation [SKIP if --preview]
 
 Delegate to cco-agent-apply (scope: docs, operations: [{action, scope, file, sections, sources, projectType}]). Extract from actual source files. Apply: brevity, examples, scannability, actionability. Avoid: filler, "this document explains...", long paragraphs. On error: count as failed, continue.
 
@@ -108,7 +108,7 @@ Delegate to cco-agent-apply (scope: docs, operations: [{action, scope, file, sec
 
 ### Phase 6: Summary
 
-Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category.
+Per CCO Rules: Accounting.
 
 Interactive output format:
 
