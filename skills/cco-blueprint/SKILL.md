@@ -361,7 +361,7 @@ In --auto: silent cleanup. Interactive: confirm if >5 entries removed. Partial c
 
 ### Phase 8: Summary
 
-Per CCO Rules: Accounting — applied + failed + needs_approval = total. No "declined" category. Auto Mode — no questions, no deferrals, fix everything except large architectural changes.
+Per CCO Rules: Accounting, Auto Mode.
 
 Before/After delta table (9 dimensions), accounting (applied/failed/needs_approval/total), next steps.
 
