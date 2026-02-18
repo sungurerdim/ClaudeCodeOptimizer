@@ -205,11 +205,18 @@ gh pr merge {number} --auto --squash
    - Otherwise → proceed
 2. `gh pr merge {number} --squash`
 
-After merge: `git checkout {base} && git pull origin {base}`, delete local branch.
+**After merge setup (always, including --auto):**
+
+```bash
+git checkout {base} && git pull origin {base}
+git branch -d {branch}                          # safe: changes already pushed
+```
+
+User is now on {base}. With auto-merge: squash commit arrives on next `git pull` after CI passes. With direct merge: already included in the pull above.
 
 ### Phase 6.1: Branch Cleanup [AFTER MERGE ONLY]
 
-Skip when: merge not completed, `--draft`, or user selected "Create PR only".
+Skip when: `--draft`, or user selected "Create PR only" or "Create as draft".
 
 **Steps 1-2 are independent — run in parallel:**
 
