@@ -23,7 +23,7 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 
 ## Context
 
-- Git status: !`git status --short --branch 2>/dev/null | cat`
+- Git status: !`git status --short --branch`
 - Args: $ARGUMENTS
 
 ## Scopes
