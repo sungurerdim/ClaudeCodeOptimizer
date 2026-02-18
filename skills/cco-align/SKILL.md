@@ -23,7 +23,7 @@ For tactical file-level fixes, use `/cco-optimize`.
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null | cat`
+- Git status: !`git status --short --branch 2>/dev/null | cat`
 
 ## Scopes (7 scopes, 87 checks)
 

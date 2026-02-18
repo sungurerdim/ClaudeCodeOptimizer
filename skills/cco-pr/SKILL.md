@@ -24,7 +24,7 @@ Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describ
 
 ## Context
 
-- Branch: !`git branch --show-current 2>/dev/null | cat`
+- Status: !`git status --short --branch 2>/dev/null | cat`
 - Commits on branch: !`git log --oneline $(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo main)..HEAD 2>/dev/null | cat`
 - Existing PR: !`gh pr list --head "$(git branch --show-current 2>/dev/null)" --json number,title,state,url -L1 2>/dev/null | cat`
 
@@ -44,6 +44,13 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 ### Phase 1: Validate
 
 **Steps 1-4 are independent — run in parallel. Steps 12-14 are independent of 8-11 — start in parallel with step 8.**
+
+**Batch hints (minimize calls):**
+- Steps 1, 4, 6: derive from context — if status returned output with branch name, git+repo+branch are verified
+- Steps 2-3 → single runtime call: `gh auth status 2>&1` (verifies both gh available and authenticated)
+- Steps 9+10 → single call: `git rev-list --left-right --count origin/{base}...HEAD` (left=behind, right=ahead)
+- Step 11: derive from context — `[ahead N]` in status output = unpushed commits exist, no separate call needed
+- Steps 12-14 → parallel: 3 calls in one message
 
 1. Verify `git` available → not found: stop with "git is required"
 2. Verify `gh` available → not found: stop with "gh CLI is required (https://cli.github.com)"
@@ -82,6 +89,8 @@ If format/lint changed files → stage and commit as `chore: format and lint fix
 If tests fail → stop. Do NOT create PR with failing tests.
 
 ### Phase 3: Analyze
+
+**Both commands are independent — run in parallel:**
 
 ```bash
 git diff {base}...HEAD          # THE source of truth — also derive file summary from this
@@ -147,9 +156,13 @@ Common misclassifications:
 
 ### Phase 4: Review [SKIP if --auto]
 
-Display: branch, title, type → bump effect, body preview.
+Display: branch, title, body preview, version annotation.
 
-Populate each option's `markdown` field with the PR body preview (title + summary + changes). This lets the user see exactly what will be created before confirming.
+**Version annotation** — append to each option's markdown as the first `──` line:
+- All signals agree: `── version: {type} → {effect}`
+- Net diff overrode commits or borderline: `── version: ~{type} → {effect} (estimated)`
+
+Effects: `feat` → minor bump, `fix` → patch bump, `feat!`/`fix!` → major bump, anything else → no bump.
 
 ```javascript
 AskUserQuestion([{
@@ -157,11 +170,11 @@ AskUserQuestion([{
   header: "PR Action",
   options: [
     { label: "Create + Auto-merge (Recommended)", description: "Squash + delete branch when checks pass",
-      markdown: "{title}\n\n{body}\n\n── auto-merge: squash + delete branch" },
+      markdown: "{title}\n\n{body}\n\n── version: {type} → {effect}\n── auto-merge: squash + delete branch" },
     { label: "Create PR only", description: "Merge manually later",
-      markdown: "{title}\n\n{body}\n\n── merge: manual" },
+      markdown: "{title}\n\n{body}\n\n── version: {type} → {effect}\n── merge: manual" },
     { label: "Create as draft", description: "Draft PR for further work",
-      markdown: "{title}\n\n{body}\n\n── status: draft" },
+      markdown: "{title}\n\n{body}\n\n── version: {type} → {effect}\n── status: draft" },
     { label: "Cancel", description: "Don't create PR" }
   ],
   multiSelect: false
