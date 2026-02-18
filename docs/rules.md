@@ -22,7 +22,7 @@ Claude Code automatically reads all `.md` files in `~/.claude/rules/` at session
 | **Session Resilience** | Anchor to Artifacts, Error Recovery |
 | **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
 | **Security Baseline** | Security Patterns (secrets, bare except, empty catch, unsanitized data, eval) |
-| **CCO Operations** | Accounting, Auto Mode, Agent Output, Tool Prerequisites, Confidence Scoring, Skip Patterns, Severity Levels |
+| **CCO Operations** | Accounting, Auto Mode, Agent Output, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Parallel Execution, Severity Levels |
 
 ## Hard Limits
 

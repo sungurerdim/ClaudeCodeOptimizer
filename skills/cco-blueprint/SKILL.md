@@ -210,6 +210,7 @@ Deployment auto-detected from Discovery (Docker/cloud/serverless), written to pr
 | Priorities | Security + Code Quality |
 | Constraints | Keep framework/language |
 | Audience | Auto-detect (Dockerfile → container, .github → cloud, else local) |
+| Deployment | Auto-detect from Docker/cloud/serverless signals |
 
 #### Ideal Metrics by Project Type
 
@@ -317,7 +318,7 @@ Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) i
 
 ### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-**Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
+**Phase gate:** After Phase 6 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Phase 7.
 
 If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
 

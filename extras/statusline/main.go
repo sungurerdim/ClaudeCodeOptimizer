@@ -41,13 +41,13 @@ func main() {
 	const maxStdinSize = 10 << 20 // 10 MB
 	data, err := io.ReadAll(io.LimitReader(os.Stdin, maxStdinSize))
 	if err != nil {
-		fmt.Printf("[Statusline Error: %v]\n", err)
+		fmt.Fprintf(os.Stderr, "[Statusline Error: %v]\n", err)
 		return
 	}
 
 	var input Input
 	if err := json.Unmarshal(data, &input); err != nil {
-		fmt.Printf("[Statusline Error: %v]\n", err)
+		fmt.Fprintf(os.Stderr, "[Statusline Error: %v]\n", err)
 		return
 	}
 	if input.CWD == "" {

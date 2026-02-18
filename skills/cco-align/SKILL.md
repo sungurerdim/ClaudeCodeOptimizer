@@ -120,7 +120,7 @@ Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count fin
 
 ### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-**Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
+**Phase gate:** After Phase 6 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
 
 If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
 

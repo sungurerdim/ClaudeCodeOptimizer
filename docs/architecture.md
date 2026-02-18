@@ -149,7 +149,7 @@ Skills invoke agents using these standard groupings:
 
 ### File Manifest Sync
 
-The file lists in `extras/installer/main.go` and `skills/cco-update/SKILL.md` must stay synchronized. When adding or removing a skill/agent file, update both locations.
+The file list in `extras/installer/manifest.go` is the single source of truth for installed files. When adding or removing a skill/agent file, update `manifest.go`.
 
 ---
 
@@ -193,7 +193,7 @@ Agent model selection is specified in agent frontmatter (`model: haiku` / `model
 |------|-------|--------|
 | Detection & Analysis | Haiku | Fast, read-only |
 | Code fixes & Synthesis | Opus | Fewer errors on edits |
-| Research | Haiku + Opus | Haiku search, Opus synthesis |
+| Research | Haiku | Read-only research and synthesis |
 
 ---
 

@@ -264,7 +264,7 @@ if (toApply.length > 0) {
     Per CCO Rules: Accounting, Auto Mode.
 
     Return: { applied: n, failed: n, needs_approval: n, total: n, details: [...] }
-  `, { model: "opus" })
+  `)
 }
 ```
 
