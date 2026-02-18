@@ -23,7 +23,7 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null | cat`
+- Git status: !`git status --short --branch 2>/dev/null | cat`
 - Args: $ARGUMENTS
 
 ## Scopes
@@ -44,6 +44,8 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 Setup → Analysis → Gap Analysis → [Plan] → Generate → Summary
 
 ### Phase 1: Setup [SKIP if --auto]
+
+**Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for docs).
 
 ```javascript
 AskUserQuestion([

@@ -55,9 +55,11 @@ Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
 
 ## Execution
 
+**Steps 1-2 are independent — run in parallel.**
+
 1. **Linters** — If project has configured linters (detected from config files like .eslintrc, biome.json, pyproject.toml, Makefile), run them via Bash. Skip if no tooling detected.
 2. **Grep** — All patterns from all scopes in single parallel batch
-3. **Context** — Read matched files in parallel (offset+limit=50 around match). MANDATORY: never report a finding without completing this step. If context reveals false positive → discard. For findings about repository hygiene (committed binaries, coverage files, secrets in repo): run `git ls-files --error-unmatch <file>` via Bash to verify the file is tracked. If untracked or .gitignored → discard finding.
+3. **Context** — Read matched files in parallel (offset+limit=50 around match). MANDATORY: never report a finding without completing this step. If context reveals false positive → discard. For findings about repository hygiene (committed binaries, coverage files, secrets in repo): batch verify via `git ls-files {file1} {file2} ...` in a single Bash call — files not in output are untracked. If untracked or .gitignored → discard finding.
 4. **Output** — Combined JSON with findings tagged by scope
 
 Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
@@ -111,4 +113,4 @@ Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
 | False positives | Skip: pre-existing issues, platform-guarded code, linter domain, single occurrences, .gitignored files reported as "committed to repo". Per CCO Rules: Skip Patterns. |
 | CRITICAL validation | Analyze as "this is a bug" AND "this might be intentional". Both agree → include. Disagree → downgrade. |
 | CRITICAL/HIGH gate | Before finalizing: (1) re-read the file section, (2) check skip patterns, (3) verify not test/mock/fixture context, (4) for "committed to repo" findings — verify file is actually git-tracked (not .gitignored). Any check fails → downgrade one severity level. |
-| Git-tracked verification | Before reporting findings about files being committed to the repo (binaries, coverage files, secrets), verify with `git ls-files --error-unmatch <file>` or `git check-ignore <file>`. If the file is .gitignored or not tracked, discard the finding. |
+| Git-tracked verification | Before reporting findings about files being committed to the repo (binaries, coverage files, secrets), batch verify via `git ls-files {file1} {file2} ...` in a single Bash call — files not in output are untracked. If .gitignored or not tracked, discard the finding. |

@@ -21,7 +21,7 @@ disable-model-invocation: true
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null | cat`
+- Git status: !`git status --short --branch 2>/dev/null | cat`
 - Args: $ARGUMENTS
 
 ## CLAUDE.md Profile Format
@@ -82,13 +82,13 @@ Toolchain: {tools} | {CI} | {container}
 | 1 | Discovery | No |
 | 2 | Init Flow | Yes (if profile exists) |
 | 3 | Assess | No |
-| 3.5 | Project Map | No |
+| 3.1 | Project Map | No |
 | 4 | Consolidate | No |
 | 5 | Plan Review | Yes (--auto) |
 | 6 | Apply | Yes (--preview) |
-| 6.5 | Needs-Approval Review | Yes (--auto) |
+| 6.1 | Needs-Approval Review | Yes (--auto) |
 | 7 | Update Profile | No |
-| 7.5 | Memory Cleanup | Yes (--preview) |
+| 7.1 | Memory Cleanup | Yes (--preview) |
 | 8 | Summary | No |
 
 Before reporting completion, verify every non-skipped phase produced output.
@@ -98,6 +98,8 @@ Before reporting completion, verify every non-skipped phase produced output.
 Discovery → [Init Flow] → Assess [PARALLEL] → Consolidate → Plan → [Apply] → Update Profile → Summary
 
 ### Phase 1: Discovery [PARALLEL]
+
+**Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for blueprint).
 
 1. Search CLAUDE.md for `<!-- cco-blueprint-start -->`
 2. Parallel project detection via Glob/Grep/Read: language (majority file ext), framework (express/fastapi/react/etc), project type (routes→API, pages→Web, bin→CLI, src/lib→Library), toolchain (.eslintrc, tsconfig, biome.json), CI/CD, Docker, tests, data sensitivity (password/email/token patterns), git status
@@ -249,13 +251,13 @@ AskUserQuestion([{
 
 Context fields are read from the blueprint profile. This enables stack-specific pattern detection, privacy severity calibration, and quality target alignment.
 
-**Agent invocation:** Launch ALL 5 tracks as Task calls in a SINGLE message WITHOUT `run_in_background`. This executes them in parallel and returns results directly. Do NOT use `run_in_background` for Task calls — it causes empty output files and late completion notifications. Wait for ALL agent results before proceeding to Phase 3.5.
+**Agent invocation:** Launch ALL 5 tracks as Task calls in a SINGLE message WITHOUT `run_in_background`. This executes them in parallel and returns results directly. Do NOT use `run_in_background` for Task calls — it causes empty output files and late completion notifications. Wait for ALL agent results before proceeding to Phase 3.1.
 
 All tracks run with `--preview`. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
 
-**Phase gate:** Do NOT proceed to Phase 3.5/4 until all 5 agent tracks have returned results or failed. Verify each track produced output before consolidation.
+**Phase gate:** Do NOT proceed to Phase 3.1/4 until all 5 agent tracks have returned results or failed. Verify each track produced output before consolidation.
 
-### Phase 3.5: Project Map
+### Phase 3.1: Project Map
 
 Build from Discovery + Assess results. Generated from directory structure, entry points (package.json main/bin), import/require patterns, dependency files, detected toolchain.
 
@@ -313,7 +315,7 @@ AskUserQuestion([{
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) in priority order: CRITICAL/security → Code quality → Architecture → Documentation. Per CCO Rules: on error, count as failed, continue.
 
-### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
 **Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
 
@@ -336,7 +338,7 @@ AskUserQuestion([{
 
 Update CLAUDE.md blueprint section with new Current Scores.
 
-### Phase 7.5: Memory Cleanup [SKIP if --preview]
+### Phase 7.1: Memory Cleanup [SKIP if --preview]
 
 Clean up Claude Code auto-memory files: `{user home}/.claude/projects/{project-hash}/memory/`
 

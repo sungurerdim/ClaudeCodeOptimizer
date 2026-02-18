@@ -23,7 +23,7 @@ For tactical file-level fixes, use `/cco-optimize`.
 
 ## Context
 
-- Git status: !`git status --short 2>/dev/null | cat`
+- Git status: !`git status --short --branch 2>/dev/null | cat`
 
 ## Scopes (7 scopes, 87 checks)
 
@@ -42,6 +42,8 @@ For tactical file-level fixes, use `/cco-optimize`.
 Setup → Analyze → Gap Analysis → Recommendations → [Plan] → Apply → Summary
 
 ### Phase 1: Setup [SKIP if --auto]
+
+**Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for align).
 
 ```javascript
 AskUserQuestion([{
@@ -116,7 +118,7 @@ If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
 
 Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count findings, not locations. On error: count as failed, continue.
 
-### Phase 6.5: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
 **Phase gate:** After Phase 6 completes, count needs_approval items. If needs_approval = 0, skip to Phase 7.
 
