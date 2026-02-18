@@ -43,7 +43,7 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 
 ### Phase 1: Validate
 
-**Steps 1-4 are independent — run in parallel. Steps 12-13 are independent of 8-11 — start in parallel with step 8.**
+**Steps 1-4 are independent — run in parallel. Steps 12-14 are independent of 8-11 — start in parallel with step 8.**
 
 1. Verify `git` available → not found: stop with "git is required"
 2. Verify `gh` available → not found: stop with "gh CLI is required (https://cli.github.com)"
@@ -58,14 +58,18 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 11. Unpushed commits → `git push -u origin {branch}`
 12. PR already exists → show URL, ask: Update / Skip
 13. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
-    - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true, auto_merge=true
+    - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true
     - Mismatch → ask to fix (--auto: fix via `gh api -X PATCH`)
+    - Detect branch protection: `gh api repos/{owner}/{repo}/branches/{base}/protection 2>/dev/null` → 404 means no protection → skip `auto_merge` check, use direct merge in Phase 6
+14. Stale branch scan: `git for-each-ref --sort=committerdate refs/heads/ --format='%(refname:short) %(committerdate:relative)' --no-merged={base}` — exclude current branch, cross-reference with `gh pr list --state open --json headRefName --jq '.[].headRefName'`
+    - Branches with no open PR and last commit >7 days ago → display: "Possibly forgotten: {branch} ({age}). Create PR or delete?"
+    - --auto: skip (informational only)
 
 ### Phase 2: Quality Gates [ENTIRE PROJECT]
 
 Run format, lint, and test across the **entire project**. Auto-fix all fixable issues.
 
-**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files + suggest `/cco-blueprint --init`.
+**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet/test, `pyproject.toml` → ruff/pytest, `Cargo.toml` → cargo clippy/test, `Makefile` → make targets. Tool not found → skip silently.
 
 **Run in order (stop on failure):**
 1. **Format** — project's formatter with auto-fix (gofmt, prettier, ruff format, rustfmt, etc.)
@@ -86,17 +90,36 @@ git log {base}..HEAD --oneline  # commit titles — only for type classification
 
 **Net diff principle:** The PR describes `git diff {base}...HEAD`. Period. Commit history is only used to determine the conventional commit type. The body describes the final state difference, not the development journey.
 
-**Type classification:**
-1. Scan commit titles for conventional types
-2. Any `feat` commit → PR type is `feat` (minor bump)
-3. Only `fix` commits → PR type is `fix` (patch bump)
-4. Only non-bumping types → PR type is the dominant one (no bump)
-5. `!` in any commit type or `BREAKING CHANGE:` in any commit body → append `!`
+**Type classification (net diff is source of truth, not commit history):**
+1. Scan commit titles for conventional types as **initial signal**
+2. Validate against `git diff {base}...HEAD` — the net diff overrides commit types:
+   - New user-facing capability in the final diff? → `feat`
+   - Broken behavior fixed in the final diff? → `fix`
+   - Neither? → dominant non-bumping type from commits
+3. If commits say `feat` but net diff shows only internal restructuring → PR type is `refactor`/`chore`
+4. `!` in any commit type or `BREAKING CHANGE:` in any commit body → append `!`
 
-**Anti-bump rules (release-please reads PR title for changelog):**
-- `feat` = user can now DO something new they couldn't before. Internal improvement → `refactor`/`chore`
-- `fix` = something was BROKEN for end users. Preventive improvement → `refactor`/`chore`
-- When uncertain → prefer non-bumping type
+**Anti-bump rules (PR title = changelog entry = version bump):**
+
+Litmus test — both must be YES for a bump:
+
+| Question | YES | NO |
+|----------|-----|----|
+| Can end users do something they **couldn't** before? | `feat` | `refactor`/`chore` |
+| Was something **broken** for end users and now works? | `fix` | `refactor`/`chore` |
+
+Common misclassifications:
+
+| Change | Looks like | Actually |
+|--------|-----------|----------|
+| Add internal helper/utility | feat | refactor |
+| Improve existing feature's code | feat | refactor/perf |
+| Harden edge cases / add guards | fix | chore |
+| Update skill/agent/rule prompts | feat | chore |
+| Update dependencies | fix | chore |
+| CI, docs, tests, config | feat/fix | ci/docs/test/chore |
+
+- When uncertain → **always** prefer non-bumping type
 - **Type ≠ scope.** `ci: fix config` = no bump. `fix(ci): fix config` = patch bump. Use the correct TYPE.
 - CI, docs, tests, config, tooling → always `ci:`, `docs:`, `test:`, `chore:` — never `feat`/`fix`
 
@@ -157,11 +180,18 @@ On error: display title and body for manual creation.
 
 Skip when: `--no-auto-merge`, `--draft`, user selected "Create PR only" or "Create as draft".
 
+**With branch protection (from step 13):**
+
 ```bash
 gh pr merge {number} --auto --squash
 ```
 
-If auto-merge unsupported: `gh pr merge {number} --squash`
+**Without branch protection (direct merge):**
+
+1. Check CI status: `gh pr checks {number} --jq '.[].state' 2>/dev/null`
+   - Any `FAILURE` → interactive: warn "CI checks failing. Merge anyway?"; --auto: merge anyway (CI is advisory without branch protection)
+   - Otherwise → proceed
+2. `gh pr merge {number} --squash`
 
 After merge: `git checkout {base} && git pull origin {base}`, delete local branch.
 
