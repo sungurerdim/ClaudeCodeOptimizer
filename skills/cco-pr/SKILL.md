@@ -24,9 +24,9 @@ Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describ
 
 ## Context
 
-- Status: !`git status --short --branch 2>/dev/null | cat`
-- Commits on branch: !`git log --oneline $(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo main)..HEAD 2>/dev/null | cat`
-- Existing PR: !`gh pr list --head "$(git branch --show-current 2>/dev/null)" --json number,title,state,url -L1 2>/dev/null | cat`
+- Status: !`git status --short --branch`
+- Commits on branch: !`git log --oneline main..HEAD`
+- Existing PR: !`gh pr view --json number,title,state,url 2>/dev/null`
 
 ## Flags
 
