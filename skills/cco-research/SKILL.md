@@ -10,9 +10,7 @@ allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 
 Hybrid: Local (Glob/Grep) + Web (cco-agent-research).
 
-## Context
-
-- Current date: !`date +%Y-%m-%d`
+**Current date:** Use `currentDate` from system-reminder context. Include it in every sub-agent prompt to prevent stale search results.
 
 ## Args
 
@@ -59,7 +57,7 @@ AskUserQuestion([
 
 ### Phase 2: Parse Query
 
-Extract from $ARGUMENTS: concepts, date context, tech domain, comparison mode, search mode (troubleshoot/changelog/security).
+Extract from $ARGUMENTS: concepts, tech domain, comparison mode, search mode (troubleshoot/changelog/security). Resolve current date from system-reminder `currentDate` — pass it explicitly to every cco-agent-research Task prompt (e.g., "Current date: 2026-02-19. Search for...").
 
 ### Phase 3: Research [PARALLEL: up to 7 calls]
 
