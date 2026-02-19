@@ -39,6 +39,9 @@ type Input struct {
 			CacheReadInputTokens     int64 `json:"cache_read_input_tokens"`
 		} `json:"current_usage"`
 	} `json:"context_window"`
+	Workspace *struct {
+		AddedDirs []string `json:"added_dirs"`
+	} `json:"workspace"`
 }
 
 // ============================================================================

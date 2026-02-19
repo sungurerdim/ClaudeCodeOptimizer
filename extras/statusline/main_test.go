@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -514,5 +515,143 @@ func TestBuildStatusRow_WithConflict(t *testing.T) {
 	}
 	if !containsVisible(row[0], "2 conflict") {
 		t.Error("missing conflict count")
+	}
+}
+
+// ============================================================================
+// buildWorkspaceRow
+// ============================================================================
+
+func TestBuildWorkspaceRow_Nil(t *testing.T) {
+	input := &Input{CWD: "/home/user/project"}
+	if row := buildWorkspaceRow(input); row != nil {
+		t.Errorf("expected nil, got %v", row)
+	}
+}
+
+func TestBuildWorkspaceRow_EmptyDirs(t *testing.T) {
+	input := &Input{CWD: "/home/user/project"}
+	input.Workspace = &struct {
+		AddedDirs []string `json:"added_dirs"`
+	}{}
+	if row := buildWorkspaceRow(input); row != nil {
+		t.Errorf("expected nil for empty added_dirs, got %v", row)
+	}
+}
+
+func TestBuildWorkspaceRow_WithDirs(t *testing.T) {
+	input := &Input{CWD: "/home/user/project"}
+	input.Workspace = &struct {
+		AddedDirs []string `json:"added_dirs"`
+	}{
+		AddedDirs: []string{"/home/user/shared", "/home/user/utils"},
+	}
+	row := buildWorkspaceRow(input)
+	if row == nil {
+		t.Fatal("expected non-nil row")
+	}
+	if len(row) != 2 {
+		t.Fatalf("expected 2 elements, got %d", len(row))
+	}
+	if !containsVisible(row[0], "+") {
+		t.Error("missing + prefix on first element")
+	}
+}
+
+func TestBuildWorkspaceRow_SingleDir(t *testing.T) {
+	input := &Input{CWD: "/home/user/project"}
+	input.Workspace = &struct {
+		AddedDirs []string `json:"added_dirs"`
+	}{
+		AddedDirs: []string{"/home/user/other"},
+	}
+	row := buildWorkspaceRow(input)
+	if len(row) != 1 {
+		t.Fatalf("expected 1 element, got %d", len(row))
+	}
+	if !containsVisible(row[0], "+") {
+		t.Error("missing + prefix")
+	}
+}
+
+// ============================================================================
+// abbreviateDir
+// ============================================================================
+
+func TestAbbreviateDir_RelativeSibling(t *testing.T) {
+	got := abbreviateDir("/home/user/shared", "/home/user/project")
+	if got != "../shared" {
+		t.Errorf("abbreviateDir sibling = %q, want \"../shared\"", got)
+	}
+}
+
+func TestAbbreviateDir_Subdirectory(t *testing.T) {
+	got := abbreviateDir("/home/user/project/sub", "/home/user/project")
+	if got != "sub" {
+		t.Errorf("abbreviateDir subdir = %q, want \"sub\"", got)
+	}
+}
+
+func TestAbbreviateDir_TooFarUp(t *testing.T) {
+	// 2+ levels up should fall back to home abbreviation or basename
+	got := abbreviateDir("/home/user/a/b", "/home/user/x/y/z")
+	// This is ../../../a/b which starts with ../.. so it falls through.
+	// Should get ~/a/b or basename depending on home dir.
+	if got == "../../../a/b" {
+		t.Errorf("abbreviateDir should not use deep relative path, got %q", got)
+	}
+}
+
+func TestAbbreviateDir_EmptyCWD(t *testing.T) {
+	got := abbreviateDir("/some/path/project", "")
+	// Should fall back to home abbreviation or basename
+	if got == "" {
+		t.Error("abbreviateDir returned empty string")
+	}
+}
+
+// ============================================================================
+// buildStatusline with workspace
+// ============================================================================
+
+func TestBuildStatusline_WithWorkspace(t *testing.T) {
+	input := &Input{
+		CWD:     "/home/user/project",
+		Version: "2.1.47",
+	}
+	input.Model.DisplayName = "Claude Opus 4.6"
+	input.Workspace = &struct {
+		AddedDirs []string `json:"added_dirs"`
+	}{
+		AddedDirs: []string{"/home/user/shared"},
+	}
+
+	git := &GitInfo{Branch: "main", RepoName: "project"}
+	out := buildStatusline(input, git)
+	if !containsVisible(out, "+") {
+		t.Error("missing workspace row with + prefix")
+	}
+}
+
+func TestBuildStatusline_WithoutWorkspace(t *testing.T) {
+	input := &Input{
+		CWD:     "/home/user/project",
+		Version: "2.1.47",
+	}
+	input.Model.DisplayName = "Claude Opus 4.6"
+	git := &GitInfo{Branch: "main", RepoName: "project"}
+
+	out := buildStatusline(input, git)
+	// Should have 3 content lines + 1 empty line (zero-width space)
+	lines := strings.Split(out, "\n")
+	// Last line is empty after trailing \n
+	nonEmpty := 0
+	for _, l := range lines {
+		if l != "" && l != "\u200B" {
+			nonEmpty++
+		}
+	}
+	if nonEmpty != 3 {
+		t.Errorf("expected 3 content lines without workspace, got %d", nonEmpty)
 	}
 }

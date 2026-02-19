@@ -61,6 +61,19 @@ func buildStatusRow(git *GitInfo) []string {
 	}
 }
 
+// buildWorkspaceRow returns row 4: added directories via /add-dir, or nil if none.
+func buildWorkspaceRow(input *Input) []string {
+	if input.Workspace == nil || len(input.Workspace.AddedDirs) == 0 {
+		return nil
+	}
+	parts := make([]string, len(input.Workspace.AddedDirs))
+	for i, dir := range input.Workspace.AddedDirs {
+		parts[i] = c(abbreviateDir(dir, input.CWD), cyan)
+	}
+	parts[0] = c("+", green) + " " + parts[0]
+	return parts
+}
+
 // buildSessionRow returns row 3: username + CC version + model + context usage.
 func buildSessionRow(input *Input) []string {
 	username := "user"

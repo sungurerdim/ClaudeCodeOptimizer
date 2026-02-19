@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -40,6 +42,23 @@ func formatContextUsage(input *Input) string {
 
 	percent := tokens * 100 / cw.ContextWindowSize
 	return fmt.Sprintf("%s %d%%", formatK(tokens), percent)
+}
+
+// abbreviateDir shortens a directory path for statusline display.
+// Priority: relative to CWD (max 1 parent level) > ~/... > basename.
+func abbreviateDir(dir, cwd string) string {
+	if cwd != "" {
+		if rel, err := filepath.Rel(cwd, dir); err == nil {
+			slashRel := filepath.ToSlash(rel)
+			if !strings.HasPrefix(slashRel, "../..") {
+				return slashRel
+			}
+		}
+	}
+	if home, err := os.UserHomeDir(); err == nil && strings.HasPrefix(dir, home) {
+		return "~" + filepath.ToSlash(dir[len(home):])
+	}
+	return filepath.Base(dir)
 }
 
 // visibleLen returns the display width of a string, excluding ANSI escape codes
