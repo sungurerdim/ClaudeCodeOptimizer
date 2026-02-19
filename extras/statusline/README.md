@@ -69,7 +69,7 @@ Add to `~/.claude/settings.json`:
 {
   "statusLine": {
     "type": "command",
-    "command": "%USERPROFILE%\\.claude\\cco-statusline.exe",
+    "command": "~/.claude/cco-statusline.exe",
     "padding": 1
   }
 }
