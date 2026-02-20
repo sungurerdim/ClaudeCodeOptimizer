@@ -97,7 +97,7 @@ If "New branch": stash, checkout {base}, create branch, pop stash.
 **1.4 Quality Gates [CHANGED FILES ONLY]:**
 - Always: secret scan + large file check
 - Code files: format + lint (no tests) on changed files only
-  - Detect toolchain: first check CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet, `pyproject.toml` → ruff, `Cargo.toml` → cargo clippy, `Makefile` → make lint. Tool not found → skip silently.
+  - Detect toolchain: first check CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet, `pyproject.toml` → ruff, `Cargo.toml` → cargo clippy, `Makefile` → make lint. Per CCO Rules: Tool Prerequisites.
   - Run formatter then linter with auto-fix. Skip if tool unavailable.
 - Docs/config only: skip code checks
 - If format/lint modified files: include those changes in the commit

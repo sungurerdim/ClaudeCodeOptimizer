@@ -11,7 +11,7 @@
   "_windows": "Windows",
   "statusLine_windows": {
     "type": "command",
-    "command": "%USERPROFILE%\\.claude\\cco-statusline.exe",
+    "command": "~/.claude/cco-statusline.exe",
     "padding": 1
   }
 }

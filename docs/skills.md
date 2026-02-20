@@ -71,16 +71,18 @@ Strategic architecture analysis — current vs ideal state.
 /cco-align --auto                  # Unattended mode
 ```
 
-### Scopes (6 scopes, 77 checks)
+### Scopes (8 scopes, 92 checks)
 
 | Scope | Focus |
 |-------|-------|
 | Architecture | Coupling, cohesion, layers, dependencies |
 | Patterns | SOLID, DRY, design patterns, consistency |
+| Cross-Cutting | Decision impact tracing across areas |
 | Testing | Coverage, quality, gaps |
 | Maintainability | Complexity, readability, naming |
 | AI-Architecture | Over-engineering, drift, premature abstraction |
 | Functional-Completeness | CRUD, pagination, edge cases, validation |
+| Production-Readiness | Health endpoints, shutdown, config, deployment |
 
 ### Gap Analysis
 
@@ -107,16 +109,14 @@ Quality-gated atomic commits.
 /cco-commit --staged-only   # Only staged changes
 ```
 
-### Quality Gates (Parallel)
+### Quality Gates [changed files only]
 
 | Gate | Action |
 |------|--------|
 | Secrets | Block if found |
 | Large Files | Warn >1MB, Block >10MB |
-| Format | Auto-fix, re-stage |
-| Lint | Stop on unfixable |
-| Types | Stop on failure |
-| Tests | Stop on failure |
+| Format | Auto-fix, include in commit |
+| Lint | Auto-fix or ask "Fix first / Commit anyway" |
 
 ### Commit Format
 
@@ -202,16 +202,19 @@ Profile-based project health assessment, transformation, and progress tracking.
 5. **Memory** — Cleans stale auto-memory entries using project context (deleted file refs, outdated commands, contradictions)
 6. **Track** — Updates scores in profile for incremental improvement
 
-### Health Dimensions (6)
+### Health Dimensions (9)
 
 | Dimension | Weight | Source |
 |-----------|--------|--------|
-| Security | 25% | optimize: security + privacy + robustness |
-| Code Quality | 20% | optimize: hygiene + types + simplify + performance |
-| Architecture | 20% | align: architecture + patterns + maintainability |
-| Stack Health | 15% | audit: stack-assessment + dependency-health |
-| DX | 10% | audit: dx-quality + project-structure |
-| Documentation | 10% | docs results |
+| Security & Privacy | 18% | optimize: security + privacy |
+| Code Quality | 14% | optimize: hygiene + types + simplify |
+| Architecture | 14% | align: architecture + patterns + cross-cutting + maintainability |
+| Performance | 10% | optimize: performance |
+| Resilience | 10% | optimize: robustness + align: functional-completeness |
+| Testing | 10% | align: testing |
+| Stack Health | 10% | audit: stack-assessment + dependency-health |
+| DX | 7% | audit: dx-quality + project-structure |
+| Documentation | 7% | docs results |
 
 ### Profile Questions (6)
 
@@ -234,11 +237,11 @@ Create pull requests with conventional commit titles for clean release-please ch
 
 ### How It Works
 
-1. Analyzes ALL commits on the branch (not just latest)
-2. Determines conventional commit type from commit history (`feat` → minor, `fix` → patch, others → no bump)
+1. Analyzes net diff between base and HEAD (`git diff {base}...HEAD`)
+2. Determines conventional commit type from net diff (commits used as initial signal only)
 3. Generates PR title in conventional commit format (≤70 chars)
-4. Creates clean body with summary, changes, and test plan
-5. Single Co-Authored-By trailer (not per-commit duplication)
+4. Creates clean body with summary and changes (no test plan — CI is the test plan)
+5. No Co-Authored-By in PR body — commits have it, GitHub includes on squash merge
 
 ### Release-Please Integration
 

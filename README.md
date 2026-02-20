@@ -92,12 +92,10 @@ Rules are active in every session — no commands needed.
 |----------|-------------|
 | Scope Control | Every changed line traces to the request; unrelated issues mentioned, not fixed |
 | Complexity Limits | CC≤15, Method≤50 lines, File≤500 lines, Nesting≤3, Params≤4 |
-| Anti-Overengineering | No abstraction unless it solves a current problem in multiple places |
 | Production Standards | Security, privacy, performance, error handling applied by default |
 | Output Brevity | Concise responses; no unnecessary praise, filler, or emojis |
-| Verification | Read before write; verify imports and APIs exist before using |
+| Verification | Verify imports and APIs exist before using; match existing code style |
 | Uncertainty Protocol | State confidence levels; ask before proceeding on ambiguous tasks |
-| Security Baseline | Flag secrets in source, bare catches, unsanitized data, eval/pickle |
 
 Full reference: [docs/rules.md](docs/rules.md)
 

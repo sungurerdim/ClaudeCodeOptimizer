@@ -56,8 +56,10 @@ extras/statusline/bin/
 # Go installer local build artifacts
 extras/installer/cco
 extras/installer/cco.exe
+extras/installer/installer.exe
 extras/installer/dist/
 extras/installer/bin/
+extras/installer/coverage.*
 
 # Windows artifacts
 nul

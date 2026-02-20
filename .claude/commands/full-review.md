@@ -2,7 +2,6 @@
 description: CCO system health check (~78 checks across 8 categories)
 argument-hint: [--auto] [--quick] [--focus=X] [--preview] [--fix]
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), AskUserQuestion, Edit(*)
-model: opus
 ---
 
 # /full-review
@@ -122,11 +121,11 @@ Launch 4 parallel Explore agents covering 8 categories:
 - --auto mode: zero AskUserQuestion calls in flow
 - --preview mode: zero Edit/Write calls in flow
 - Skills with disable-model-invocation: 2 (blueprint, update)
-- Agent scopes: analyze 9 Optimize + 7 Review + 4 Audit = 20 total
+- Agent scopes: analyze 9 Optimize + 8 Review + 4 Audit = 21 total
 - cco-agent-apply: fix scope + docs scope
 - cco-agent-research: 6 scopes (local, search, analyze, synthesize, full, dependency)
 - Agent output: JSON with findings[], scores, metrics, error
-- Model selection: analyze/research = haiku, apply = opus
+- Model selection: analyze/research = haiku, apply = inherits session model
 - All skills support --auto and --preview where applicable
 - No skill references non-existent files or paths
 

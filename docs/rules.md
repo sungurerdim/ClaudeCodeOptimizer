@@ -14,15 +14,14 @@ Claude Code automatically reads all `.md` files in `~/.claude/rules/` at session
 
 | Category | Rules |
 |----------|-------|
-| **Scope Control** | Minimal Footprint, Exploration Budget, Decide and Execute |
-| **Code Integrity** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4), Anti-Overengineering |
+| **Scope Control** | Exploration Budget, Decide and Execute |
+| **Code Integrity** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4) |
 | **Production Standards** | Production-ready baseline for all output |
-| **Verification** | Read Before Write, Edit Discipline |
+| **Verification** | API Verification, Edit Discipline |
 | **Uncertainty Protocol** | Surface Uncertainty, Scope Creep Guard |
 | **Session Resilience** | Anchor to Artifacts, Error Recovery |
 | **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
-| **Security Baseline** | Security Patterns (secrets, bare except, empty catch, unsanitized data, eval) |
-| **CCO Operations** | Accounting, Auto Mode, Agent Output, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Parallel Execution, Severity Levels |
+| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Needs-Approval Protocol, Parallel Execution, Severity Levels |
 
 ## Hard Limits
 
