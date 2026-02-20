@@ -18,14 +18,14 @@ For tactical file-level fixes, use `/cco-optimize`.
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | All 7 scopes, all severities, no questions, single-line summary |
+| `--auto` | All 8 scopes, all severities, no questions, single-line summary |
 | `--preview` | Analyze only, show gaps and findings, don't apply |
 
 ## Context
 
 - Git status: !`git status --short --branch`
 
-## Scopes (7 scopes, 87 checks)
+## Scopes (8 scopes, 92 checks)
 
 | Scope | ID Range | Focus |
 |-------|----------|-------|
@@ -36,6 +36,7 @@ For tactical file-level fixes, use `/cco-optimize`.
 | ai-architecture | AIA-01 to AIA-10 | Over-engineering, local solutions, drift |
 | functional-completeness | FUN-01 to FUN-18 | API completeness, CRUD, pagination, edge cases, schema validation |
 | production-readiness | PRD-01 to PRD-07 | Health endpoints, graceful shutdown, config validation, secret management, deployment hygiene, observability hooks, scaling readiness |
+| cross-cutting | XCT-01 to XCT-05 | Decision impact tracing across areas |
 
 ## Execution Flow
 
@@ -50,7 +51,7 @@ AskUserQuestion([{
   question: "Which areas should be reviewed?",
   header: "Scopes",
   options: [
-    { label: "Structure (Recommended)", description: "architecture + patterns" },
+    { label: "Structure (Recommended)", description: "architecture + patterns + cross-cutting" },
     { label: "Quality (Recommended)", description: "testing + maintainability" },
     { label: "Production Readiness", description: "production-readiness" },
     { label: "Completeness & Data", description: "functional-completeness + ai-architecture" }
@@ -64,7 +65,7 @@ AskUserQuestion([{
 If blueprint profile exists in CLAUDE.md, read context (projectType, stack, qualityTarget, dataSensitivity, constraints) and pass to agent calls.
 
 Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review, context: from profile if available) in a SINGLE message WITHOUT `run_in_background`:
-- Structure: architecture, patterns
+- Structure: architecture, patterns, cross-cutting
 - Quality: testing, maintainability
 - Production: production-readiness
 - Completeness: functional-completeness, ai-architecture
@@ -86,6 +87,27 @@ Calculate gaps: current vs ideal for coupling, cohesion, complexity, coverage. D
 Technology assessment: if alternatives found, show current vs ideal with migration cost. Recommend only with evidence (file:line).
 
 **Evidence verification:** Before including any gap: read the cited file:line to confirm evidence supports the claim. Remove any gap where cited code does not demonstrate the issue.
+
+**Decision quality check:** For key technology decisions detected in the codebase (stack, framework, data model, auth, deployment), evaluate:
+
+| Decision | Current | Rationale | Alternative | Trade-off | Assessment |
+|----------|---------|-----------|-------------|-----------|------------|
+
+- **OK** — fits context, no clearly superior alternative
+- **Questionable** — concrete alternative may be better (show evidence)
+- **Problematic** — actively causing issues (show evidence at file:line)
+
+Include only Questionable/Problematic. OK decisions go in summary strengths.
+
+**Strategic gap check (human-judgment issues not caught by pattern analysis):**
+
+| Area | Question | Evidence Source |
+|------|----------|----------------|
+| Tech debt trajectory | Accumulating or decreasing? Where concentrated? | TODO/FIXME density, complex regions |
+| Evolution capacity | Next major change — what breaks first? | Coupling hotspots, hardcoded values |
+| Scale ceiling | At what point does architecture fail? Realistic? | Data structures, I/O patterns |
+
+Include only areas where concrete risk is identified with evidence. Speculative gaps excluded.
 
 ### Phase 4: Recommendations [80/20 PRIORITIZED]
 
@@ -120,22 +142,7 @@ Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count fin
 
 ### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-**Phase gate:** After Phase 6 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
-
-If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
-
-```javascript
-AskUserQuestion([{
-  question: "There are items that need your approval. How would you like to proceed?",
-  header: "Approval",
-  options: [
-    { label: "Fix All (Recommended)", description: "Apply all needs-approval items" },
-    { label: "Review Each", description: "Review and decide on each item individually" },
-    { label: "Skip All", description: "Leave needs-approval items unfixed" }
-  ],
-  multiSelect: false
-}])
-```
+Per CCO Rules: Needs-Approval Protocol.
 
 ### Phase 7: Summary
 

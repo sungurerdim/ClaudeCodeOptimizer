@@ -121,7 +121,7 @@ Launch 4 parallel Explore agents covering 8 categories:
 - --auto mode: zero AskUserQuestion calls in flow
 - --preview mode: zero Edit/Write calls in flow
 - Skills with disable-model-invocation: 2 (blueprint, update)
-- Agent scopes: analyze 9 Optimize + 7 Review + 4 Audit = 20 total
+- Agent scopes: analyze 9 Optimize + 8 Review + 4 Audit = 21 total
 - cco-agent-apply: fix scope + docs scope
 - cco-agent-research: 6 scopes (local, search, analyze, synthesize, full, dependency)
 - Agent output: JSON with findings[], scores, metrics, error

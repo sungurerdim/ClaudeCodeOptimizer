@@ -112,7 +112,13 @@ Agents return structured data as final text message. Never write to files. On fa
 
 ### Tool Prerequisites
 
-Verify required external tools before execution. Critical missing → stop with install instructions. Non-critical → warn once, continue.
+Verify required external tools before execution.
+
+| Tool Role | Missing Behavior |
+|-----------|-----------------|
+| Critical (git, gh) | Stop with install instructions |
+| Quality gate (linter, formatter) | Skip silently — project-specific, absence expected |
+| Non-critical operational | Warn once, continue |
 
 ### Confidence Scoring
 
@@ -131,7 +137,13 @@ When findings > 0 and not --auto, display plan table before asking:
 3. Use `markdown` preview on each option to show the findings that would be affected (full table for Fix All, filtered for By Severity, etc.)
 4. If the user's response includes annotations (notes), use them to adjust behavior — e.g., "skip test coverage items" filters findings before apply
 
-After apply, if needs_approval > 0 and not --auto: display items table (ID, severity, issue, location, reason), ask Fix All / Review Each.
+### Needs-Approval Protocol
+
+After apply phase completes, ALWAYS evaluate needs_approval count before proceeding to summary.
+
+If needs_approval > 0 and not --auto: display items table (ID, severity, issue, location, reason), then:
+
+1. Action: Fix All / Review Each / Skip All
 
 ### Parallel Execution
 

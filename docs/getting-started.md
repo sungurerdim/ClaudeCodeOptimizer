@@ -121,7 +121,7 @@ CCO rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Claude Code autom
 | **Uncertainty Protocol** | Surface Uncertainty (stop & ask), Scope Creep Guard |
 | **Session Resilience** | Anchor to Artifacts, Error Recovery |
 | **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
-| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Severity Levels, Skip Patterns |
+| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Needs-Approval Protocol, Parallel Execution, Severity Levels |
 
 ### Hard Limits
 

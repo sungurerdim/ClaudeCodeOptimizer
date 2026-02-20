@@ -90,7 +90,7 @@ Skills use Claude Code's native skill mechanism with `SKILL.md` files in `~/.cla
 
 ### Shared Patterns
 
-Common patterns (severity levels, accounting, skip patterns, confidence scoring, auto mode) are defined once in `rules/cco-rules.md` under CCO Operations. Skills reference them with `Per CCO Rules.`
+Common patterns (severity levels, accounting, skip patterns, confidence scoring, auto mode, needs-approval protocol, tool prerequisites) are defined once in `rules/cco-rules.md` under CCO Operations. Skills reference them with `Per CCO Rules.`
 
 When updating these patterns, update the rules file — all skills and agents inherit automatically.
 
@@ -105,7 +105,7 @@ When updating these patterns, update the rules file — all skills and agents in
 | `--init` | Create profile only | blueprint |
 | `--refresh` | Re-scan profile, preserve decisions | blueprint |
 
-Scope names are consistent across skills: `security`, `hygiene`, `types`, `performance`, `ai-hygiene`, `robustness`, `privacy`, `doc-sync`, `simplify`, `architecture`, `patterns`, `testing`, `maintainability`, `ai-architecture`, `functional-completeness`, `production-readiness`.
+Scope names are consistent across skills: `security`, `hygiene`, `types`, `performance`, `ai-hygiene`, `robustness`, `privacy`, `doc-sync`, `simplify`, `architecture`, `patterns`, `cross-cutting`, `testing`, `maintainability`, `ai-architecture`, `functional-completeness`, `production-readiness`.
 
 ---
 
@@ -134,7 +134,7 @@ Skills invoke agents using these standard groupings:
 | Group | Agent | Mode | Scopes |
 |-------|-------|------|--------|
 | Code Quality | analyze | auto | security, robustness, privacy, hygiene, types, simplify, performance |
-| Architecture | analyze | review | architecture, patterns, testing, maintainability |
+| Architecture | analyze | review | architecture, patterns, cross-cutting, testing, maintainability |
 | Production | analyze | review | production-readiness, functional-completeness, ai-architecture |
 | Documentation | analyze | auto | doc-sync |
 | Audit | analyze | audit | stack-assessment, dependency-health, dx-quality, project-structure |
