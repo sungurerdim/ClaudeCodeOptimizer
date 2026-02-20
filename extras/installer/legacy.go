@@ -162,6 +162,7 @@ func removeDirIfExists(base, path string) bool {
 	if info, err := os.Stat(fullPath); err == nil && info.IsDir() {
 		if err := os.RemoveAll(fullPath); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to remove directory %s: %v\n", path, err)
+			return false
 		}
 		return true
 	}
