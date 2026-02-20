@@ -52,9 +52,9 @@ func cleanupLegacy(base string) []string {
 	// Deprecation: v1/v2 cleanup can be removed in v6+ (no active users expected).
 	if pipPath, err := exec.LookPath("pip"); err == nil {
 		// Check if package is actually installed before attempting uninstall
-		checkCmd := exec.Command(pipPath, "show", "claudecodeoptimizer")
+		checkCmd := exec.Command(pipPath, "show", "claudecodeoptimizer") //nolint:gosec // path from exec.LookPath
 		if checkCmd.Run() == nil {
-			cmd := exec.Command(pipPath, "uninstall", "claudecodeoptimizer", "-y")
+			cmd := exec.Command(pipPath, "uninstall", "claudecodeoptimizer", "-y") //nolint:gosec // path from exec.LookPath
 			if err := cmd.Run(); err == nil {
 				removed = append(removed, "pip:claudecodeoptimizer")
 			}
@@ -63,9 +63,9 @@ func cleanupLegacy(base string) []string {
 
 	// v2.x plugin cleanup (best-effort, skip if claude not available)
 	if claudePath, err := exec.LookPath("claude"); err == nil {
-		cmd := exec.Command(claudePath, "plugin", "uninstall", "cco@ClaudeCodeOptimizer")
+		cmd := exec.Command(claudePath, "plugin", "uninstall", "cco@ClaudeCodeOptimizer") //nolint:gosec // path from exec.LookPath
 		_ = cmd.Run()
-		cmd2 := exec.Command(claudePath, "plugin", "marketplace", "remove", "ClaudeCodeOptimizer")
+		cmd2 := exec.Command(claudePath, "plugin", "marketplace", "remove", "ClaudeCodeOptimizer") //nolint:gosec // path from exec.LookPath
 		if err := cmd2.Run(); err == nil {
 			removed = append(removed, "plugin:cco@ClaudeCodeOptimizer")
 		}

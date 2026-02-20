@@ -43,15 +43,16 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 			continue
 		}
 
+		switch {
 		// "# branch.head <name>" — current branch name (14 = len("# branch.head "))
-		if strings.HasPrefix(line, "# branch.head ") {
+		case strings.HasPrefix(line, "# branch.head "):
 			if len(line) > 14 {
 				info.Branch = line[14:]
 			}
-		} else if strings.HasPrefix(line, "# branch.ab ") {
-			// "# branch.ab +N -M" — ahead/behind counts
+		// "# branch.ab +N -M" — ahead/behind counts
+		case strings.HasPrefix(line, "# branch.ab "):
 			parts := strings.Fields(line)
-			// Validate format: expect exactly 3 fields ("# branch.ab", "+N", "-M")
+			// Validate format: expect exactly 4 fields ("#", "branch.ab", "+N", "-M")
 			if len(parts) < 4 {
 				continue
 			}
@@ -75,12 +76,12 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 				info.Ahead = ahead
 				info.Behind = behind
 			}
-		} else if strings.HasPrefix(line, "u ") {
-			// "u ..." — unmerged (conflict) entry
+		// "u ..." — unmerged (conflict) entry
+		case strings.HasPrefix(line, "u "):
 			info.Conflict++
-		} else if strings.HasPrefix(line, "1 ") || strings.HasPrefix(line, "2 ") {
-			// "1 XY ..." — ordinary change; "2 XY ..." — rename/copy
-			// Position 2 = index status, position 3 = working tree status
+		// "1 XY ..." — ordinary change; "2 XY ..." — rename/copy
+		// Position 2 = index status, position 3 = working tree status
+		case strings.HasPrefix(line, "1 "), strings.HasPrefix(line, "2 "):
 			if len(line) < 4 {
 				continue
 			}
@@ -108,8 +109,8 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 			if idx == 'R' {
 				info.Ren++
 			}
-		} else if strings.HasPrefix(line, "? ") {
-			// "? <path>" — untracked file
+		// "? <path>" — untracked file
+		case strings.HasPrefix(line, "? "):
 			info.Add++
 		}
 	}

@@ -21,7 +21,7 @@ func TestWriteFile(t *testing.T) {
 			t.Fatalf("writeFile failed: %v", err)
 		}
 
-		content, err := os.ReadFile(filepath.Join(base, "a", "b", "c.md"))
+		content, err := os.ReadFile(filepath.Join(base, "a", "b", "c.md")) //nolint:gosec // G304: test path
 		if err != nil {
 			t.Fatalf("read failed: %v", err)
 		}
@@ -37,7 +37,7 @@ func TestWriteFile(t *testing.T) {
 		if err := writeFile(base, "a/b/c.md", "second"); err != nil {
 			t.Fatal(err)
 		}
-		content, _ := os.ReadFile(filepath.Join(base, "a", "b", "c.md"))
+		content, _ := os.ReadFile(filepath.Join(base, "a", "b", "c.md")) //nolint:gosec // G304: test path
 		if string(content) != "second" {
 			t.Errorf("got %q, want %q", string(content), "second")
 		}
@@ -49,7 +49,7 @@ func TestRemoveIfExists(t *testing.T) {
 
 	t.Run("removes existing file", func(t *testing.T) {
 		path := "test.md"
-		_ = os.WriteFile(filepath.Join(base, path), []byte("x"), 0644)
+		_ = os.WriteFile(filepath.Join(base, path), []byte("x"), 0600)
 
 		removed := removeIfExists(base, path)
 		if !removed {
@@ -73,8 +73,8 @@ func TestRemoveDirIfExists(t *testing.T) {
 
 	t.Run("removes existing directory", func(t *testing.T) {
 		dir := filepath.Join(base, "subdir")
-		_ = os.MkdirAll(dir, 0755)
-		_ = os.WriteFile(filepath.Join(dir, "file.txt"), []byte("x"), 0644)
+		_ = os.MkdirAll(dir, 0750)
+		_ = os.WriteFile(filepath.Join(dir, "file.txt"), []byte("x"), 0600)
 
 		removed := removeDirIfExists(base, "subdir")
 		if !removed {
@@ -93,7 +93,7 @@ func TestRemoveDirIfExists(t *testing.T) {
 	})
 
 	t.Run("returns false for file instead of directory", func(t *testing.T) {
-		_ = os.WriteFile(filepath.Join(base, "file.txt"), []byte("x"), 0644)
+		_ = os.WriteFile(filepath.Join(base, "file.txt"), []byte("x"), 0600)
 		removed := removeDirIfExists(base, "file.txt")
 		if removed {
 			t.Error("expected false for file (not directory)")
@@ -237,10 +237,10 @@ func TestCleanupLegacy(t *testing.T) {
 	t.Run("removes v3 legacy commands", func(t *testing.T) {
 		base := t.TempDir()
 		cmdDir := filepath.Join(base, "commands")
-		_ = os.MkdirAll(cmdDir, 0755)
+		_ = os.MkdirAll(cmdDir, 0750)
 
 		for _, f := range legacyV3Commands {
-			_ = os.WriteFile(filepath.Join(base, filepath.FromSlash(f)), []byte("x"), 0644)
+			_ = os.WriteFile(filepath.Join(base, filepath.FromSlash(f)), []byte("x"), 0600)
 		}
 
 		removed := cleanupLegacy(base)
@@ -264,9 +264,9 @@ func TestCleanupLegacy(t *testing.T) {
 		skillsDir := filepath.Join(base, "skills")
 
 		// Create a current skill
-		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-optimize"), 0755)
+		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-optimize"), 0750)
 		// Create a stale skill
-		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-oldskill"), 0755)
+		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-oldskill"), 0750)
 
 		removed := cleanupLegacy(base)
 
@@ -289,12 +289,12 @@ func TestCleanupLegacy(t *testing.T) {
 	t.Run("removes stale agents", func(t *testing.T) {
 		base := t.TempDir()
 		agentDir := filepath.Join(base, "agents")
-		_ = os.MkdirAll(agentDir, 0755)
+		_ = os.MkdirAll(agentDir, 0750)
 
 		// Create a current agent
-		_ = os.WriteFile(filepath.Join(agentDir, "cco-agent-analyze.md"), []byte("x"), 0644)
+		_ = os.WriteFile(filepath.Join(agentDir, "cco-agent-analyze.md"), []byte("x"), 0600)
 		// Create a stale agent
-		_ = os.WriteFile(filepath.Join(agentDir, "cco-agent-old.md"), []byte("x"), 0644)
+		_ = os.WriteFile(filepath.Join(agentDir, "cco-agent-old.md"), []byte("x"), 0600)
 
 		removed := cleanupLegacy(base)
 
@@ -318,7 +318,7 @@ func TestCleanupLegacy(t *testing.T) {
 		base := t.TempDir()
 
 		for _, d := range legacyDirs {
-			_ = os.MkdirAll(filepath.Join(base, filepath.FromSlash(d)), 0755)
+			_ = os.MkdirAll(filepath.Join(base, filepath.FromSlash(d)), 0750)
 		}
 
 		removed := cleanupLegacy(base)

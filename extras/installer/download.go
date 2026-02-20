@@ -114,8 +114,8 @@ func tryDownload(baseURL, path string) (string, error) {
 func writeFile(base, path, content string) error {
 	fullPath := filepath.Join(base, filepath.FromSlash(path))
 	dir := filepath.Dir(fullPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return fmt.Errorf("mkdir failed: %w", err)
 	}
-	return os.WriteFile(fullPath, []byte(content), 0644)
+	return os.WriteFile(fullPath, []byte(content), 0600)
 }

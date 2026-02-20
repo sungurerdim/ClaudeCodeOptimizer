@@ -98,7 +98,7 @@ func runInstall(tag string) {
 func resolveAndVerify(base, tag string) (installInfo, bool) {
 	// Detect currently installed version
 	currentVersion := ""
-	if content, err := os.ReadFile(filepath.Join(base, "rules", "cco-rules.md")); err == nil {
+	if content, err := os.ReadFile(filepath.Join(base, "rules", "cco-rules.md")); err == nil { //nolint:gosec // G304: path constructed from home directory
 		currentVersion = extractVersion(string(content))
 	}
 
@@ -132,20 +132,22 @@ func resolveAndVerify(base, tag string) (installInfo, bool) {
 	fmt.Printf("  Source verified (%s)\n", ref)
 
 	// Show version info
-	if currentVersion != "" && newVersion != "" {
-		if currentVersion == newVersion && tag == "" {
+	switch {
+	case currentVersion != "" && newVersion != "":
+		switch {
+		case currentVersion == newVersion && tag == "":
 			fmt.Printf("  Version: v%s (already up to date)\n", currentVersion)
 			fmt.Println()
 			fmt.Println("Already up to date. Nothing to do.")
 			return installInfo{}, false
-		} else if currentVersion == newVersion {
+		case currentVersion == newVersion:
 			fmt.Printf("  Version: v%s (reinstalling)\n", currentVersion)
-		} else {
+		default:
 			fmt.Printf("  Update: v%s → v%s\n", currentVersion, newVersion)
 		}
-	} else if currentVersion != "" {
+	case currentVersion != "":
 		fmt.Printf("  Installed: v%s\n", currentVersion)
-	} else if newVersion != "" {
+	case newVersion != "":
 		fmt.Printf("  Version: v%s (fresh install)\n", newVersion)
 	}
 
@@ -417,7 +419,7 @@ func runVersion() {
 	}
 	rulesPath := filepath.Join(base, "rules", "cco-rules.md")
 
-	content, err := os.ReadFile(rulesPath)
+	content, err := os.ReadFile(rulesPath) //nolint:gosec // G304: path constructed from home directory
 	if err != nil {
 		fmt.Println("CCO is not installed.")
 		return
