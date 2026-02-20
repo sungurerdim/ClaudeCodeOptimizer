@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -11,33 +11,15 @@ import (
 )
 
 func execGit(args ...string) (string, bool) {
-	timeout := 1500 * time.Millisecond
-	cmd := exec.Command("git", args...)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	ctx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
 
-	done := make(chan struct{})
-	var out []byte
-	var err error
-
-	go func() {
-		out, err = cmd.Output()
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		if err != nil {
-			return "", false
-		}
-		return strings.TrimRight(string(out), "\n"), true
-	case <-time.After(timeout):
-		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
-			<-done // wait for goroutine to finish after kill
-		}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	out, err := cmd.Output()
+	if err != nil {
 		return "", false
 	}
+	return strings.TrimRight(string(out), "\n"), true
 }
 
 // parseGitStatus parses output from `git status --porcelain=v2 -b` into GitInfo fields.

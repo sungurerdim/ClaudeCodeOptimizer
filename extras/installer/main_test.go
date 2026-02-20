@@ -233,45 +233,6 @@ func (t *rewriteTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return http.DefaultTransport.RoundTrip(parsed)
 }
 
-func TestUpdateTimestamp(t *testing.T) {
-	base := t.TempDir()
-	rulesDir := filepath.Join(base, "rules")
-	_ = os.MkdirAll(rulesDir, 0755)
-
-	t.Run("updates existing timestamp", func(t *testing.T) {
-		content := "---\ncco_version: 4.2.0\nlast_update_check: 2024-01-01T00:00:00Z\n---\n# Rules"
-		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"), []byte(content), 0644)
-
-		updateTimestamp(base)
-
-		updated, _ := os.ReadFile(filepath.Join(rulesDir, "cco-rules.md"))
-		if strings.Contains(string(updated), "2024-01-01") {
-			t.Error("timestamp should have been updated")
-		}
-		if !strings.Contains(string(updated), "last_update_check:") {
-			t.Error("timestamp line should still exist")
-		}
-	})
-
-	t.Run("does nothing if no timestamp line", func(t *testing.T) {
-		content := "---\ncco_version: 4.2.0\n---\n# Rules"
-		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"), []byte(content), 0644)
-
-		updateTimestamp(base)
-
-		updated, _ := os.ReadFile(filepath.Join(rulesDir, "cco-rules.md"))
-		if string(updated) != content {
-			t.Error("file should be unchanged when no timestamp line exists")
-		}
-	})
-
-	t.Run("does nothing if file missing", func(t *testing.T) {
-		_ = os.Remove(filepath.Join(rulesDir, "cco-rules.md"))
-		// Should not panic
-		updateTimestamp(base)
-	})
-}
-
 func TestCleanupLegacy(t *testing.T) {
 	t.Run("removes v3 legacy commands", func(t *testing.T) {
 		base := t.TempDir()

@@ -29,7 +29,7 @@ func resolveLatestTag() string {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "main"
 	}
 
@@ -54,7 +54,7 @@ func downloadFile(baseURL, path string) (string, error) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("HTTP %d for %s", resp.StatusCode, path)
 	}
 

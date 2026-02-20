@@ -101,21 +101,9 @@ func TestFormatContextUsage_Nil(t *testing.T) {
 
 func TestFormatContextUsage_WithCurrentUsage(t *testing.T) {
 	input := &Input{}
-	input.ContextWindow = &struct {
-		ContextWindowSize int64 `json:"context_window_size"`
-		TotalInputTokens  int64 `json:"total_input_tokens"`
-		CurrentUsage      *struct {
-			InputTokens              int64 `json:"input_tokens"`
-			CacheCreationInputTokens int64 `json:"cache_creation_input_tokens"`
-			CacheReadInputTokens     int64 `json:"cache_read_input_tokens"`
-		} `json:"current_usage"`
-	}{
+	input.ContextWindow = &ContextWindow{
 		ContextWindowSize: 200000,
-		CurrentUsage: &struct {
-			InputTokens              int64 `json:"input_tokens"`
-			CacheCreationInputTokens int64 `json:"cache_creation_input_tokens"`
-			CacheReadInputTokens     int64 `json:"cache_read_input_tokens"`
-		}{
+		CurrentUsage: &CurrentUsage{
 			InputTokens:              30000,
 			CacheCreationInputTokens: 10000,
 			CacheReadInputTokens:     5000,
@@ -130,15 +118,7 @@ func TestFormatContextUsage_WithCurrentUsage(t *testing.T) {
 
 func TestFormatContextUsage_FallbackToTotal(t *testing.T) {
 	input := &Input{}
-	input.ContextWindow = &struct {
-		ContextWindowSize int64 `json:"context_window_size"`
-		TotalInputTokens  int64 `json:"total_input_tokens"`
-		CurrentUsage      *struct {
-			InputTokens              int64 `json:"input_tokens"`
-			CacheCreationInputTokens int64 `json:"cache_creation_input_tokens"`
-			CacheReadInputTokens     int64 `json:"cache_read_input_tokens"`
-		} `json:"current_usage"`
-	}{
+	input.ContextWindow = &ContextWindow{
 		ContextWindowSize: 200000,
 		TotalInputTokens:  10000,
 	}
@@ -194,8 +174,7 @@ func TestJustifyRow_Multiple(t *testing.T) {
 }
 
 func containsVisible(s, sub string) bool {
-	// Strip ANSI codes and check
-	plain := ""
+	var b strings.Builder
 	inEsc := false
 	for i := 0; i < len(s); i++ {
 		if s[i] == '\x1b' {
@@ -208,18 +187,9 @@ func containsVisible(s, sub string) bool {
 			}
 			continue
 		}
-		plain += string(s[i])
+		b.WriteByte(s[i])
 	}
-	return len(plain) > 0 && contains(plain, sub)
-}
-
-func contains(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
+	return b.Len() > 0 && strings.Contains(b.String(), sub)
 }
 
 // ============================================================================
@@ -531,9 +501,7 @@ func TestBuildWorkspaceRow_Nil(t *testing.T) {
 
 func TestBuildWorkspaceRow_EmptyDirs(t *testing.T) {
 	input := &Input{CWD: "/home/user/project"}
-	input.Workspace = &struct {
-		AddedDirs []string `json:"added_dirs"`
-	}{}
+	input.Workspace = &Workspace{}
 	if row := buildWorkspaceRow(input); row != nil {
 		t.Errorf("expected nil for empty added_dirs, got %v", row)
 	}
@@ -541,9 +509,7 @@ func TestBuildWorkspaceRow_EmptyDirs(t *testing.T) {
 
 func TestBuildWorkspaceRow_WithDirs(t *testing.T) {
 	input := &Input{CWD: "/home/user/project"}
-	input.Workspace = &struct {
-		AddedDirs []string `json:"added_dirs"`
-	}{
+	input.Workspace = &Workspace{
 		AddedDirs: []string{"/home/user/shared", "/home/user/utils"},
 	}
 	row := buildWorkspaceRow(input)
@@ -560,9 +526,7 @@ func TestBuildWorkspaceRow_WithDirs(t *testing.T) {
 
 func TestBuildWorkspaceRow_SingleDir(t *testing.T) {
 	input := &Input{CWD: "/home/user/project"}
-	input.Workspace = &struct {
-		AddedDirs []string `json:"added_dirs"`
-	}{
+	input.Workspace = &Workspace{
 		AddedDirs: []string{"/home/user/other"},
 	}
 	row := buildWorkspaceRow(input)
@@ -620,9 +584,7 @@ func TestBuildStatusline_WithWorkspace(t *testing.T) {
 		Version: "2.1.47",
 	}
 	input.Model.DisplayName = "Claude Opus 4.6"
-	input.Workspace = &struct {
-		AddedDirs []string `json:"added_dirs"`
-	}{
+	input.Workspace = &Workspace{
 		AddedDirs: []string{"/home/user/shared"},
 	}
 

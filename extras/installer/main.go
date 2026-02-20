@@ -16,7 +16,11 @@ func main() {
 
 	switch os.Args[1] {
 	case "install":
-		runInstall()
+		tag := ""
+		if len(os.Args) >= 3 {
+			tag = os.Args[2]
+		}
+		runInstall(tag)
 	case "uninstall":
 		runUninstall()
 	case "version":
@@ -31,22 +35,25 @@ func printUsage() {
 	fmt.Println("CCO — Claude Code Optimizer")
 	fmt.Println()
 	fmt.Println("Usage:")
-	fmt.Println("  cco install     Install or update CCO")
-	fmt.Println("  cco uninstall   Remove CCO files")
-	fmt.Println("  cco version     Show installed version")
+	fmt.Println("  cco install [tag]   Install or update CCO (optional: specific version tag)")
+	fmt.Println("  cco uninstall       Remove CCO files")
+	fmt.Println("  cco version         Show installed version")
 }
 
-func claudeDir() string {
+func claudeDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: cannot determine home directory: %v\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("cannot determine home directory: %w", err)
 	}
-	return filepath.Join(home, ".claude")
+	return filepath.Join(home, ".claude"), nil
 }
 
-func runInstall() {
-	base := claudeDir()
+func runInstall(tag string) {
+	base, err := claudeDir()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// State recovery: detect interrupted previous install
 	stateFile := filepath.Join(base, ".cco-installing")
@@ -67,12 +74,18 @@ func runInstall() {
 		currentVersion = extractVersion(string(content))
 	}
 
-	// Resolve latest release tag
-	ref := resolveLatestTag()
-	if ref == "main" {
-		fmt.Println("Channel: stable (main — no tags found)")
+	// Resolve release tag
+	var ref string
+	if tag != "" {
+		ref = tag
+		fmt.Printf("Channel: pinned (%s)\n", ref)
 	} else {
-		fmt.Printf("Channel: stable (%s)\n", ref)
+		ref = resolveLatestTag()
+		if ref == "main" {
+			fmt.Println("Channel: stable (main — no tags found)")
+		} else {
+			fmt.Printf("Channel: stable (%s)\n", ref)
+		}
 	}
 
 	baseURL := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s", repo, ref)
@@ -92,8 +105,13 @@ func runInstall() {
 
 	// Show version info
 	if currentVersion != "" && newVersion != "" {
-		if currentVersion == newVersion {
+		if currentVersion == newVersion && tag == "" {
 			fmt.Printf("  Version: v%s (already up to date)\n", currentVersion)
+			fmt.Println()
+			fmt.Println("Already up to date. Nothing to do.")
+			return
+		} else if currentVersion == newVersion {
+			fmt.Printf("  Version: v%s (reinstalling)\n", currentVersion)
 		} else {
 			fmt.Printf("  Update: v%s → v%s\n", currentVersion, newVersion)
 		}
@@ -162,9 +180,6 @@ func runInstall() {
 	// Legacy cleanup
 	legacyRemoved := cleanupLegacy(base)
 
-	// Update timestamp
-	updateTimestamp(base)
-
 	// Summary
 	fmt.Println()
 	if failed == 0 {
@@ -176,8 +191,8 @@ func runInstall() {
 		fmt.Println()
 		fmt.Printf("Installed to: %s%c\n", base, filepath.Separator)
 		fmt.Println("  rules/cco-rules.md")
-		fmt.Println("  skills/cco-*/SKILL.md (8 skills)")
-		fmt.Println("  agents/cco-agent-*.md (3 agents)")
+		fmt.Printf("  skills/cco-*/SKILL.md (%d skills)\n", len(skillFiles))
+		fmt.Printf("  agents/cco-agent-*.md (%d agents)\n", len(agentFiles))
 		if len(legacyRemoved) > 0 {
 			fmt.Println()
 			fmt.Printf("Cleaned up %d legacy file(s) from previous CCO version:\n", len(legacyRemoved))
@@ -201,7 +216,11 @@ func runInstall() {
 }
 
 func runUninstall() {
-	base := claudeDir()
+	base, err := claudeDir()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 
 	fmt.Println("CCO Uninstaller")
 	fmt.Println("===============")
@@ -233,12 +252,8 @@ func runUninstall() {
 		display string
 	}{
 		{"CCO rules", []string{"rules/cco-rules.md"}, false, "1 file"},
-		{"CCO skills", nil, true, "8 skills"},
-		{"CCO agents", []string{
-			"agents/cco-agent-analyze.md",
-			"agents/cco-agent-apply.md",
-			"agents/cco-agent-research.md",
-		}, false, "3 files"},
+		{"CCO skills", nil, true, fmt.Sprintf("%d skills", len(skillFiles))},
+		{"CCO agents", agentFiles, false, fmt.Sprintf("%d files", len(agentFiles))},
 	}
 
 	for _, g := range groups {
@@ -324,7 +339,11 @@ func removeAll(base string) {
 }
 
 func runVersion() {
-	base := claudeDir()
+	base, err := claudeDir()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 	rulesPath := filepath.Join(base, "rules", "cco-rules.md")
 
 	content, err := os.ReadFile(rulesPath)

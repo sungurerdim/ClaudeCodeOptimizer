@@ -49,6 +49,7 @@ func cleanupLegacy(base string) []string {
 	var removed []string
 
 	// v1.x pip cleanup (best-effort, skip if pip not available)
+	// Deprecation: v1/v2 cleanup can be removed in v6+ (no active users expected).
 	if pipPath, err := exec.LookPath("pip"); err == nil {
 		// Check if package is actually installed before attempting uninstall
 		checkCmd := exec.Command(pipPath, "show", "claudecodeoptimizer")
