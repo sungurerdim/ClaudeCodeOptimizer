@@ -91,6 +91,7 @@ Run independent tool calls in parallel. Per CCO Rules: Skip Patterns.
 | ai-architecture | AIA-01 to AIA-10 | Over-engineering (interface with 1 impl, abstract class with 1 subclass, factory for 1 type, generic wrapper around single use case), local-only solutions presented as reusable (single-caller utility modules, config for 1 value), architectural drift (module violating its own established pattern), pattern inconsistency (same problem solved 3+ different ways across codebase) |
 | functional-completeness | FUN-01 to FUN-18 | Missing CRUD/pagination/filter, incomplete error handling, state transition gaps, caching/indexing strategy |
 | production-readiness | PRD-01 to PRD-07 | Health/readiness probe completeness, graceful shutdown handling, config validation at startup, secret injection method (env vs hardcoded), container/deployment hygiene (Dockerfile best practices, compose config), observability hooks (structured logging, metrics endpoints, trace propagation), scaling bottlenecks (stateful components, connection pool limits, single points of failure) |
+| cross-cutting | XCT-01 to XCT-05 | Decision impact tracing: how one architectural choice affects other areas (performance, testability, security, maintainability). Only report concrete cross-area impacts with evidence at file:line |
 
 ### Audit Scopes (project-level assessment)
 

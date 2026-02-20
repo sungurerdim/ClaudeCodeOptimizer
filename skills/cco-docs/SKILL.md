@@ -77,7 +77,7 @@ In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
 ### Phase 2: Analysis
 
-Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
+Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
 
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
 

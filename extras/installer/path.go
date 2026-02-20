@@ -3,17 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 func ensurePATH() {
 	exe, err := os.Executable()
 	if err != nil {
-		return
+		fmt.Fprintf(os.Stderr, "Warning: could not determine executable path: %v\n", err)
+		exe = os.Args[0]
 	}
 	binDir := filepath.Dir(exe)
 
@@ -29,49 +28,14 @@ func ensurePATH() {
 
 	fmt.Println()
 	if runtime.GOOS == "windows" {
-		// Add to user PATH via setx
-		cmd := exec.Command("setx", "PATH", binDir+sep+"%PATH%")
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Add this to your PATH: %s\n", binDir)
-			return
-		}
-		fmt.Printf("Added %s to user PATH (restart your terminal to use 'cco' directly).\n", binDir)
+		fmt.Printf("Add this directory to your PATH to use 'cco' directly:\n")
+		fmt.Printf("  %s\n", binDir)
+		fmt.Println()
+		fmt.Println("PowerShell (run as admin):")
+		fmt.Printf("  [Environment]::SetEnvironmentVariable('PATH', '%s;' + [Environment]::GetEnvironmentVariable('PATH', 'User'), 'User')\n", binDir)
 	} else {
 		fmt.Printf("Add this to your shell profile to use 'cco' directly:\n")
 		fmt.Printf("  export PATH=\"%s:$PATH\"\n", binDir)
-	}
-}
-
-func updateTimestamp(base string) {
-	rulesPath := filepath.Join(base, "rules", "cco-rules.md")
-	raw, err := os.ReadFile(rulesPath)
-	if err != nil {
-		return
-	}
-
-	content := string(raw)
-	const prefix = "last_update_check: "
-	idx := strings.Index(content, prefix)
-	if idx == -1 {
-		return
-	}
-
-	// Find the end of the existing timestamp line
-	start := idx + len(prefix)
-	end := strings.IndexByte(content[start:], '\n')
-	var oldLine string
-	if end == -1 {
-		oldLine = content[idx:]
-	} else {
-		oldLine = content[idx : start+end]
-	}
-
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05Z")
-	newLine := prefix + timestamp
-	updated := strings.Replace(content, oldLine, newLine, 1)
-
-	if err := os.WriteFile(rulesPath, []byte(updated), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to update timestamp: %v\n", err)
 	}
 }
 

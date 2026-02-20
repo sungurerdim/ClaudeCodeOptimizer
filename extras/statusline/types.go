@@ -24,21 +24,30 @@ func c(text, style string) string {
 // INPUT SCHEMA (Claude Code stdin JSON)
 // ============================================================================
 
+type CurrentUsage struct {
+	InputTokens              int64 `json:"input_tokens"`
+	CacheCreationInputTokens int64 `json:"cache_creation_input_tokens"`
+	CacheReadInputTokens     int64 `json:"cache_read_input_tokens"`
+}
+
+type ContextWindow struct {
+	ContextWindowSize int64         `json:"context_window_size"`
+	TotalInputTokens  int64         `json:"total_input_tokens"`
+	CurrentUsage      *CurrentUsage `json:"current_usage"`
+}
+
+type Workspace struct {
+	AddedDirs []string `json:"added_dirs"`
+}
+
 type Input struct {
 	CWD     string `json:"cwd"`
 	Version string `json:"version"`
 	Model   struct {
 		DisplayName string `json:"display_name"`
 	} `json:"model"`
-	ContextWindow *struct {
-		ContextWindowSize int64 `json:"context_window_size"`
-		TotalInputTokens  int64 `json:"total_input_tokens"`
-		CurrentUsage      *struct {
-			InputTokens              int64 `json:"input_tokens"`
-			CacheCreationInputTokens int64 `json:"cache_creation_input_tokens"`
-			CacheReadInputTokens     int64 `json:"cache_read_input_tokens"`
-		} `json:"current_usage"`
-	} `json:"context_window"`
+	ContextWindow *ContextWindow `json:"context_window"`
+	Workspace     *Workspace     `json:"workspace"`
 }
 
 // ============================================================================

@@ -90,7 +90,7 @@ Skills use Claude Code's native skill mechanism with `SKILL.md` files in `~/.cla
 
 ### Shared Patterns
 
-Common patterns (severity levels, accounting, skip patterns, confidence scoring, auto mode) are defined once in `rules/cco-rules.md` under CCO Operations. Skills reference them with `Per CCO Rules.`
+Common patterns (severity levels, accounting, skip patterns, confidence scoring, auto mode, needs-approval protocol, tool prerequisites) are defined once in `rules/cco-rules.md` under CCO Operations. Skills reference them with `Per CCO Rules.`
 
 When updating these patterns, update the rules file — all skills and agents inherit automatically.
 
@@ -105,7 +105,7 @@ When updating these patterns, update the rules file — all skills and agents in
 | `--init` | Create profile only | blueprint |
 | `--refresh` | Re-scan profile, preserve decisions | blueprint |
 
-Scope names are consistent across skills: `security`, `hygiene`, `types`, `performance`, `ai-hygiene`, `robustness`, `privacy`, `doc-sync`, `simplify`, `architecture`, `patterns`, `testing`, `maintainability`, `ai-architecture`, `functional-completeness`, `production-readiness`.
+Scope names are consistent across skills: `security`, `hygiene`, `types`, `performance`, `ai-hygiene`, `robustness`, `privacy`, `doc-sync`, `simplify`, `architecture`, `patterns`, `cross-cutting`, `testing`, `maintainability`, `ai-architecture`, `functional-completeness`, `production-readiness`.
 
 ---
 
@@ -114,7 +114,7 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 | Agent | Purpose | Model | Pattern |
 |-------|---------|-------|---------|
 | analyze | Read-only analysis, metrics, findings | Haiku | Linters → Grep → Context reads → JSON |
-| apply | Write operations with verification | Opus | Pre-check → Read → Apply → Verify → Cascade |
+| apply | Write operations with verification | Inherited | Pre-check → Read → Apply → Verify → Cascade |
 | research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
 
 ### Agent Contracts
@@ -125,7 +125,7 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 | apply | `{findings[], fixAll?: boolean}` | `{applied, failed, needs_approval, total, error?}` |
 | research | `{query, depth: "standard"\|"deep"}` | `{sources[], synthesis, confidence, contradictions[], gaps[], error?}` |
 
-**Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Output.
+**Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Contract.
 
 ### Scope Groups
 
@@ -134,7 +134,7 @@ Skills invoke agents using these standard groupings:
 | Group | Agent | Mode | Scopes |
 |-------|-------|------|--------|
 | Code Quality | analyze | auto | security, robustness, privacy, hygiene, types, simplify, performance |
-| Architecture | analyze | review | architecture, patterns, testing, maintainability |
+| Architecture | analyze | review | architecture, patterns, cross-cutting, testing, maintainability |
 | Production | analyze | review | production-readiness, functional-completeness, ai-architecture |
 | Documentation | analyze | auto | doc-sync |
 | Audit | analyze | audit | stack-assessment, dependency-health, dx-quality, project-structure |
@@ -187,13 +187,13 @@ Invariant: `applied + failed + needs_approval = total`
 
 ## Model Strategy
 
-Agent model selection is specified in agent frontmatter (`model: haiku` / `model: opus`). Skills inherit the session model — no model lock-in.
+Read-only agents (analyze, research) are pinned to Haiku for speed and cost efficiency. Write agents (apply) inherit the session model — if the user selects Opus, apply runs on Opus; if Sonnet, it runs on Sonnet.
 
 | Task | Model | Reason |
 |------|-------|--------|
-| Detection & Analysis | Haiku | Fast, read-only |
-| Code fixes & Synthesis | Opus | Fewer errors on edits |
-| Research | Haiku | Read-only research and synthesis |
+| Detection & Analysis | Haiku | Fast, read-only, cost-efficient |
+| Code fixes & Synthesis | Inherited | Matches user's chosen quality/cost tradeoff |
+| Research | Haiku | Read-only, speed-optimized |
 
 ---
 

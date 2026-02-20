@@ -9,10 +9,10 @@ Specialized subagents for analysis, fixes, and research.
 | Agent | Purpose | Model | Tools |
 |-------|---------|-------|-------|
 | **cco-agent-analyze** | Codebase analysis with severity scoring | Haiku | Glob, Read, Grep, Bash |
-| **cco-agent-apply** | Verified write operations + accounting | Opus | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
+| **cco-agent-apply** | Verified write operations + accounting | Inherited | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
 | **cco-agent-research** | Multi-source research with CRAAP+ scoring | Haiku | WebSearch, WebFetch, Read, Grep, Glob |
 
-**Model rationale:** Haiku for read-only agents (fast, cost-effective). Opus for apply agent (fewer tool errors, coding accuracy). Agent models are specified in frontmatter — skills inherit the session model.
+**Model rationale:** Haiku for read-only agents (fast, cost-effective). Apply agent inherits the session model (matches user's quality/cost tradeoff). Agent models are specified in frontmatter.
 
 ## When to Use
 
@@ -37,7 +37,7 @@ Need changes?
 Read-only analysis agent. Returns structured JSON with findings, scores, and metrics.
 
 - **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
-- **7 review scopes** (87 checks): architecture, patterns, testing, maintainability, ai-architecture, functional-completeness, production-readiness
+- **8 review scopes** (92 checks): architecture, patterns, cross-cutting, testing, maintainability, ai-architecture, functional-completeness, production-readiness
 - **4 audit scopes** (40 checks): stack-assessment, dependency-health, dx-quality, project-structure
 - Platform filtering, skip patterns, false positive handling
 - Per CCO Rules: Confidence Scoring, Severity Levels, Skip Patterns

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"bytes"
+	"context"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -10,34 +11,28 @@ import (
 	"time"
 )
 
+// gitTimeoutMs returns the git command timeout in milliseconds,
+// configurable via the CCO_GIT_TIMEOUT environment variable.
+func gitTimeoutMs() int {
+	const defaultTimeout = 5000
+	if envTimeout := os.Getenv("CCO_GIT_TIMEOUT"); envTimeout != "" {
+		if t, err := strconv.Atoi(envTimeout); err == nil && t > 0 {
+			return t
+		}
+	}
+	return defaultTimeout
+}
+
 func execGit(args ...string) (string, bool) {
-	timeout := 1500 * time.Millisecond
-	cmd := exec.Command("git", args...)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(gitTimeoutMs())*time.Millisecond)
+	defer cancel()
 
-	done := make(chan struct{})
-	var out []byte
-	var err error
-
-	go func() {
-		out, err = cmd.Output()
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		if err != nil {
-			return "", false
-		}
-		return strings.TrimRight(string(out), "\n"), true
-	case <-time.After(timeout):
-		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
-			<-done // wait for goroutine to finish after kill
-		}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	out, err := cmd.Output()
+	if err != nil {
 		return "", false
 	}
+	return strings.TrimRight(string(out), "\n"), true
 }
 
 // parseGitStatus parses output from `git status --porcelain=v2 -b` into GitInfo fields.
@@ -48,29 +43,45 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 			continue
 		}
 
+		switch {
 		// "# branch.head <name>" — current branch name (14 = len("# branch.head "))
-		if strings.HasPrefix(line, "# branch.head ") {
-			info.Branch = line[14:]
-		} else if strings.HasPrefix(line, "# branch.ab ") {
-			// "# branch.ab +N -M" — ahead/behind counts
+		case strings.HasPrefix(line, "# branch.head "):
+			if len(line) > 14 {
+				info.Branch = line[14:]
+			}
+		// "# branch.ab +N -M" — ahead/behind counts
+		case strings.HasPrefix(line, "# branch.ab "):
 			parts := strings.Fields(line)
-			for _, p := range parts {
+			// Validate format: expect exactly 4 fields ("#", "branch.ab", "+N", "-M")
+			if len(parts) < 4 {
+				continue
+			}
+			ab := parts[2:]
+			hasAhead, hasBehind := false, false
+			var ahead, behind int
+			for _, p := range ab {
 				if strings.HasPrefix(p, "+") {
 					if v, err := strconv.Atoi(p[1:]); err == nil {
-						info.Ahead = v
+						ahead = v
+						hasAhead = true
 					}
 				} else if strings.HasPrefix(p, "-") {
 					if v, err := strconv.Atoi(p[1:]); err == nil {
-						info.Behind = v
+						behind = v
+						hasBehind = true
 					}
 				}
 			}
-		} else if strings.HasPrefix(line, "u ") {
-			// "u ..." — unmerged (conflict) entry
+			if hasAhead && hasBehind {
+				info.Ahead = ahead
+				info.Behind = behind
+			}
+		// "u ..." — unmerged (conflict) entry
+		case strings.HasPrefix(line, "u "):
 			info.Conflict++
-		} else if strings.HasPrefix(line, "1 ") || strings.HasPrefix(line, "2 ") {
-			// "1 XY ..." — ordinary change; "2 XY ..." — rename/copy
-			// Position 2 = index status, position 3 = working tree status
+		// "1 XY ..." — ordinary change; "2 XY ..." — rename/copy
+		// Position 2 = index status, position 3 = working tree status
+		case strings.HasPrefix(line, "1 "), strings.HasPrefix(line, "2 "):
 			if len(line) < 4 {
 				continue
 			}
@@ -98,8 +109,8 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 			if idx == 'R' {
 				info.Ren++
 			}
-		} else if strings.HasPrefix(line, "? ") {
-			// "? <path>" — untracked file
+		// "? <path>" — untracked file
+		case strings.HasPrefix(line, "? "):
 			info.Add++
 		}
 	}

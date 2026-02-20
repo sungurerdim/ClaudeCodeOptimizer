@@ -36,13 +36,13 @@ Toolchain: gofmt + go vet + golangci-lint | GoReleaser | GitHub Actions CI | No 
 | Dimension | Score | Status |
 |-----------|-------|--------|
 | Security & Privacy | 90 | OK |
-| Code Quality | 88 | OK |
+| Code Quality | 90 | OK |
 | Architecture | 76 | WARN |
 | Performance | 90 | OK |
-| Resilience | 80 | WARN |
-| Testing | 72 | WARN |
-| Stack Health | 87 | OK |
-| DX | 80 | WARN |
-| Documentation | 84 | WARN |
+| Resilience | 84 | WARN |
+| Testing | 68 | WARN |
+| Stack Health | 88 | OK |
+| DX | 82 | WARN |
+| Documentation | 80 | WARN |
 | Overall | 84 | WARN |
 <!-- cco-blueprint-end -->

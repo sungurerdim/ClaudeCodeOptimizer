@@ -74,6 +74,11 @@ jobs:
           go-version: '1.23'
           cache: false
 
+      - name: Lint before release
+        run: |
+          cd extras/installer && go vet ./...
+          cd ../../extras/statusline && go vet ./...
+
       - name: Test before release
         run: |
           cd extras/installer && go test -race -count=1 ./...

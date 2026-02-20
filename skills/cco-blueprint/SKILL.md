@@ -245,7 +245,7 @@ AskUserQuestion([{
 | Track | Agent Call |
 |-------|-----------|
 | A: Code Quality | cco-agent-analyze: security, hygiene, types, simplify, performance, robustness, privacy (mode: auto, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
-| B: Architecture | cco-agent-analyze: architecture, patterns, testing, maintainability (mode: review, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
+| B: Architecture | cco-agent-analyze: architecture, patterns, cross-cutting, testing, maintainability (mode: review, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
 | C: Production | cco-agent-analyze: production-readiness (mode: review, context: {projectType, stack, qualityTarget, dataSensitivity, constraints}) |
 | D: Documentation | cco-agent-analyze: doc-sync (mode: auto) |
 | E: Audit | cco-agent-analyze: stack-assessment, dependency-health, dx-quality, project-structure (mode: audit) |
@@ -254,7 +254,7 @@ Context fields are read from the blueprint profile. This enables stack-specific 
 
 **Agent invocation:** Launch ALL 5 tracks as Task calls in a SINGLE message WITHOUT `run_in_background`. This executes them in parallel and returns results directly. Do NOT use `run_in_background` for Task calls — it causes empty output files and late completion notifications. Wait for ALL agent results before proceeding to Phase 3.1.
 
-All tracks run with `--preview`. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+All tracks run with `--preview`. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
 
 **Phase gate:** Do NOT proceed to Phase 3.1/4 until all 5 agent tracks have returned results or failed. Verify each track produced output before consolidation.
 
@@ -279,7 +279,7 @@ Calculate health scores:
 |-----------|--------|--------|
 | Security & Privacy | 18%* | optimize: security + privacy |
 | Code Quality | 14% | optimize: hygiene + types + simplify |
-| Architecture | 14% | align: architecture + patterns + maintainability |
+| Architecture | 14% | align: architecture + patterns + cross-cutting + maintainability |
 | Performance | 10% | optimize: performance |
 | Resilience | 10% | optimize: robustness + align: functional-completeness |
 | Testing | 10% | align: testing |
@@ -318,22 +318,7 @@ Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) i
 
 ### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-**Phase gate:** After Phase 6 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Phase 7.
-
-If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
-
-```javascript
-AskUserQuestion([{
-  question: "There are items that need your approval. How would you like to proceed?",
-  header: "Approval",
-  options: [
-    { label: "Fix All (Recommended)", description: "Apply all needs-approval items" },
-    { label: "Review Each", description: "Review and decide on each item individually" },
-    { label: "Skip All", description: "Leave needs-approval items unfixed" }
-  ],
-  multiSelect: false
-}])
-```
+Per CCO Rules: Needs-Approval Protocol.
 
 ### Phase 7: Update Profile
 

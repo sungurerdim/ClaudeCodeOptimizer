@@ -74,7 +74,7 @@ Launch scope groups as parallel Task calls to cco-agent-analyze (mode: auto) in 
 
 **Agent invocation:** Send ALL 4 Task calls in one message. Do NOT use `run_in_background` for Task calls. Wait for ALL results before proceeding.
 
-Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
 
 **Phase gate:** Do NOT proceed to Phase 3 until all 4 agent groups have returned results or failed.
 
@@ -109,26 +109,16 @@ Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). 
 
 ### Phase 4.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
 
-**Phase gate:** After Phase 4 completes, ALWAYS evaluate needs_approval count before proceeding. Do not skip to Summary.
-
-If needs_approval > 0, display items table (ID, severity, issue, location, reason), then ALWAYS use AskUserQuestion:
-
-```javascript
-AskUserQuestion([{
-  question: "There are items that need your approval. How would you like to proceed?",
-  header: "Approval",
-  options: [
-    { label: "Fix All (Recommended)", description: "Apply all needs-approval items" },
-    { label: "Review Each", description: "Review and decide on each item individually" },
-    { label: "Skip All", description: "Leave needs-approval items unfixed" }
-  ],
-  multiSelect: false
-}])
-```
+Per CCO Rules: Needs-Approval Protocol.
 
 ### Phase 4.2: Loop [--loop flag only]
 
-If applied > 0: re-run Phase 2 scoped to modified files → re-run Phase 4. Max 3 iterations. Summary shows per-iteration breakdown.
+If applied > 0:
+1. **Cascade check** — for each modified file, verify dependent files don't need updates (exports, versions, config references). Report cascade items as new findings.
+2. **Re-analyze** — re-run Phase 2 scoped to modified files + cascade-affected files
+3. **Re-apply** — re-run Phase 4 for new findings
+
+Max 3 iterations. Summary shows per-iteration breakdown.
 
 ### Phase 5: Summary
 

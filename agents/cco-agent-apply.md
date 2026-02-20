@@ -2,7 +2,6 @@
 name: cco-agent-apply
 description: Batch write operations with verification, cascade fixing, accounting.
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion
-model: opus
 ---
 
 # cco-agent-apply
@@ -34,7 +33,7 @@ Batch write operations with verification. Fix everything, leave nothing behind.
 }
 ```
 
-Per CCO Rules: Accounting, Agent Output.
+Per CCO Rules: Accounting, Agent Contract.
 
 ## Policies
 
@@ -51,7 +50,7 @@ Per CCO Rules: Accounting, Agent Output.
 | 2. Read | All affected files | **PARALLEL** |
 | 3. Apply | All independent edits | **PARALLEL** (different files), **SEQUENTIAL** (same file — re-read after each edit to refresh line numbers) |
 | 4. Verify | Lint, type, test checks | **PARALLEL** — batch all verification commands into a single message |
-| 5. Cascade | If new errors, repeat 3-4 | Sequential (max 3 iterations, then → `failed`) |
+| 5. Cascade | Check for: (a) new lint/type errors from the fix, (b) dependent files needing updates (exports, versions, config references). If found, repeat 3-4 | Sequential (max 3 iterations, then → `failed`) |
 
 ## Fix Categories
 

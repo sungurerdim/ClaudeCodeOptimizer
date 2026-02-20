@@ -75,14 +75,14 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 
 Run format, lint, and test across the **entire project**. Auto-fix all fixable issues.
 
-**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet/test, `pyproject.toml` → ruff/pytest, `Cargo.toml` → cargo clippy/test, `Makefile` → make targets. Tool not found → skip silently.
+**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet/test, `pyproject.toml` → ruff/pytest, `Cargo.toml` → cargo clippy/test, `Makefile` → make targets. Per CCO Rules: Tool Prerequisites.
 
 **Run in order (stop on failure):**
 1. **Format** — project's formatter with auto-fix (gofmt, prettier, ruff format, rustfmt, etc.)
 2. **Lint** — project's linter with auto-fix (golangci-lint --fix, eslint --fix, ruff check --fix, etc.)
 3. **Test** — project's test runner (go test, npm test, pytest, etc.)
 
-Multi-module projects: run in each module directory. Tool unavailable: skip, warn once.
+Multi-module projects: run in each module directory. Per CCO Rules: Tool Prerequisites.
 
 If format/lint changed files → stage and commit as `chore: format and lint fixes`.
 If tests fail → stop. Do NOT create PR with failing tests.
