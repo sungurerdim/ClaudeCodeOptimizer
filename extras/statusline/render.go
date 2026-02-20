@@ -23,6 +23,14 @@ func buildLocationRow(input *Input, git *GitInfo) []string {
 	return row
 }
 
+// changePart formats a label+count pair, highlighting non-zero counts with the given style.
+func changePart(label string, count int, style string) string {
+	if count > 0 {
+		return c(fmt.Sprintf("%s %d", label, count), style)
+	}
+	return c(fmt.Sprintf("%s 0", label), gray)
+}
+
 // buildStatusRow returns row 2: ahead/behind + file change counts, or "No git".
 func buildStatusRow(git *GitInfo) []string {
 	if git == nil {
@@ -43,13 +51,6 @@ func buildStatusRow(git *GitInfo) []string {
 	alertStr := aheadStr + " " + behindStr
 	if git.Conflict > 0 {
 		alertStr += " " + c(fmt.Sprintf("%d conflict", git.Conflict), redBold)
-	}
-
-	changePart := func(label string, count int, style string) string {
-		if count > 0 {
-			return c(fmt.Sprintf("%s %d", label, count), style)
-		}
-		return c(fmt.Sprintf("%s 0", label), gray)
 	}
 
 	return []string{

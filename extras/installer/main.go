@@ -72,7 +72,9 @@ func runInstall(tag string) {
 		fmt.Println("  Proceeding with fresh install...")
 		fmt.Println()
 	}
-	_ = os.WriteFile(stateFile, []byte("installing"), 0644)
+	if err := os.WriteFile(stateFile, []byte("installing"), 0600); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not write state file: %v\n", err)
+	}
 	defer func() { _ = os.Remove(stateFile) }()
 
 	fmt.Println("CCO Installer")
@@ -156,14 +158,23 @@ func resolveAndVerify(base, tag string) (installInfo, bool) {
 	}, true
 }
 
+// installFile represents a file to download and install, with its manifest group.
+type installFile struct {
+	path  string
+	group string
+}
+
+// downloadResult holds the outcome of a single file download.
+type downloadResult struct {
+	path    string
+	group   string
+	content string
+	err     error
+}
+
 // downloadAllFiles downloads all manifest files in parallel, writes them
 // sequentially, and returns the count of non-critical failures.
 func downloadAllFiles(base string, info installInfo) int {
-	type installFile struct {
-		path  string
-		group string
-	}
-
 	var allFiles []installFile
 	for _, f := range rulesFiles {
 		allFiles = append(allFiles, installFile{f, "rules"})
@@ -181,15 +192,9 @@ func downloadAllFiles(base string, info installInfo) int {
 	}
 
 	// Download all files in parallel
-	type downloadResult struct {
-		path    string
-		group   string
-		content string
-		err     error
-	}
-
 	results := make([]downloadResult, len(allFiles))
 	var wg sync.WaitGroup
+	sem := make(chan struct{}, 10)
 
 	for i, f := range allFiles {
 		// Reuse already-downloaded content from verification step
@@ -200,6 +205,8 @@ func downloadAllFiles(base string, info installInfo) int {
 		wg.Add(1)
 		go func(idx int, file installFile) {
 			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			content, dlErr := downloadFile(info.baseURL, file.path)
 			results[idx] = downloadResult{path: file.path, group: file.group, content: content, err: dlErr}
 		}(i, f)

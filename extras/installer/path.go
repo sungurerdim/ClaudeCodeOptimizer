@@ -11,7 +11,8 @@ import (
 func ensurePATH() {
 	exe, err := os.Executable()
 	if err != nil {
-		return
+		fmt.Fprintf(os.Stderr, "Warning: could not determine executable path: %v\n", err)
+		exe = os.Args[0]
 	}
 	binDir := filepath.Dir(exe)
 

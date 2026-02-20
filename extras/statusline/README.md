@@ -5,7 +5,7 @@ Optional status line for Claude Code that shows git, model, and session info at 
 ## What it shows
 
 ```
-ClaudeCodeOptimizer:dev  ·  v4.2.0
+ClaudeCodeOptimizer:dev  ·  vX.Y.Z
 △ 2 ▽ 0  ·  mod 1  ·  add 0  ·  del 0  ·  mv 0
 Sungur  ·  CC 1.0.80  ·  Opus 4.6  ·  45K 22%
 ```
@@ -20,36 +20,38 @@ Sungur  ·  CC 1.0.80  ·  Opus 4.6  ·  45K 22%
 
 ### Install
 
-Pre-built binaries are in the `bin/` directory. Copy the one matching your platform to `~/.claude/`.
+Pre-built binaries are available from [GitHub Releases](https://github.com/sungurerdim/ClaudeCodeOptimizer/releases). Download the one matching your platform and copy it to `~/.claude/`.
 
 **Mac (Apple Silicon):**
 ```bash
-cp extras/statusline/bin/cco-statusline-darwin-arm64 ~/.claude/cco-statusline
+cp cco-statusline-darwin-arm64 ~/.claude/cco-statusline
 chmod +x ~/.claude/cco-statusline
 ```
 
 **Mac (Intel):**
 ```bash
-cp extras/statusline/bin/cco-statusline-darwin-amd64 ~/.claude/cco-statusline
+cp cco-statusline-darwin-amd64 ~/.claude/cco-statusline
 chmod +x ~/.claude/cco-statusline
 ```
 
 **Linux (x64):**
 ```bash
-cp extras/statusline/bin/cco-statusline-linux-amd64 ~/.claude/cco-statusline
+cp cco-statusline-linux-amd64 ~/.claude/cco-statusline
 chmod +x ~/.claude/cco-statusline
 ```
 
 **Linux (ARM64):**
 ```bash
-cp extras/statusline/bin/cco-statusline-linux-arm64 ~/.claude/cco-statusline
+cp cco-statusline-linux-arm64 ~/.claude/cco-statusline
 chmod +x ~/.claude/cco-statusline
 ```
 
 **Windows:**
 ```powershell
-Copy-Item extras\statusline\bin\cco-statusline-windows-amd64.exe ~\.claude\cco-statusline.exe
+Copy-Item cco-statusline-windows-amd64.exe ~\.claude\cco-statusline.exe
 ```
+
+Alternatively, [build from source](#build-from-source) below.
 
 Add to `~/.claude/settings.json`:
 

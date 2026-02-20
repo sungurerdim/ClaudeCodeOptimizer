@@ -10,6 +10,9 @@ linters:
     - misspell
     - ineffassign
     - gocritic
+    - gosec
+    - errorlint
+    - nolintlint
   exclusions:
     paths:
       - "dist/"

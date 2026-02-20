@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -10,8 +11,20 @@ import (
 	"time"
 )
 
+// gitTimeoutMs returns the git command timeout in milliseconds,
+// configurable via the CCO_GIT_TIMEOUT environment variable.
+func gitTimeoutMs() int {
+	const defaultTimeout = 5000
+	if envTimeout := os.Getenv("CCO_GIT_TIMEOUT"); envTimeout != "" {
+		if t, err := strconv.Atoi(envTimeout); err == nil && t > 0 {
+			return t
+		}
+	}
+	return defaultTimeout
+}
+
 func execGit(args ...string) (string, bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(gitTimeoutMs())*time.Millisecond)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "git", args...)
@@ -32,20 +45,35 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 
 		// "# branch.head <name>" — current branch name (14 = len("# branch.head "))
 		if strings.HasPrefix(line, "# branch.head ") {
-			info.Branch = line[14:]
+			if len(line) > 14 {
+				info.Branch = line[14:]
+			}
 		} else if strings.HasPrefix(line, "# branch.ab ") {
 			// "# branch.ab +N -M" — ahead/behind counts
 			parts := strings.Fields(line)
-			for _, p := range parts {
+			// Validate format: expect exactly 3 fields ("# branch.ab", "+N", "-M")
+			if len(parts) < 4 {
+				continue
+			}
+			ab := parts[2:]
+			hasAhead, hasBehind := false, false
+			var ahead, behind int
+			for _, p := range ab {
 				if strings.HasPrefix(p, "+") {
 					if v, err := strconv.Atoi(p[1:]); err == nil {
-						info.Ahead = v
+						ahead = v
+						hasAhead = true
 					}
 				} else if strings.HasPrefix(p, "-") {
 					if v, err := strconv.Atoi(p[1:]); err == nil {
-						info.Behind = v
+						behind = v
+						hasBehind = true
 					}
 				}
+			}
+			if hasAhead && hasBehind {
+				info.Ahead = ahead
+				info.Behind = behind
 			}
 		} else if strings.HasPrefix(line, "u ") {
 			// "u ..." — unmerged (conflict) entry

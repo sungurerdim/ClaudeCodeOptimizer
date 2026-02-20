@@ -17,7 +17,7 @@ var httpClient = &http.Client{
 	Timeout: 30 * time.Second,
 	Transport: &http.Transport{
 		MaxIdleConns:        10,
-		MaxIdleConnsPerHost: 5,
+		MaxIdleConnsPerHost: 15,
 		IdleConnTimeout:     30 * time.Second,
 	},
 }
@@ -44,7 +44,8 @@ func resolveLatestTag() string {
 }
 
 func downloadFile(baseURL, path string) (string, error) {
-	if strings.Contains(path, "..") {
+	cleanPath := filepath.Clean(path)
+	if strings.HasPrefix(cleanPath, "..") || filepath.IsAbs(cleanPath) {
 		return "", fmt.Errorf("invalid path: %s", path)
 	}
 
@@ -92,9 +93,15 @@ func tryDownload(baseURL, path string) (string, error) {
 		return "", &httpError{StatusCode: resp.StatusCode, Path: path}
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
+	const maxFileSize = 10 * 1024 * 1024
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFileSize))
 	if err != nil {
 		return "", fmt.Errorf("read failed: %w", err)
+	}
+	// Check for truncation: if there's more data, the file exceeds the limit
+	probe := make([]byte, 1)
+	if n, _ := resp.Body.Read(probe); n > 0 {
+		return "", fmt.Errorf("file exceeds 10MB limit: %s", path)
 	}
 
 	if !bytes.HasPrefix(body, []byte("---")) || !bytes.Contains(body, []byte("\n---\n")) {

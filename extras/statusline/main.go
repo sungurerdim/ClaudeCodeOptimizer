@@ -52,13 +52,13 @@ func main() {
 	data, err := io.ReadAll(io.LimitReader(os.Stdin, maxStdinSize))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[Statusline Error: %v]\n", err)
-		return
+		os.Exit(1)
 	}
 
 	var input Input
 	if err := json.Unmarshal(data, &input); err != nil {
-		fmt.Fprintf(os.Stderr, "[Statusline Error: %v]\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "[cco-statusline] JSON parse error: %v\n", err)
+		os.Exit(1)
 	}
 	if input.CWD == "" {
 		input.CWD = "."
