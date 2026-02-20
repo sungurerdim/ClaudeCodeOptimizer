@@ -2,7 +2,6 @@
 name: cco-agent-apply
 description: Batch write operations with verification, cascade fixing, accounting.
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion
-model: opus
 ---
 
 # cco-agent-apply

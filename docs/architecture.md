@@ -114,7 +114,7 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 | Agent | Purpose | Model | Pattern |
 |-------|---------|-------|---------|
 | analyze | Read-only analysis, metrics, findings | Haiku | Linters → Grep → Context reads → JSON |
-| apply | Write operations with verification | Opus | Pre-check → Read → Apply → Verify → Cascade |
+| apply | Write operations with verification | Inherited | Pre-check → Read → Apply → Verify → Cascade |
 | research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
 
 ### Agent Contracts
@@ -187,13 +187,13 @@ Invariant: `applied + failed + needs_approval = total`
 
 ## Model Strategy
 
-Agent model selection is specified in agent frontmatter (`model: haiku` / `model: opus`). Skills inherit the session model — no model lock-in.
+Read-only agents (analyze, research) are pinned to Haiku for speed and cost efficiency. Write agents (apply) inherit the session model — if the user selects Opus, apply runs on Opus; if Sonnet, it runs on Sonnet.
 
 | Task | Model | Reason |
 |------|-------|--------|
-| Detection & Analysis | Haiku | Fast, read-only |
-| Code fixes & Synthesis | Opus | Fewer errors on edits |
-| Research | Haiku | Read-only research and synthesis |
+| Detection & Analysis | Haiku | Fast, read-only, cost-efficient |
+| Code fixes & Synthesis | Inherited | Matches user's chosen quality/cost tradeoff |
+| Research | Haiku | Read-only, speed-optimized |
 
 ---
 
