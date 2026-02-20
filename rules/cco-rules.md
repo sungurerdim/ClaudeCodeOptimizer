@@ -8,9 +8,7 @@ last_update_check: 1970-01-01T00:00:00Z
 
 ## Scope Control
 
-### Minimal Footprint
-
-Every changed line must trace directly to the user's request. Unrelated issues: mention, don't fix. Create new files only when the user explicitly requests them.
+Unrelated issues: mention, don't fix.
 
 ### Exploration Budget
 
@@ -42,16 +40,6 @@ Flag when code approaches these limits. Refactor only when the current task's sc
 | Nesting Depth | ≤ 3 |
 | Parameters | ≤ 4 |
 
-### Anti-Overengineering
-
-Before adding any abstraction, all three must be YES:
-
-1. Does this solve a concrete, current problem?
-2. Will this be used in more than one place?
-3. Is inline code insufficient?
-
-All NO = don't abstract. Avoid single-use wrappers, impossible error handling, and unnecessary bulk.
-
 ## Production Standards
 
 Every output must be production-ready by default. Apply security, privacy, performance, error handling, reliability, and code quality practices as a baseline — the same way a senior engineer would, without being asked. The user's lack of knowledge about a concern must never result in that concern being skipped.
@@ -64,9 +52,9 @@ Tables over paragraphs. Bullets over prose. Summary: max 1-3 sentences. Educatio
 
 ## Verification
 
-### Read Before Write
+### API Verification
 
-Before modifying any file: read it first. Before using any import or API: verify it exists in the codebase or documentation. Never assume file contents, function signatures, or API shapes from memory.
+Before using any import or API: verify it exists in the codebase or documentation. Never assume function signatures or API shapes from memory.
 
 ### Edit Discipline
 
@@ -108,12 +96,6 @@ State the end goal before starting. Before each major step, confirm it serves th
 
 Before reporting done: re-read modified files to confirm correctness, verify no steps were skipped, and confirm the original requirement is fully satisfied.
 
-## Security Baseline
-
-### Security Patterns
-
-Address security anti-patterns (secrets in source, bare catches, empty catch blocks, unsanitized external data, eval/pickle/yaml.load) before continuing. Standard fixes apply: env vars for secrets, specific catch types, input validation, safe alternatives.
-
 ## CCO Operations
 
 ### Accounting
@@ -124,9 +106,9 @@ applied + failed + needs_approval = total. No declined category.
 
 When --auto active: no questions, no deferrals. Fix everything except large architectural changes. Never say "too complex", "might break", or "consider later".
 
-### Agent Output
+### Agent Contract
 
-Agents return structured data as final text message. Never write to files. On failure: {"error": "message"}. Validate before processing; retry once if malformed.
+Agents return structured data as final text message. Never write to files. On failure: {"error": "message"}. Validate before processing; retry once if malformed. On second failure, continue with remaining groups. Score failed dimensions as N/A.
 
 ### Tool Prerequisites
 
@@ -151,13 +133,9 @@ When findings > 0 and not --auto, display plan table before asking:
 
 After apply, if needs_approval > 0 and not --auto: display items table (ID, severity, issue, location, reason), ask Fix All / Review Each.
 
-### Agent Error Handling
-
-Validate agent output. On malformed/missing response, retry once. On second failure, continue with remaining groups. Score failed dimensions as N/A.
-
 ### Parallel Execution
 
-ALWAYS batch independent tool calls into a single message. Never issue sequential calls when no data dependency exists. Self-check before each message: could any of these calls run simultaneously? If yes → batch them. Use `run_in_background` for long Bash commands only; collect via TaskOutput before producing output. NEVER use `run_in_background` for Task (agent) calls — multiple Task calls in a single message already execute in parallel and return results directly.
+Use `run_in_background` for long Bash commands only; collect via TaskOutput before producing output. NEVER use `run_in_background` for Task (agent) calls — multiple Task calls in a single message already execute in parallel and return results directly.
 
 ### Severity Levels
 

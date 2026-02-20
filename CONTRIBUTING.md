@@ -25,7 +25,7 @@ cd ClaudeCodeOptimizer
 1. Edit `rules/cco-rules.md` (single source of truth)
 2. Update `docs/rules.md` to reflect changes
 
-Rule categories: Scope Control, Code Integrity, Production Standards, Verification, Uncertainty Protocol, Session Resilience, Process Discipline, Security Baseline, CCO Operations.
+Rule categories: Scope Control, Code Integrity, Production Standards, Output Brevity, Verification, Uncertainty Protocol, Session Resilience, Process Discipline, CCO Operations.
 
 ### Adding a New Skill
 

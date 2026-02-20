@@ -254,7 +254,7 @@ Context fields are read from the blueprint profile. This enables stack-specific 
 
 **Agent invocation:** Launch ALL 5 tracks as Task calls in a SINGLE message WITHOUT `run_in_background`. This executes them in parallel and returns results directly. Do NOT use `run_in_background` for Task calls — it causes empty output files and late completion notifications. Wait for ALL agent results before proceeding to Phase 3.1.
 
-All tracks run with `--preview`. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+All tracks run with `--preview`. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
 
 **Phase gate:** Do NOT proceed to Phase 3.1/4 until all 5 agent tracks have returned results or failed. Verify each track produced output before consolidation.
 

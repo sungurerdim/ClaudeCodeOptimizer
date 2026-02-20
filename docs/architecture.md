@@ -125,7 +125,7 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 | apply | `{findings[], fixAll?: boolean}` | `{applied, failed, needs_approval, total, error?}` |
 | research | `{query, depth: "standard"\|"deep"}` | `{sources[], synthesis, confidence, contradictions[], gaps[], error?}` |
 
-**Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Output.
+**Error contract:** On failure, all agents return `{"error": "message"}`. Per CCO Rules: Agent Contract.
 
 ### Scope Groups
 

@@ -71,7 +71,7 @@ Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review, c
 
 **Agent invocation:** Send ALL 4 Task calls in one message. Do NOT use `run_in_background` for Task calls. Wait for ALL results before proceeding.
 
-Merge findings. Per CCO Rules: Agent Error Handling — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+Merge findings. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
 
 **Phase gate:** Do NOT proceed to Phase 3 until all 4 agent groups have returned results or failed.
 

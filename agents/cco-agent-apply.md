@@ -33,7 +33,7 @@ Batch write operations with verification. Fix everything, leave nothing behind.
 }
 ```
 
-Per CCO Rules: Accounting, Agent Output.
+Per CCO Rules: Accounting, Agent Contract.
 
 ## Policies
 
