@@ -111,11 +111,13 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 
 ## Agent System
 
-| Agent | Purpose | Model | Pattern |
-|-------|---------|-------|---------|
-| analyze | Read-only analysis, metrics, findings | Haiku | Linters → Grep → Context reads → JSON |
-| apply | Write operations with verification | Inherited | Pre-check → Read → Apply → Verify → Cascade |
-| research | Information gathering with scoring | Haiku | Search → Fetch → Score → Synthesize |
+| Agent | Purpose | Model | Isolation | Pattern |
+|-------|---------|-------|-----------|---------|
+| analyze | Read-only analysis, metrics, findings | Haiku | worktree | Linters → Grep → Context reads → JSON |
+| apply | Write operations with verification | Inherited | — | Pre-check → Read → Apply → Verify → Cascade |
+| research | Information gathering with scoring | Haiku | — | Search → Fetch → Score → Synthesize |
+
+**Isolation rationale:** Analyze agents use `isolation: worktree` because they are read-only and run in parallel (4-5 concurrent instances). Worktree isolation prevents interference between parallel agents and the working directory, with automatic cleanup on completion. Apply does not use worktree because it writes to the actual working directory. Research does not use worktree because its local reads are thread-safe and the worktree overhead is not justified for web-focused work.
 
 ### Agent Contracts
 
@@ -142,10 +144,11 @@ Skills invoke agents using these standard groupings:
 ### Orchestration Pattern
 
 1. Launch all scope groups as parallel Task calls in a **single message** (no `run_in_background`)
-2. Wait for ALL agent results before proceeding (phase gate)
-3. Validate agent JSON output; retry once on malformed response
-4. On second failure, continue with remaining groups; score failed dimensions as N/A
-5. Merge findings, deduplicate by file:line (keep highest severity)
+2. Analyze agents run in isolated git worktrees (declared via `isolation: worktree` in agent frontmatter)
+3. Wait for ALL agent results before proceeding (phase gate)
+4. Validate agent JSON output; retry once on malformed response
+5. On second failure, continue with remaining groups; score failed dimensions as N/A
+6. Merge findings, deduplicate by file:line (keep highest severity)
 
 ### File Manifest Sync
 
