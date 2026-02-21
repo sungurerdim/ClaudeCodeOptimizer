@@ -98,12 +98,20 @@ When updating these patterns, update the rules file — all skills and agents in
 
 | Flag | Meaning | Available In |
 |------|---------|-------------|
-| `--auto` | No questions, fix everything, single-line summary | optimize, align, blueprint, pr |
-| `--preview` | Analyze only, no fixes applied | optimize, align, blueprint, pr, commit |
-| `--scope=X` | Limit to specific scopes (comma-separated) | optimize, blueprint |
+| `--auto` | No questions, fix everything, single-line summary | optimize, align, blueprint, docs, pr, update |
+| `--preview` | Analyze only, no fixes applied | optimize, align, blueprint, docs, pr, commit |
+| `--scope=X` | Limit to specific scopes (comma-separated) | optimize, blueprint, docs |
 | `--loop` | Re-run until clean, max 3 iterations | optimize |
 | `--init` | Create profile only | blueprint |
 | `--refresh` | Re-scan profile, preserve decisions | blueprint |
+| `--update` | Regenerate even if docs exist | docs |
+| `--draft` | Create as draft PR (implies --no-auto-merge) | pr |
+| `--no-auto-merge` | Skip auto-merge setup | pr |
+| `--single` | Force single commit | commit |
+| `--staged-only` | Commit only staged changes | commit |
+| `--check` | Version check only, no changes | update |
+| `--quick` | T1-T2 sources only | research |
+| `--deep` | All tiers, resumable | research |
 
 Scope names are consistent across skills: `security`, `hygiene`, `types`, `performance`, `ai-hygiene`, `robustness`, `privacy`, `doc-sync`, `simplify`, `architecture`, `patterns`, `cross-cutting`, `testing`, `maintainability`, `ai-architecture`, `functional-completeness`, `production-readiness`.
 
