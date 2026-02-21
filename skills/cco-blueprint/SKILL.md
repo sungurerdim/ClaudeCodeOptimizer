@@ -353,6 +353,6 @@ Before/After delta table (9 dimensions), accounting (applied/failed/needs_approv
 
 Next: `/cco-blueprint --preview` (check progress) | `/cco-optimize` (fix issues) | `/cco-align` (fix structure)
 
---auto: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Total: {n}`
+--auto: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Needs Approval: {n} | Total: {n}`
 
 Status: OK (overall >= target), WARN (gap exists but progress), FAIL (CRITICAL unfixed or regression).

@@ -6,11 +6,11 @@ Specialized subagents for analysis, fixes, and research.
 
 ## Overview
 
-| Agent | Purpose | Model | Tools |
-|-------|---------|-------|-------|
-| **cco-agent-analyze** | Codebase analysis with severity scoring | Haiku | Glob, Read, Grep, Bash |
-| **cco-agent-apply** | Verified write operations + accounting | Inherited | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
-| **cco-agent-research** | Multi-source research with CRAAP+ scoring | Haiku | WebSearch, WebFetch, Read, Grep, Glob |
+| Agent | Purpose | Model | Isolation | Tools |
+|-------|---------|-------|-----------|-------|
+| **cco-agent-analyze** | Codebase analysis with severity scoring | Haiku | worktree | Glob, Read, Grep, Bash |
+| **cco-agent-apply** | Verified write operations + accounting | Inherited | — | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
+| **cco-agent-research** | Multi-source research with CRAAP+ scoring | Haiku | — | WebSearch, WebFetch, Read, Grep, Glob |
 
 **Model rationale:** Haiku for read-only agents (fast, cost-effective). Apply agent inherits the session model (matches user's quality/cost tradeoff). Agent models are specified in frontmatter.
 
@@ -34,7 +34,7 @@ Need changes?
 
 ## cco-agent-analyze
 
-Read-only analysis agent. Returns structured JSON with findings, scores, and metrics.
+Read-only analysis agent with `isolation: worktree`. Runs on an isolated git worktree snapshot, preventing interference between parallel agents and the working directory. Returns structured JSON with findings, scores, and metrics.
 
 - **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
 - **8 review scopes** (92 checks): architecture, patterns, cross-cutting, testing, maintainability, ai-architecture, functional-completeness, production-readiness

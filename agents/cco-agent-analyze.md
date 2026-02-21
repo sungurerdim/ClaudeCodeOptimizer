@@ -3,6 +3,7 @@ name: cco-agent-analyze
 description: Codebase analysis with severity scoring - security, privacy, hygiene, types, performance, robustness, functional-completeness audits.
 tools: Glob, Read, Grep, Bash
 model: haiku
+isolation: worktree
 ---
 
 # cco-agent-analyze

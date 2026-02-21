@@ -121,9 +121,9 @@ cco-docs complete
 | api       | Created  | docs/api.md     |    85 |
 | dev       | Skipped  | CONTRIBUTING.md |     — |
 
-Applied: 2 | Failed: 0 | Total: 2
+Applied: 2 | Failed: 0 | Needs Approval: 0 | Total: 2
 ```
 
-Gap summary (before/after), files generated, applied/failed/total.
+Gap summary (before/after), files generated, applied/failed/needs_approval/total.
 
---auto: `cco-docs: {OK|WARN|FAIL} | Applied: N | Failed: N | Total: N`
+--auto: `cco-docs: {OK|WARN|FAIL} | Applied: N | Failed: N | Needs Approval: N | Total: N`
