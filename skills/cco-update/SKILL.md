@@ -22,7 +22,7 @@ Without flags: check for update, ask before upgrading.
 
 ### Step 1: Version Check
 
-1. Read current `cco_version` from cco-rules.md frontmatter (already in context)
+1. Use the Read tool to read the **installed** `~/.claude/rules/cco-rules.md` (resolve `~` to user home). Extract `cco_version` from YAML frontmatter.
 2. WebFetch `https://api.github.com/repos/sungurerdim/ClaudeCodeOptimizer/tags?per_page=1` → extract latest tag name, strip `v` prefix
 3. Compare current vs latest semver
 
@@ -60,7 +60,7 @@ $b="$HOME\.local\bin"; New-Item $b -ItemType Directory -Force >$null; irm https:
 
 ### Step 4: Verify & Summary
 
-Read cco-rules.md → confirm `cco_version` matches latest.
+Read the **installed** `~/.claude/rules/cco-rules.md` from disk → confirm `cco_version` matches latest.
 
 | Mode | Output |
 |------|--------|
