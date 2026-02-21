@@ -143,7 +143,7 @@ Failed:
 Applied: 9 | Failed: 1 | Needs Approval: 0 | Total: 10
 ```
 
---auto: `cco-optimize: {OK|WARN} | applied: N | failed: N | needs_approval: N | total: N`
+--auto: `cco-optimize: {OK|WARN} | Applied: N | Failed: N | Needs Approval: N | Total: N`
 
 Status: OK (failed=0), WARN (failed>0 no CRITICAL), FAIL (CRITICAL unfixed or error).
 

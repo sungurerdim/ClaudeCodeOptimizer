@@ -75,7 +75,7 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 
 Run format, lint, and test across the **entire project**. Auto-fix all fixable issues.
 
-**Detect toolchain:** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet/test, `pyproject.toml` → ruff/pytest, `Cargo.toml` → cargo clippy/test, `Makefile` → make targets. Per CCO Rules: Tool Prerequisites.
+**Detect toolchain (same pattern as cco-commit Phase 1.4):** Read CLAUDE.md blueprint (`Toolchain:` within `cco-blueprint-start/end`). No blueprint → auto-detect from project files: `package.json` scripts → npm, `go.mod` → go vet/test, `pyproject.toml` → ruff/pytest, `Cargo.toml` → cargo clippy/test, `Makefile` → make targets. Per CCO Rules: Tool Prerequisites.
 
 **Run in order (stop on failure):**
 1. **Format** — project's formatter with auto-fix (gofmt, prettier, ruff format, rustfmt, etc.)
