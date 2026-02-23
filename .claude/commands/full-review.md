@@ -1,5 +1,5 @@
 ---
-description: CCO system health check (~78 checks across 8 categories)
+description: CCO self-review — system health check (~78 checks across 8 categories). Use to audit CCO's own rules, skills, and agents.
 argument-hint: [--auto] [--quick] [--focus=X] [--preview] [--fix]
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), AskUserQuestion, Edit(*)
 ---

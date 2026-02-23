@@ -134,7 +134,7 @@ func getGitInfo() *GitInfo {
 
 	go func() {
 		defer wg.Done()
-		tagOut, tagOk = execGit("for-each-ref", "--sort=-v:refname", "--count=1", "--format=%(refname:short)", "refs/tags/")
+		tagOut, tagOk = execGit("describe", "--tags", "--abbrev=0")
 	}()
 
 	go func() {

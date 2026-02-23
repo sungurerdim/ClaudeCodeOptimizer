@@ -1,7 +1,7 @@
 ---
 cco_version: 4.3.0 # x-release-please-version
 description: Minimal behavior framework for AI-assisted development — quality, efficiency, security, speed
-last_update_check: 1970-01-01T00:00:00Z
+last_update_check: 2026-02-21T13:30:00Z
 ---
 
 # CCO Rules
@@ -40,6 +40,40 @@ Flag when code approaches these limits. Refactor only when the current task's sc
 | Nesting Depth | ≤ 3 |
 | Parameters | ≤ 4 |
 
+### Test Integrity
+
+Tests validate real-world behavior, not CI status. A passing test suite must mean the software works correctly in production.
+
+**Non-negotiable rules:**
+- Never weaken, skip, or disable a failing test to make it pass
+- Never mock away the actual behavior under test — mock only external dependencies
+- Never remove or relax assertions to resolve failures
+- If a test fails: fix the code, or fix the test to correctly validate real behavior — never gut the test
+- Platform-specific concerns (paths, FUSE, native host, encoding) must be genuinely resolved, not bypassed in test harness
+
+**Test environment fidelity:**
+
+| Concern | Required Behavior |
+|---------|-------------------|
+| File paths | Test with real OS paths, not hardcoded Unix-only |
+| Platform integration | Verify native host compatibility, not just container |
+| State persistence | Validate actual session/history/config round-trips |
+| Directory structures | Use production-equivalent layouts |
+
+When a test exposes a real deficiency, treat it as a bug — not a test problem.
+
+**Test smells to flag:**
+- Catch-all try/except in tests that swallow real errors
+- Tests that assert only `is not None` when specific values matter
+- Overly broad mocks that replace the system under test
+- Test helpers that silently normalize platform differences
+- `@pytest.mark.skip` / `unittest.skip` without a linked issue
+
+**Coverage philosophy:**
+- Coverage measures scenario completeness, not line percentage
+- A 60% coverage with real integration tests > 95% with shallow mocks
+- Every bug fix must include a regression test for the specific failure mode
+
 ## Production Standards
 
 Every output must be production-ready by default. Apply security, privacy, performance, error handling, reliability, and code quality practices as a baseline — the same way a senior engineer would, without being asked. The user's lack of knowledge about a concern must never result in that concern being skipped.
@@ -59,6 +93,99 @@ Before using any import or API: verify it exists in the codebase or documentatio
 ### Edit Discipline
 
 Preserve the existing file's indentation style (tabs vs spaces, width). Match surrounding code style for naming, formatting, and patterns. On Windows paths, use the path format the project already uses.
+
+## Behavioral Guardrails
+
+Guardrails for patterns where LLM-assisted development systematically fails. These are non-negotiable.
+
+### Collateral Mutation
+
+When modifying a function, verify all other behaviors in that function remain unchanged. Trace every caller of changed code to confirm no downstream behavior shifted.
+
+Pre-commit diff checklist:
+- No return value type/shape changes beyond the fix
+- No conditional branch logic altered outside the target bug
+- No default parameter values changed as side effect
+
+### Error Handling Integrity
+
+Never catch broader than necessary. Never replace a specific error with a generic fallback.
+
+| Anti-pattern | Required Behavior |
+|-------------|-------------------|
+| `catch (Exception e)` | Catch the specific exception type |
+| `catch { return null/default }` | Propagate or handle with context |
+| `_ = riskyOperation()` | Handle or explicitly document why ignored |
+| Generic fallback replacing specific handler | Preserve the specificity of existing handlers |
+
+Error handling must never hide a bug. If unsure whether to catch or propagate — propagate.
+
+### Migration Completeness
+
+After any rename, move, or interface change: search the entire codebase for all references before declaring done. Use grep/glob, not memory.
+
+- All files importing/referencing the old name updated
+- All interface implementors updated
+- All config files, env vars, and documentation updated
+- All test files updated
+- Build + tests pass with zero broken references
+
+### Lossy Transformation Guard
+
+When converting between formats, structures, or schemas: preserve all fields, even unknown ones. Default behavior is pass-through, not drop.
+
+- Never silently drop fields during config/data migration
+- When the target format can't represent a source field, warn explicitly
+- Round-trip test: source → target → source must produce identical output
+- Optional/nullable fields must be preserved, not defaulted away
+
+### Diff Hygiene
+
+Only touch lines directly required by the task. A clean diff = reviewable diff.
+
+Never in a task-scoped change:
+- Reformat untouched code
+- Add/change type annotations on unmodified functions
+- "Improve" comments in unrelated code
+- Reorder imports beyond what the change requires
+- Change whitespace in lines not otherwise modified
+
+### Dependency Verification
+
+Before adding or using any dependency:
+
+| Check | Method |
+|-------|--------|
+| Package exists | Verify in registry (npm, PyPI, crates.io, pkg.go.dev) |
+| Version is correct | Check installed version, not assumed latest |
+| API exists in that version | Read docs/changelog for the installed version |
+| Not transitive-only | Verify it's in direct dependencies |
+
+Never suggest installing a package without verifying it exists. Never use an API feature without confirming it's available in the project's dependency version.
+
+### Concurrency Awareness
+
+When writing or modifying async/concurrent code:
+
+- Identify shared mutable state and protect it
+- Consider parallel execution, out-of-order completion, and interruption
+- File operations on shared paths need locking or atomic write patterns
+- Database operations need appropriate transaction isolation
+- Flag potential race conditions even if the current code doesn't address them
+
+### Boundary Conditions
+
+Always consider edge cases for every conditional and data operation:
+
+| Category | Edge Cases to Consider |
+|----------|----------------------|
+| Collections | Empty, single element, very large |
+| Strings | Empty, whitespace-only, Unicode multi-byte, null |
+| Numbers | Zero, negative, overflow, NaN |
+| Pagination/Slicing | Off-by-one, first page, last page, beyond range |
+| File paths | Root, trailing separator, special chars, max length |
+
+When writing conditionals: verify boundary values land on the correct side. When unsure, write an explicit test for the boundary.
 
 ## Uncertainty Protocol
 

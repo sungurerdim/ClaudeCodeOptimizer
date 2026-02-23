@@ -1,5 +1,5 @@
 ---
-description: Project health system - profile-based assessment, transformation, and progress tracking via CLAUDE.md
+description: Project health system — profile-based assessment, transformation, and progress tracking. Use for project scoring, blueprint init, or health refresh.
 argument-hint: "[--auto] [--preview] [--init] [--refresh] [--scope=<name>]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 disable-model-invocation: true

@@ -1,6 +1,6 @@
 ---
 name: cco-agent-research
-description: Multi-source research with CRAAP+ reliability scoring and synthesis
+description: "Sub-agent: web search, source scoring, and CRAAP+ synthesis. Used by /cco-research skill and autonomously for research tasks."
 tools: WebSearch, WebFetch, Read, Grep, Glob
 model: haiku
 ---
