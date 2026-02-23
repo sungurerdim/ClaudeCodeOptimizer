@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.3.0...v4.4.0) (2026-02-23)
+
+
+### Features
+
+* **rules:** add behavioral guardrails and fix stale tag check ([#60](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/60)) ([c685443](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/c6854434eb7067c5a0edead4050ca7a20588725b))
+
 ## [4.3.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.2.2...v4.3.0) (2026-02-21)
 
 
