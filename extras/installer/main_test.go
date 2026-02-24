@@ -645,9 +645,9 @@ func TestDetectCurrentVersion(t *testing.T) {
 
 func TestExtractVersion(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   string
-		want    string
+		name  string
+		input string
+		want  string
 	}{
 		{"standard version", "---\ncco_version: 4.4.0\n---\n", "4.4.0"},
 		{"version with comment", "---\ncco_version: 4.4.0 # current\n---\n", "4.4.0"},
