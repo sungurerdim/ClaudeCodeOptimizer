@@ -40,7 +40,8 @@ Per CCO Rules: Accounting, Agent Contract.
 - When `fixAll: true`: ask user for significant changes (>50 lines), never skip
 - Force-write always: execute all writes unconditionally
 - Per CCO Rules: Auto Mode (no deferrals)
-- **Import/API verification:** Before writing any fix that adds an import/require/include → Glob/Grep to confirm the module exists in the project or dependencies. Before using any API method → verify it exists in the dependency source or documentation. Never rely on memory for API shapes.
+- Per CCO Rules: Trust Verification — before adding any import/API, verify it exists in codebase or dependencies.
+- Per CCO Rules: Fix Quality — Grep for existing patterns before creating new code. Cross-module change → `needs_approval`.
 
 ## Execution
 

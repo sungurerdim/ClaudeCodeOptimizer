@@ -143,22 +143,19 @@ Launch 4 parallel Explore agents covering 8 categories:
 
 ### Group C: AI Communication + Efficiency (Cat 4 + Cat 5)
 
-**CATEGORY 4 — AI Communication (8 checks):**
+**CATEGORY 4 — AI Communication (7 checks):**
 - No teaching AI basics (AI already knows how to code/test/review)
 - Rules specify WHAT not HOW (leave implementation to AI)
 - Process assurance patterns are legitimate (quality gates, agent contracts)
 - No unnecessary repetition across files (rules ↔ skills ↔ agents)
 - Each rule provides unique CCO-specific value
-- Positive impact: doesn't constrain AI's natural capabilities
 - Weakness completion: addresses known AI weak points (focus, step-skipping)
 - Model compatibility: core structure is model-agnostic
 
-**CATEGORY 5 — Efficiency & Density (10 checks):**
+**CATEGORY 5 — Efficiency & Density (8 checks):**
 - Tables for tabular data (not prose paragraphs)
 - No redundancy across files (shared patterns → CCO Rules reference)
 - Concrete benefit test: "What do we lose without this?" — if no answer, flag
-- AskUserQuestion limits respected in all skills
-- No teaching of basics Claude already knows
 - Large files >500 lines flagged
 - Context commands minimal (no redundant Glob/Read calls)
 - No single-use abstractions or wrappers
@@ -200,13 +197,13 @@ Launch 4 parallel Explore agents covering 8 categories:
 | 1 | Inventory & Sync | 10 | File counts, SSOT, terminology |
 | 2 | Skill & Agent Quality | 12 | Frontmatter, modes, scopes, models |
 | 3 | Architecture Compliance | 10 | Deps, paths, loading, patterns |
-| 4 | AI Communication | 8 | WHAT-not-HOW, no teaching, model-agnostic |
-| 5 | Efficiency & Density | 10 | Benefit test, no redundancy, token budget |
+| 4 | AI Communication | 7 | WHAT-not-HOW, no teaching, model-agnostic |
+| 5 | Efficiency & Density | 8 | Benefit test, no redundancy, token budget |
 | 6 | Production Standards | 10 | Quality gates, accounting, security |
 | 7 | Documentation & Language | 10 | Accuracy, English, no orphans |
 | 8 | Release Readiness | 8 | Installer, version, cross-platform |
 
-**Total: ~78 checks**
+**Total: ~75 checks**
 
 ---
 
@@ -291,7 +288,7 @@ Detected:
 │ 7. Documentation & Language │   {n}  │   {n}  │  {st}  │
 │ 8. Release Readiness        │   {n}  │   {n}  │  {st}  │
 ├─────────────────────────────┼────────┼────────┼────────┤
-│ TOTAL (~78 checks)          │   {n}  │   {n}  │  {st}  │
+│ TOTAL (~75 checks)          │   {n}  │   {n}  │  {st}  │
 └─────────────────────────────┴────────┴────────┴────────┘
 
 {if findings}
@@ -321,16 +318,6 @@ NON-findings:
 
 ---
 
-## Recovery
-
-| Situation | Recovery |
-|-----------|----------|
-| Fix broke a skill | `git checkout -- {file}` |
-| Multiple files affected | `git checkout .` |
-| Want to review changes | `git diff` |
-
----
-
 ## Rules
 
 1. **Context first** — Verify CCO repo before analysis
@@ -338,4 +325,4 @@ NON-findings:
 3. **80/20 prioritization** — Quick Win → Moderate → Complex
 4. **Evidence required** — Every finding needs file:line
 
-Per CCO Rules: Accounting, Auto Mode, Efficiency.
+Per CCO Rules: Accounting, Auto Mode.

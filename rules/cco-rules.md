@@ -6,31 +6,53 @@ last_update_check: 2026-02-21T13:30:00Z
 
 # CCO Rules
 
-## Scope Control
+## Failure Prevention
 
-Unrelated issues: mention, don't fix.
+### Scope Boundary [PROHIBITION]
 
-### Exploration Budget
+Only touch lines the task requires. Unrelated issues: mention, don't fix. Never reformat untouched code, add annotations to unmodified functions, reorder imports beyond what the change requires, or change whitespace in unmodified lines.
 
-Context efficiency guideline — expand when the task requires deeper understanding:
+### Test Integrity [PROHIBITION]
 
-| Task | Files to Read |
-|------|---------------|
-| Small fix (1-2 files) | 1-3 files |
-| Feature (3-5 files) | 5-10 files |
-| Architecture scan | Structure first, then deepen |
+Never weaken, skip, mock away, or relax assertions to make a test pass. Fix the code, or fix the test to correctly validate real behavior. Test environment must use real OS paths, production-equivalent layouts, and native host verification — not bypassed in harness. Every bug fix includes a regression test.
 
-These are starting points. Read more when the task demands it.
+### Cross-file Consistency [PROHIBITION]
 
-### Decide and Execute
+After modifying file A, verify no file B depends on the changed interface, export, type, or constant in a now-broken way. Grep all consumers before declaring done. A change that breaks a dependent file is not done.
 
-For implementation: commit to the simplest approach, reassess only on failure. For design and architecture: compare 2-3 approaches briefly before committing.
+### Change Verification [GATE]
 
-## Code Integrity
+After modifying a function → verify: all other behaviors in that function unchanged? All callers unaffected? No return type/shape changes beyond the fix? No conditional branch logic altered outside the target?
+
+### Migration Sweep [GATE]
+
+After rename/move/interface change → grep/glob entire codebase: all imports, implementors, configs, env vars, docs, and tests reference the new name? Build passes with zero broken references?
+
+### Trust Verification [GATE]
+
+Before using any import, API, or dependency → verify it exists in codebase, registry, or docs. Check: package exists in registry? Version correct? API available in that version? Not transitive-only? Never assume from memory.
+
+### Format Preservation [GATE]
+
+During format/schema/data conversion → all fields preserved, including unknown ones? Target can't represent a source field → warn explicitly. Round-trip produces identical output?
+
+### Artifact-First Recovery [GATE]
+
+After context gap → re-read files before modifying (conversation memory is not source of truth). Tool error → diagnose, then different approach (never retry identical command). Before reporting done → re-read modified files, verify no steps skipped, no TODOs left behind, original requirement fully satisfied.
+
+## Process Framework
+
+- **Before starting:** State the end goal. 3+ steps → use task tools for tracking.
+- **While working:** Phase gate — execute numbered steps in order. Verify each step's output before proceeding. Never skip a step.
+- **Before finishing:** Re-read modified files. All steps completed? Original requirement fully met?
+- **On uncertainty:** State it explicitly. Ask, don't guess. Never assume requirements.
+- **On scope expansion:** Finding count exceeds 2× estimate → stop and ask before continuing.
+
+## Quality Thresholds
 
 ### Complexity Limits
 
-Flag when code approaches these limits. Refactor only when the current task's scope allows it — do not force mid-task restructuring.
+Flag when code approaches these limits. Refactor only when current task scope allows.
 
 | Metric | Limit |
 |--------|-------|
@@ -40,188 +62,25 @@ Flag when code approaches these limits. Refactor only when the current task's sc
 | Nesting Depth | ≤ 3 |
 | Parameters | ≤ 4 |
 
-### Test Integrity
+### Output & Edit Standards
 
-Tests validate real-world behavior, not CI status. A passing test suite must mean the software works correctly in production.
+Tables over paragraphs. Bullets over prose. Summary: max 1-3 sentences. Preserve existing file indentation style and surrounding code patterns. On Windows, use the path format the project already uses.
 
-**Non-negotiable rules:**
-- Never weaken, skip, or disable a failing test to make it pass
-- Never mock away the actual behavior under test — mock only external dependencies
-- Never remove or relax assertions to resolve failures
-- If a test fails: fix the code, or fix the test to correctly validate real behavior — never gut the test
-- Platform-specific concerns (paths, FUSE, native host, encoding) must be genuinely resolved, not bypassed in test harness
+### Error Handling
 
-**Test environment fidelity:**
+Catch specific exceptions, never broader. Propagate when unsure. Error handling must never hide a bug.
 
-| Concern | Required Behavior |
-|---------|-------------------|
-| File paths | Test with real OS paths, not hardcoded Unix-only |
-| Platform integration | Verify native host compatibility, not just container |
-| State persistence | Validate actual session/history/config round-trips |
-| Directory structures | Use production-equivalent layouts |
+### i18n Stack Reference
 
-When a test exposes a real deficiency, treat it as a bug — not a test problem.
+Flag missing i18n/a11y as HIGH on user-facing apps. Don't auto-fix — propose framework-native approach:
 
-**Test smells to flag:**
-- Catch-all try/except in tests that swallow real errors
-- Tests that assert only `is not None` when specific values matter
-- Overly broad mocks that replace the system under test
-- Test helpers that silently normalize platform differences
-- `@pytest.mark.skip` / `unittest.skip` without a linked issue
-
-**Coverage philosophy:**
-- Coverage measures scenario completeness, not line percentage
-- A 60% coverage with real integration tests > 95% with shallow mocks
-- Every bug fix must include a regression test for the specific failure mode
-
-## Production Standards
-
-Every output must be production-ready by default. Apply security, privacy, performance, error handling, reliability, and code quality practices as a baseline — the same way a senior engineer would, without being asked. The user's lack of knowledge about a concern must never result in that concern being skipped.
-
-When a production standard requires a design decision the user should be aware of, inform them briefly — but the standard itself is non-negotiable.
-
-## Output Brevity
-
-Tables over paragraphs. Bullets over prose. Summary: max 1-3 sentences. Educational content: only when the fix is non-obvious. Never repeat information the user already knows.
-
-## Verification
-
-### API Verification
-
-Before using any import or API: verify it exists in the codebase or documentation. Never assume function signatures or API shapes from memory.
-
-### Edit Discipline
-
-Preserve the existing file's indentation style (tabs vs spaces, width). Match surrounding code style for naming, formatting, and patterns. On Windows paths, use the path format the project already uses.
-
-## Behavioral Guardrails
-
-Guardrails for patterns where LLM-assisted development systematically fails. These are non-negotiable.
-
-### Collateral Mutation
-
-When modifying a function, verify all other behaviors in that function remain unchanged. Trace every caller of changed code to confirm no downstream behavior shifted.
-
-Pre-commit diff checklist:
-- No return value type/shape changes beyond the fix
-- No conditional branch logic altered outside the target bug
-- No default parameter values changed as side effect
-
-### Error Handling Integrity
-
-Never catch broader than necessary. Never replace a specific error with a generic fallback.
-
-| Anti-pattern | Required Behavior |
-|-------------|-------------------|
-| `catch (Exception e)` | Catch the specific exception type |
-| `catch { return null/default }` | Propagate or handle with context |
-| `_ = riskyOperation()` | Handle or explicitly document why ignored |
-| Generic fallback replacing specific handler | Preserve the specificity of existing handlers |
-
-Error handling must never hide a bug. If unsure whether to catch or propagate — propagate.
-
-### Migration Completeness
-
-After any rename, move, or interface change: search the entire codebase for all references before declaring done. Use grep/glob, not memory.
-
-- All files importing/referencing the old name updated
-- All interface implementors updated
-- All config files, env vars, and documentation updated
-- All test files updated
-- Build + tests pass with zero broken references
-
-### Lossy Transformation Guard
-
-When converting between formats, structures, or schemas: preserve all fields, even unknown ones. Default behavior is pass-through, not drop.
-
-- Never silently drop fields during config/data migration
-- When the target format can't represent a source field, warn explicitly
-- Round-trip test: source → target → source must produce identical output
-- Optional/nullable fields must be preserved, not defaulted away
-
-### Diff Hygiene
-
-Only touch lines directly required by the task. A clean diff = reviewable diff.
-
-Never in a task-scoped change:
-- Reformat untouched code
-- Add/change type annotations on unmodified functions
-- "Improve" comments in unrelated code
-- Reorder imports beyond what the change requires
-- Change whitespace in lines not otherwise modified
-
-### Dependency Verification
-
-Before adding or using any dependency:
-
-| Check | Method |
-|-------|--------|
-| Package exists | Verify in registry (npm, PyPI, crates.io, pkg.go.dev) |
-| Version is correct | Check installed version, not assumed latest |
-| API exists in that version | Read docs/changelog for the installed version |
-| Not transitive-only | Verify it's in direct dependencies |
-
-Never suggest installing a package without verifying it exists. Never use an API feature without confirming it's available in the project's dependency version.
-
-### Concurrency Awareness
-
-When writing or modifying async/concurrent code:
-
-- Identify shared mutable state and protect it
-- Consider parallel execution, out-of-order completion, and interruption
-- File operations on shared paths need locking or atomic write patterns
-- Database operations need appropriate transaction isolation
-- Flag potential race conditions even if the current code doesn't address them
-
-### Boundary Conditions
-
-Always consider edge cases for every conditional and data operation:
-
-| Category | Edge Cases to Consider |
-|----------|----------------------|
-| Collections | Empty, single element, very large |
-| Strings | Empty, whitespace-only, Unicode multi-byte, null |
-| Numbers | Zero, negative, overflow, NaN |
-| Pagination/Slicing | Off-by-one, first page, last page, beyond range |
-| File paths | Root, trailing separator, special chars, max length |
-
-When writing conditionals: verify boundary values land on the correct side. When unsure, write an explicit test for the boundary.
-
-## Uncertainty Protocol
-
-### Surface Uncertainty
-
-When uncertain, state it explicitly ("~90% sure", "uncertain about X"). Ask before proceeding on ambiguous tasks. Never guess at requirements.
-
-### Scope Creep Guard
-
-If finding count exceeds 2x initial estimate, stop and ask the user before continuing.
-
-## Session Resilience
-
-### Anchor to Artifacts
-
-Files and git state are the source of truth — not conversation memory. When returning to a topic after other work, re-read the relevant files before making changes. Never rely on earlier conversation context for file contents.
-
-### Error Recovery
-
-On tool error: diagnose why, then use a different approach on the second attempt. Never retry the exact same failing command.
-
-## Process Discipline
-
-### Task Awareness
-
-For multi-step work (3+ steps), track progress using task tools. Mark steps in_progress before starting and completed when verified. This prevents skipped steps and provides continuity across context compactions.
-
-Phase gate: when a plan has numbered substeps, execute in order. Verify each substep produced its expected output before proceeding to the next. Never skip a substep.
-
-### Goal Anchoring
-
-State the end goal before starting. Before each major step, confirm it serves that goal. If work has drifted from the original request, stop and realign.
-
-### Completion Verification
-
-Before reporting done: re-read modified files to confirm correctness, verify no steps were skipped, and confirm the original requirement is fully satisfied.
+| Stack | i18n Solution | Message Format |
+|-------|--------------|----------------|
+| Flutter/Dart | `flutter_localizations` + `intl` | ARB files (`lib/l10n/*.arb`) |
+| React/Next.js | `next-intl` or `react-intl` | JSON files |
+| Python CLI | `gettext` | PO files |
+| iOS (Swift) | `String(localized:)` | `.xcstrings` |
+| Android (Kotlin) | Android resources | `res/values-{locale}/strings.xml` |
 
 ## CCO Operations
 
@@ -251,6 +110,8 @@ Verify required external tools before execution.
 
 Findings include confidence (0-100). Auto mode: fix all except architectural redesign. Interactive: user decides.
 
+**Model-aware ceiling:** When analyze agent runs on haiku, CRITICAL/HIGH findings have confidence capped at 85. Review-mode on sonnet has no cap.
+
 ### Skip Patterns
 
 Never flag intentionally marked code: # noqa, # intentional, # safe:, _ prefix, TYPE_CHECKING blocks, platform guards, test fixtures.
@@ -276,6 +137,8 @@ If needs_approval > 0 and not --auto: display items table (ID, severity, issue, 
 
 Use `run_in_background` for long Bash commands only; collect via TaskOutput before producing output. NEVER use `run_in_background` for Task (agent) calls — multiple Task calls in a single message already execute in parallel and return results directly.
 
+**Max concurrency:** Launch at most **2 Task (agent) calls per message**. When more agents are needed, batch them sequentially (e.g., 5 agents → batch 1: 2, batch 2: 2, batch 3: 1). Wait for each batch to complete before launching the next.
+
 ### Severity Levels
 
 | Level | Criteria |
@@ -286,3 +149,58 @@ Use `run_in_background` for long Bash commands only; collect via TaskOutput befo
 | LOW | Style only |
 
 When uncertain, choose lower severity.
+
+### Model Routing
+
+Skills specify model per Task call based on analysis mode:
+
+| Mode | Default Model |
+|------|--------------|
+| auto | haiku |
+| review | sonnet |
+| audit | haiku |
+| CRITICAL escalation | opus |
+
+Agent frontmatter `model: haiku` is the default. Skills override via Task tool's `model` parameter when invoking review-mode agents.
+
+### CRITICAL Escalation
+
+When any analyze agent reports a CRITICAL finding:
+1. Skill isolates the CRITICAL finding(s)
+2. Single Task call to cco-agent-analyze (model: opus, scopes: [original scope], mode: review) with only the file(s) containing CRITICAL findings
+3. Opus confirms → keep CRITICAL. Opus rejects → downgrade to HIGH or discard.
+4. Applied in all modes including --auto. CRITICAL false positives are costlier than one extra validation.
+5. Max 1 escalation call per skill invocation (batch all CRITICALs into one call).
+
+### Fix Quality
+
+Fix suggestions and applied changes must comply with: DRY (no duplicate logic), SSOT (no second source of truth), SoC (stay within module boundary), KISS (simplest solution), Consistency (match project patterns). A fix that violates these principles is a new problem, not a solution.
+
+Agents verify before suggesting/applying: existing pattern exists? → reference it. New abstraction needed? → only if 3+ uses. Cross-module change? → needs_approval.
+
+### Project Types
+
+Standard project type taxonomy used across all CCO skills, agents, and scoring. Referenced as `context.projectType`.
+
+| Type ID | Detection Signals | UI Category |
+|---------|-------------------|-----------|
+| `cli` | bin/ entry, commander/yargs/cobra deps, no routes/pages | Developer Tool |
+| `library` | src/lib exports, package.json main/exports, no bin/routes | Developer Tool |
+| `api` | routes/controllers, express/fastapi/gin, REST/GraphQL endpoints | Backend |
+| `web` | pages/app dir, React/Vue/Svelte/Next.js, HTML templates | Frontend |
+| `mobile` | Flutter/React Native/Swift/Kotlin, ios/android dirs | Frontend |
+| `desktop` | Electron/Tauri/Qt, native window management | Frontend |
+| `monorepo` | packages/apps/modules dirs, workspace config (lerna, nx, turborepo, pnpm-workspace) | Multi |
+| `iac` | Terraform/Pulumi/Ansible, Dockerfile-only, CI configs, deploy scripts | Infrastructure |
+| `devtool` | CLI + library hybrid, plugin system, IDE extension, build tool | Developer Tool |
+| `data` | ETL scripts, Spark/Airflow/dbt, notebooks, data schemas | Backend |
+| `ml` | Model training, inference endpoints, notebooks, datasets | Backend |
+| `embedded` | Hardware abstraction, firmware, RTOS, resource-constrained | Infrastructure |
+| `game` | Game engine, render loop, physics, asset pipeline | Frontend |
+| `extension` | manifest.json (browser), package.json (vscode), plugin hooks | Developer Tool |
+
+**UI Categories:** Frontend (web, mobile, desktop, game) · Backend (api, data, ml) · Developer Tool (cli, library, devtool, extension) · Infrastructure (iac, embedded) · Multi (monorepo — sub-packages have own types)
+
+**Detection:** Most specific match wins. Multiple signals → prefer type with more matches. Ambiguous → ask user. Monorepo: root uses monorepo type, each sub-package uses its own detected type.
+
+**User-facing types** (web, mobile, desktop) require i18n (en + tr minimum), a11y, responsive design. Game: i18n/a11y optional.

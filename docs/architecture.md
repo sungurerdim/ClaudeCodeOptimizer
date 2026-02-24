@@ -121,11 +121,13 @@ Scope names are consistent across skills: `security`, `hygiene`, `types`, `perfo
 
 | Agent | Purpose | Model | Isolation | Pattern |
 |-------|---------|-------|-----------|---------|
-| analyze | Read-only analysis, metrics, findings | Haiku | worktree | Linters → Grep → Context reads → JSON |
+| analyze | Read-only analysis, metrics, findings | Haiku/Sonnet* | — | Linters → Grep → Context reads → JSON |
 | apply | Write operations with verification | Inherited | — | Pre-check → Read → Apply → Verify → Cascade |
 | research | Information gathering with scoring | Haiku | — | Search → Fetch → Score → Synthesize |
 
-**Isolation rationale:** Analyze agents use `isolation: worktree` because they are read-only and run in parallel (4-5 concurrent instances). Worktree isolation prevents interference between parallel agents and the working directory, with automatic cleanup on completion. Apply does not use worktree because it writes to the actual working directory. Research does not use worktree because its local reads are thread-safe and the worktree overhead is not justified for web-focused work.
+*Skill-level model override: auto mode → Haiku, review mode → Sonnet, CRITICAL escalation → Opus.
+
+**Isolation rationale:** All agents run without worktree isolation. Analyze agents are read-only — parallel instances reading the same files have no race conditions (read-read is safe). This avoids git worktree subprocess overhead, which caused ENOMEM/EAGAIN spawn errors on Windows with 4-5 concurrent instances. Apply does not use worktree because it writes to the actual working directory. Research does not use worktree because its local reads are thread-safe.
 
 ### Agent Contracts
 
@@ -151,12 +153,12 @@ Skills invoke agents using these standard groupings:
 
 ### Orchestration Pattern
 
-1. Launch all scope groups as parallel Task calls in a **single message** (no `run_in_background`)
-2. Analyze agents run in isolated git worktrees (declared via `isolation: worktree` in agent frontmatter)
-3. Wait for ALL agent results before proceeding (phase gate)
-4. Validate agent JSON output; retry once on malformed response
-5. On second failure, continue with remaining groups; score failed dimensions as N/A
-6. Merge findings, deduplicate by file:line (keep highest severity)
+1. Launch scope groups as parallel Task calls in batches of max 2 per message (no `run_in_background`)
+2. Wait for ALL agent results before proceeding (phase gate)
+3. Validate agent JSON output; retry once on malformed response
+4. On second failure, continue with remaining groups; score failed dimensions as N/A
+5. Merge findings, deduplicate by file:line (keep highest severity)
+6. Per CCO Rules: CRITICAL Escalation — validate CRITICAL findings with opus before proceeding
 
 ### File Manifest Sync
 
@@ -198,13 +200,18 @@ Invariant: `applied + failed + needs_approval = total`
 
 ## Model Strategy
 
-Read-only agents (analyze, research) are pinned to Haiku for speed and cost efficiency. Write agents (apply) inherit the session model — if the user selects Opus, apply runs on Opus; if Sonnet, it runs on Sonnet.
+Three-tier model routing based on analysis mode and scope. Per CCO Rules: Model Routing.
 
 | Task | Model | Reason |
 |------|-------|--------|
-| Detection & Analysis | Haiku | Fast, read-only, cost-efficient |
+| Detection & Analysis (auto) | Haiku | Fast, pattern-based |
+| Strategic Review (review) | Sonnet | Cross-file pattern judgment |
+| CRITICAL Re-validation | Opus | Confirms/rejects CRITICAL findings |
+| Assessment (audit) | Haiku | Measurement, scoring |
 | Code fixes & Synthesis | Inherited | Matches user's chosen quality/cost tradeoff |
 | Research | Haiku | Read-only, speed-optimized |
+
+Agent frontmatter `model: haiku` is the default. Skills override via Task tool's `model` parameter for review-mode and escalation calls.
 
 ---
 

@@ -82,7 +82,15 @@ rm -f ~/.claude/agents/cco-agent-*.md
 
 Creates a project profile in CLAUDE.md — priorities, constraints, targets, and current scores. If no profile exists, starts the init flow automatically.
 
-### Step 2: Architecture Gap Analysis
+### Step 2: Documentation Gaps
+
+```
+/cco-docs
+```
+
+Compares ideal documentation against what exists and generates missing content. Use `--preview` for analysis only, or `--scope=api` to focus on a specific area.
+
+### Step 3: Architecture Gap Analysis
 
 ```
 /cco-align
@@ -90,7 +98,7 @@ Creates a project profile in CLAUDE.md — priorities, constraints, targets, and
 
 Shows gap analysis between current state and ideal architecture. Use `--preview` for analysis without changes.
 
-### Step 3: Scan and Fix Issues
+### Step 4: Scan and Fix Issues
 
 ```
 /cco-optimize
@@ -114,14 +122,10 @@ CCO rules are auto-loaded from `~/.claude/rules/cco-rules.md`. Claude Code autom
 
 | Category | Key Rules |
 |----------|-----------|
-| **Scope Control** | Exploration Budget, Decide and Execute |
-| **Code Integrity** | Complexity Limits (method ≤50 lines, nesting ≤3) |
-| **Production Standards** | Production-ready baseline for all output |
-| **Verification** | API Verification, Edit Discipline |
-| **Uncertainty Protocol** | Surface Uncertainty (stop & ask), Scope Creep Guard |
-| **Session Resilience** | Anchor to Artifacts, Error Recovery |
-| **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
-| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Needs-Approval Protocol, Parallel Execution, Severity Levels |
+| **Failure Prevention** | 3 prohibitions (scope, tests, cross-file) + 5 process gates (change verification, migration, trust, format, artifact-first) |
+| **Process Framework** | 5 checkpoints: before starting, while working, before finishing, on uncertainty, on scope expansion |
+| **Quality Thresholds** | Complexity Limits (method ≤50 lines, nesting ≤3), i18n stack reference |
+| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Severity Levels, Plan Review Protocol, and 10 more |
 
 ### Hard Limits
 
@@ -166,6 +170,7 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 | Quality-gated commit | `/cco-commit` |
 | Project health | `/cco-blueprint` |
 | Create PR | `/cco-pr` |
+| Documentation gaps | `/cco-docs` |
 | Research a topic | `/cco-research "your question"` |
 | Update CCO | `/cco-update` |
 

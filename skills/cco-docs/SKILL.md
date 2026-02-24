@@ -81,14 +81,24 @@ Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing do
 
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
 
-Ideal docs by project type:
+Ideal docs by project type (Per CCO Rules: Project Types):
 
 | Type | README | API | Dev | User | Ops | Changelog |
 |------|--------|-----|-----|------|-----|-----------|
-| CLI | Full | - | Basic | Full | - | Yes |
-| Library | Full | Full | Full | Guides | Publish | Yes |
-| API | Full | Full | Full | Full | Full | Yes |
-| Web | Full | Components | Full | Basic | Full | Yes |
+| cli | Full | - | Basic | Full (man/help) | - | Yes |
+| library | Full | Full | Full | Guides | Publish | Yes |
+| api | Full | Full | Full | Full | Full | Yes |
+| web | Full | Components | Full | Basic | Full | Yes |
+| mobile | Full | - | Full | Store listing | Full | Yes |
+| desktop | Full | - | Full | Full | Full | Yes |
+| monorepo | Full | Per-package | Full | Per-package | Full | Yes |
+| iac | Full | - | Full | Runbook | Full | Yes |
+| devtool | Full | Full | Full | Full | - | Yes |
+| data | Full | Schema | Full | Pipeline guide | Full | Yes |
+| ml | Full | Model card | Full | Inference guide | Full | Yes |
+| embedded | Full | HW interface | Full | Setup guide | Flash guide | Yes |
+| game | Full | - | Full | Player guide | - | Yes |
+| extension | Full | API/hooks | Full | Marketplace | Publish | Yes |
 
 Missing docs = HIGH, incomplete (<70%) = MEDIUM.
 

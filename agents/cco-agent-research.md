@@ -95,15 +95,13 @@ Score < 50 → discard. Irrelevant → discard. Duplicate → skip. Outdated >2y
 
 ## Verification Rules
 
-**1. Triangulation:** No claim enters synthesis unless verified by 2+ independent sources. "Independent" = different organizations, not mirrors of the same press release.
+**1. Triangulation + Citation:** No claim enters synthesis unless verified by 2+ independent sources (different organizations, not mirrors). Every claim cites at least one source by URL. Remove unsupported claims.
 
-**2. Claim-Source Mapping:** Every factual claim in synthesis must cite at least one source by URL. Remove unsupported claims.
+**2. Recency Validation:** For statistics, market data, and tech claims: if newest source >12mo old, flag as "potentially outdated" in output.
 
-**3. Recency Validation:** For statistics, market data, and tech claims: if newest source >12mo old, flag as "potentially outdated" in output.
+**3. Source Diversity:** Valid research requires sources from ≥2 categories: official/institutional, academic/research, expert/practitioner, community/market. Single-category → confidence downgrade.
 
-**4. Source Diversity:** Valid research requires sources from ≥2 categories: official/institutional, academic/research, expert/practitioner, community/market. Single-category → confidence downgrade.
-
-**5. Bias Detection:** Flag sources with commercial interest in the conclusion. Apply vendor self-promotion modifier.
+**4. Bias Detection:** Flag sources with commercial interest in the conclusion. Apply vendor self-promotion modifier.
 
 ## Confidence
 

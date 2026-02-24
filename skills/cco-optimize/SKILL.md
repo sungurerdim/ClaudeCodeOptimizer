@@ -64,44 +64,24 @@ AskUserQuestion([{
 }])
 ```
 
-### Phase 2: Analyze [PARALLEL: 4 calls]
+### Phase 2: Analyze [BATCHED: 2+2]
 
-Launch scope groups as parallel Task calls to cco-agent-analyze (mode: auto) in a SINGLE message WITHOUT `run_in_background`:
-- Security & Privacy: security, robustness, privacy
-- Code Quality: hygiene, types, simplify
-- Performance: performance
-- AI Cleanup: ai-hygiene, doc-sync
+Per CCO Rules: Parallel Execution, Agent Contract, Model Routing.
 
-**Agent invocation:** Send ALL 4 Task calls in one message. Do NOT use `run_in_background` for Task calls. Wait for ALL results before proceeding.
+| Batch | Tracks | Model |
+|-------|--------|-------|
+| 1 | Security & Privacy (security, robustness, privacy) + Code Quality (hygiene, types, simplify) — mode: auto | haiku |
+| 2 | Performance (performance) + AI Cleanup (ai-hygiene, doc-sync) — mode: auto | haiku |
 
-Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+Wait for ALL batches. Phase gate: do not proceed until all tracks return or fail.
 
-**Phase gate:** Do NOT proceed to Phase 3 until all 4 agent groups have returned results or failed.
+Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: CRITICAL Escalation — if any CRITICAL findings, run single opus validation call before proceeding.
 
 **Gate:** If findings = 0 after analysis → skip Phase 3-4, go directly to Phase 5 with: `cco-optimize: OK | No issues found | Scopes: {scoped list}`
 
 ### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 
-Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews showing scope per option:
-
-```javascript
-AskUserQuestion([{
-  question: "{totalFindings} findings. How would you like to proceed?",
-  header: "Action",
-  options: [
-    { label: "Fix All (Recommended)", description: "Apply all fixable findings",
-      markdown: "{full findings table: ID | Severity | Title | Location}" },
-    { label: "By Severity", description: "Choose which severity levels to fix",
-      markdown: "CRITICAL: {n}\nHIGH:     {n}\nMEDIUM:   {n}\nLOW:      {n}" },
-    { label: "Review Each", description: "Decide on each finding individually",
-      markdown: "{full findings table}" },
-    { label: "Report Only", description: "No fixes, just save the report" }
-  ],
-  multiSelect: false
-}])
-```
-
-If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
+Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews. Options: Fix All (recommended) / By Severity / Review Each / Report Only.
 
 ### Phase 4: Apply [SYNCHRONOUS, SKIP if --preview]
 
@@ -151,14 +131,4 @@ Next: `/cco-commit` (commit fixes) | `/cco-align` (check architecture) | `/cco-b
 
 ## Scopes (9 scopes, 97 checks)
 
-| Scope | ID Range | Checks |
-|-------|----------|--------|
-| security | SEC-01-12 | Secrets, injection, deserialization, eval, debug, crypto |
-| hygiene | HYG-01-20 | Unused code, dead code, duplicates, stale TODOs, comment quality |
-| types | TYP-01-10 | Type errors, missing annotations, type:ignore, Any in API |
-| performance | PRF-01-10 | N+1, blocking async, missing cache/pagination/pool |
-| ai-hygiene | AIH-01-08 | Hallucinated APIs, orphan abstractions, over-documented, stale mocks |
-| robustness | ROB-01-10 | Missing timeout/retry, unbounded collections, resource cleanup |
-| privacy | PRV-01-08 | PII exposure, missing masking/consent/retention |
-| doc-sync | DOC-01-08 | README drift, API mismatch, broken links, changelog gaps |
-| simplify | SIM-01-11 | Deep nesting, duplicates, unnecessary abstractions, test bloat |
+Per cco-agent-analyze: Optimize Scopes — security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify.

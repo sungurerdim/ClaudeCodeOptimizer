@@ -144,12 +144,12 @@ Multi-source research with reliability scoring.
 
 | Tier | Score | Sources |
 |------|-------|---------|
-| T1 | 90-100 | Official docs, specs |
-| T2 | 80-90 | GitHub, changelogs |
-| T3 | 70-80 | Major blogs, tutorials |
-| T4 | 60-70 | Stack Overflow, forums |
-| T5 | 50-60 | Personal blogs |
-| T6 | Skip | Unknown/unverified |
+| T1 | 95-100 | Official docs, specs |
+| T2 | 85-94 | GitHub, changelogs |
+| T3 | 70-84 | Major blogs, tutorials |
+| T4 | 55-69 | Stack Overflow, forums |
+| T5 | 40-54 | Personal blogs |
+| T6 | <40 | Unknown/unverified (discard) |
 
 ---
 
