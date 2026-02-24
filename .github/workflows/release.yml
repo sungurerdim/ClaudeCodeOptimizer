@@ -75,9 +75,18 @@ jobs:
           cache: false
 
       - name: Lint before release
-        run: |
-          cd extras/installer && go vet ./...
-          cd ../../extras/statusline && go vet ./...
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.1.6
+          working-directory: extras/installer
+          args: --config ../../.golangci.yml
+
+      - name: Lint statusline before release
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.1.6
+          working-directory: extras/statusline
+          args: --config ../../.golangci.yml
 
       - name: Test before release
         run: |

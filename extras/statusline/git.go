@@ -14,9 +14,13 @@ import (
 // gitTimeoutMs returns the git command timeout in milliseconds,
 // configurable via the CCO_GIT_TIMEOUT environment variable.
 func gitTimeoutMs() int {
-	const defaultTimeout = 5000
+	const (
+		defaultTimeout = 5000
+		minTimeout     = 100
+		maxTimeout     = 60000
+	)
 	if envTimeout := os.Getenv("CCO_GIT_TIMEOUT"); envTimeout != "" {
-		if t, err := strconv.Atoi(envTimeout); err == nil && t > 0 {
+		if t, err := strconv.Atoi(envTimeout); err == nil && t >= minTimeout && t <= maxTimeout {
 			return t
 		}
 	}
@@ -43,11 +47,12 @@ func parseGitStatus(statusOut string, info *GitInfo) {
 			continue
 		}
 
+		const branchHeadPrefix = "# branch.head "
+
 		switch {
-		// "# branch.head <name>" — current branch name (14 = len("# branch.head "))
-		case strings.HasPrefix(line, "# branch.head "):
-			if len(line) > 14 {
-				info.Branch = line[14:]
+		case strings.HasPrefix(line, branchHeadPrefix):
+			if len(line) > len(branchHeadPrefix) {
+				info.Branch = line[len(branchHeadPrefix):]
 			}
 		// "# branch.ab +N -M" — ahead/behind counts
 		case strings.HasPrefix(line, "# branch.ab "):

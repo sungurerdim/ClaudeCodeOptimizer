@@ -63,8 +63,9 @@ func cleanupLegacy(base string) []string {
 
 	// v2.x plugin cleanup (best-effort, skip if claude not available)
 	if claudePath, err := exec.LookPath("claude"); err == nil {
-		cmd := exec.Command(claudePath, "plugin", "uninstall", "cco@ClaudeCodeOptimizer") //nolint:gosec // path from exec.LookPath
-		_ = cmd.Run()
+		// Intentional: old plugin format may not exist; error is expected and harmless
+		cmd := exec.Command(claudePath, "plugin", "uninstall", "cco@ClaudeCodeOptimizer")          //nolint:gosec // path from exec.LookPath
+		_ = cmd.Run()                                                                              // safe: best-effort removal of legacy v2 plugin format
 		cmd2 := exec.Command(claudePath, "plugin", "marketplace", "remove", "ClaudeCodeOptimizer") //nolint:gosec // path from exec.LookPath
 		if err := cmd2.Run(); err == nil {
 			removed = append(removed, "plugin:cco@ClaudeCodeOptimizer")
