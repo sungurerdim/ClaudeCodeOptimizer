@@ -90,7 +90,7 @@ applied + failed + needs_approval = total. No declined category.
 
 ### Auto Mode
 
-When --auto active: no questions, no deferrals. Fix everything except large architectural changes. Never say "too complex", "might break", or "consider later".
+When --auto active: no questions, no deferrals. Fix everything except large architectural changes (unless --force-approve). Never say "too complex", "might break", or "consider later".
 
 ### Agent Contract
 
@@ -129,7 +129,9 @@ When findings > 0 and not --auto, display plan table before asking:
 
 After apply phase completes, ALWAYS evaluate needs_approval count before proceeding to summary.
 
-If needs_approval > 0 and not --auto: display items table (ID, severity, issue, location, reason), then:
+If --force-approve: send ALL needs_approval items to cco-agent-apply without confirmation. Items become applied or failed — needs_approval count drops to 0 in final accounting.
+
+If needs_approval > 0 and not --auto and not --force-approve: display items table (ID, severity, issue, location, reason), then:
 
 1. Action: Fix All / Review Each / Skip All
 

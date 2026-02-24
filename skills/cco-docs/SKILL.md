@@ -1,6 +1,6 @@
 ---
 description: Documentation gap analysis — compare ideal vs current docs, generate missing content. Use when documentation needs to be created, updated, or audited.
-argument-hint: "[--auto] [--preview] [--scope=<name>] [--update]"
+argument-hint: "[--auto] [--preview] [--scope=<name>] [--update] [--force-approve]"
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 ---
 
@@ -20,6 +20,7 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 | `--preview` | Analyze gaps only, no generation |
 | `--scope=X` | Single scope: readme, api, dev, user, ops, changelog, refine, verify |
 | `--update` | Regenerate even if docs exist |
+| `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
 ## Context
 

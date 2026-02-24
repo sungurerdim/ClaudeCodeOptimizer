@@ -8,6 +8,7 @@
 - **Constraints:** No restrictions
 - **Data:** No sensitive data | **Regulations:** N/A
 - **Audience:** Public users | **Deploy:** GitHub releases (Go binary installer)
+- **Repo:** Public | **Team:** Solo | **Distribution:** Open source
 
 ### Project Map
 ```
@@ -35,14 +36,14 @@ Toolchain: gofmt + go vet + golangci-lint | GoReleaser | GitHub Actions CI | No 
 ### Current Scores
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Security & Privacy | 90 | OK |
-| Code Quality | 90 | OK |
-| Architecture | 76 | WARN |
-| Performance | 90 | OK |
-| Resilience | 84 | WARN |
-| Testing | 68 | WARN |
-| Stack Health | 88 | OK |
-| DX | 82 | WARN |
+| Security & Privacy | 93 | OK |
+| Code Quality | 92 | OK |
+| Architecture | 86 | OK |
+| Performance | 91 | OK |
+| Resilience | 92 | OK |
+| Testing | 80 | WARN |
+| Stack Health | 90 | OK |
+| DX | 86 | OK |
 | Documentation | 80 | WARN |
-| Overall | 84 | WARN |
+| Overall | 88 | OK |
 <!-- cco-blueprint-end -->

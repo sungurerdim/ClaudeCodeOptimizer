@@ -10,6 +10,52 @@ git clone https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cd ClaudeCodeOptimizer
 ```
 
+## Development Environment
+
+### Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Go | 1.23+ | Build installer and statusline binaries |
+| golangci-lint | v2.1+ | Linting (optional — CI runs it) |
+
+### Building
+
+```bash
+# Installer binary
+cd extras/installer && go build -o cco .
+
+# Statusline binary
+cd extras/statusline && go build -o cco-statusline .
+```
+
+### Running Tests
+
+```bash
+# Both modules
+cd extras/installer && go test -race -count=1 ./...
+cd extras/statusline && go test -race -count=1 ./...
+```
+
+### Running Lint
+
+```bash
+# Requires golangci-lint v2
+golangci-lint run --config ../../.golangci.yml ./...
+```
+
+### CI Pipeline
+
+CI runs on every PR to `main`:
+
+| Job | What It Checks |
+|-----|----------------|
+| Validate | YAML frontmatter in all skill/agent files |
+| Manifest Sync | `extras/installer/manifest.go` matches repo files |
+| Go | golangci-lint + `go test -race` for both modules |
+
+All three checks must pass before merge.
+
 ## File Naming
 
 | Type | Pattern | Location |

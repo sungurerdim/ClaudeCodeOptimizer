@@ -1,6 +1,6 @@
 ---
 description: Project health system — profile-based assessment, transformation, and progress tracking. Use for project scoring, blueprint init, or health refresh.
-argument-hint: "[--auto] [--preview] [--init] [--refresh] [--scope=<name>]"
+argument-hint: "[--auto] [--preview] [--init] [--refresh] [--scope=<name>] [--force-approve]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 disable-model-invocation: true
 ---
@@ -18,6 +18,7 @@ disable-model-invocation: true
 | `--init` | Profile creation/refresh only (no analysis) |
 | `--refresh` | Re-scan profile (decisions preserved) |
 | `--scope=X` | Specific area: stack, deps, dx, structure, code, architecture, docs, memory, all |
+| `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
 ## Context
 
@@ -86,7 +87,7 @@ Toolchain: {tools} | {CI} | {container}
 | 4 | Consolidate | No |
 | 5 | Plan Review | Yes (--auto) |
 | 6 | Apply | Yes (--preview) |
-| 6.1 | Needs-Approval Review | Yes (--auto) |
+| 6.1 | Needs-Approval Review | Yes (--auto, --force-approve auto-applies) |
 | 7 | Update Profile | No |
 | 7.1 | Memory Cleanup | Yes (--preview) |
 | 8 | Summary | No |
@@ -378,7 +379,7 @@ Per CCO Rules: Plan Review Protocol — display findings, ask with markdown prev
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) in priority order: CRITICAL/security → Code quality → Architecture → Documentation. Per CCO Rules: on error, count as failed, continue.
 
-### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto, AUTO-APPLY if --force-approve]
 
 Per CCO Rules: Needs-Approval Protocol.
 

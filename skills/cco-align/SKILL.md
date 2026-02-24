@@ -1,6 +1,6 @@
 ---
 description: Align codebase with ideal architecture — gap analysis and strategic fixes. Use for architecture review, structural improvements, or design pattern evaluation.
-argument-hint: "[--auto] [--preview]"
+argument-hint: "[--auto] [--preview] [--force-approve]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 ---
 
@@ -20,6 +20,7 @@ For tactical file-level fixes, use `/cco-optimize`.
 |------|--------|
 | `--auto` | All 8 scopes, all severities, no questions, single-line summary |
 | `--preview` | Analyze only, show gaps and findings, don't apply |
+| `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
 ## Context
 
@@ -111,7 +112,7 @@ Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, ti
 
 Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count findings, not locations. On error: count as failed, continue.
 
-### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 6.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto, AUTO-APPLY if --force-approve]
 
 Per CCO Rules: Needs-Approval Protocol.
 
