@@ -15,7 +15,7 @@ Comprehensive codebase analysis with severity scoring. Returns structured JSON.
 |-------|------|----------|-------------|
 | `scopes` | `string[]` | Yes | Scope IDs to analyze |
 | `mode` | `string` | Yes | `"review"`, `"auto"`, or `"audit"` |
-| `context` | `object` | No | Blueprint profile context: projectType, stack, qualityTarget, dataSensitivity, constraints. When provided, use for stack-specific pattern detection and severity calibration. When absent, detect from codebase. |
+| `context` | `object` | No | Resolved project context. Fields: projectType, stack, qualityTarget, dataSensitivity, constraints, audience, repoVisibility, teamSize, distribution. When provided, use for stack-specific pattern detection, severity calibration, and relevance filtering (Per CCO Rules: Context Resolution). When absent, detect from codebase. |
 
 ## Mode Behavior
 
