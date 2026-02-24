@@ -301,7 +301,7 @@ func writeResults(base string, results []downloadResult, criticalFiles map[strin
 		if r.err != nil {
 			fmt.Fprintf(os.Stderr, "  ! %s (%v)\n", r.path, r.err)
 			if criticalFiles[r.path] {
-				return failed, fmt.Errorf("critical file failed: %s (%v)", r.path, r.err)
+				return failed, fmt.Errorf("critical file failed: %s (%w)", r.path, r.err)
 			}
 			failed++
 			continue
@@ -310,7 +310,7 @@ func writeResults(base string, results []downloadResult, criticalFiles map[strin
 		if err := writeFile(base, r.path, r.content); err != nil {
 			fmt.Fprintf(os.Stderr, "  ! %s (%v)\n", r.path, err)
 			if criticalFiles[r.path] {
-				return failed, fmt.Errorf("critical file write failed: %s (%v)", r.path, err)
+				return failed, fmt.Errorf("critical file write failed: %s (%w)", r.path, err)
 			}
 			failed++
 			continue
