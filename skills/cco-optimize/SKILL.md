@@ -1,6 +1,6 @@
 ---
 description: Fix security, hygiene, types, performance issues in code. Use when code needs quality review, security audit, or cleanup.
-argument-hint: "[--auto] [--preview] [--scope=<name>]"
+argument-hint: "[--auto] [--preview] [--scope=<name>] [--force-approve]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 ---
 
@@ -22,6 +22,7 @@ For strategic architecture assessment, use `/cco-align`.
 | `--preview` | Analyze and report findings without applying fixes |
 | `--scope=<name>` | Specific scope(s), comma-separated. Valid: security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify |
 | `--loop` | Re-run until clean or max 3 iterations. Combines with `--auto`. |
+| `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
 ## Context
 
@@ -87,7 +88,7 @@ Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, ti
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
 
-### Phase 4.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto]
+### Phase 4.1: Needs-Approval Review [CONDITIONAL, SKIP if --auto, AUTO-APPLY if --force-approve]
 
 Per CCO Rules: Needs-Approval Protocol.
 
