@@ -12,16 +12,12 @@ Claude Code automatically reads all `.md` files in `~/.claude/rules/` at session
 
 ## Rule Categories
 
-| Category | Rules |
-|----------|-------|
-| **Scope Control** | Exploration Budget, Decide and Execute |
-| **Code Integrity** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4) |
-| **Production Standards** | Production-ready baseline for all output |
-| **Verification** | API Verification, Edit Discipline |
-| **Uncertainty Protocol** | Surface Uncertainty, Scope Creep Guard |
-| **Session Resilience** | Anchor to Artifacts, Error Recovery |
-| **Process Discipline** | Task Awareness, Goal Anchoring, Completion Verification |
-| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Needs-Approval Protocol, Parallel Execution, Severity Levels |
+| Category | Contents |
+|----------|----------|
+| **Failure Prevention** | 3 prohibitions (Scope Boundary, Test Integrity, Cross-file Consistency) + 5 process gates (Change Verification, Migration Sweep, Trust Verification, Format Preservation, Artifact-First Recovery) |
+| **Process Framework** | 5 checkpoints: before starting, while working, before finishing, on uncertainty, on scope expansion |
+| **Quality Thresholds** | Complexity Limits (CC≤15, Method≤50, File≤500, Nesting≤3, Params≤4), Output & Edit Standards, Error Handling, i18n Stack Reference |
+| **CCO Operations** | Accounting, Auto Mode, Agent Contract, Tool Prerequisites, Confidence Scoring, Skip Patterns, Plan Review Protocol, Needs-Approval Protocol, Parallel Execution, Severity Levels, Model Routing, CRITICAL Escalation, Fix Quality, Project Types |
 
 ## Hard Limits
 

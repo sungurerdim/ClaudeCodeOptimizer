@@ -8,11 +8,11 @@ Specialized subagents for analysis, fixes, and research.
 
 | Agent | Purpose | Model | Isolation | Tools |
 |-------|---------|-------|-----------|-------|
-| **cco-agent-analyze** | Codebase analysis with severity scoring | Haiku | worktree | Glob, Read, Grep, Bash |
+| **cco-agent-analyze** | Codebase analysis with severity scoring | Haiku/Sonnet/Opus* | — | Glob, Read, Grep, Bash |
 | **cco-agent-apply** | Verified write operations + accounting | Inherited | — | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
 | **cco-agent-research** | Multi-source research with CRAAP+ scoring | Haiku | — | WebSearch, WebFetch, Read, Grep, Glob |
 
-**Model rationale:** Haiku for read-only agents (fast, cost-effective). Apply agent inherits the session model (matches user's quality/cost tradeoff). Agent models are specified in frontmatter.
+**Model rationale:** Per CCO Rules: Model Routing. Agent frontmatter defaults to Haiku. Skills override via Task tool's `model` parameter: auto → Haiku, review → Sonnet, CRITICAL escalation → Opus. Apply agent inherits the session model.
 
 ## When to Use
 
@@ -34,13 +34,14 @@ Need changes?
 
 ## cco-agent-analyze
 
-Read-only analysis agent with `isolation: worktree`. Runs on an isolated git worktree snapshot, preventing interference between parallel agents and the working directory. Returns structured JSON with findings, scores, and metrics.
+Read-only analysis agent. Returns structured JSON with findings, scores, and metrics. No worktree isolation — read-only parallel access is safe.
 
-- **9 optimize scopes** (97 checks): security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify
-- **8 review scopes** (92 checks): architecture, patterns, cross-cutting, testing, maintainability, ai-architecture, functional-completeness, production-readiness
-- **4 audit scopes** (40 checks): stack-assessment, dependency-health, dx-quality, project-structure
-- Platform filtering, skip patterns, false positive handling
-- Per CCO Rules: Confidence Scoring, Severity Levels, Skip Patterns
+- **9 optimize scopes** (97 checks) — see agents/cco-agent-analyze.md
+- **8 review scopes** (92 checks) — see agents/cco-agent-analyze.md
+- **4 audit scopes** (40 checks) — see agents/cco-agent-analyze.md
+- Context-aware filtering by project type, cross-scope dedup, negative evidence checks
+- Standardized score calculation formula (penalty-based with severity caps)
+- Per CCO Rules: Confidence Scoring, Severity Levels, Skip Patterns, Fix Quality
 
 ## cco-agent-apply
 

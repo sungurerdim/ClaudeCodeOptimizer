@@ -59,9 +59,9 @@ AskUserQuestion([
 
 Extract from $ARGUMENTS: concepts, tech domain, comparison mode, search mode (troubleshoot/changelog/security). Resolve current date from system-reminder `currentDate` — pass it explicitly to every cco-agent-research Task prompt (e.g., "Current date: 2026-02-19. Search for...").
 
-### Phase 3: Research [PARALLEL: up to 7 calls]
+### Phase 3: Research [BATCHED: max 2 per batch]
 
-Launch parallel Task calls to cco-agent-research:
+Launch Task calls to cco-agent-research in batches of max 2 per message (runtime concurrency limit). Do NOT use `run_in_background` for Task calls.
 
 | Track | Agent scope | When |
 |-------|------------|------|
@@ -72,6 +72,8 @@ Launch parallel Task calls to cco-agent-research:
 | T4: Community (SO/Reddit) | scope: search, allowed_domains: [stackoverflow.com, reddit.com] | Standard+ |
 | Security (NVD/CVE/Snyk) | scope: dependency | If security query |
 | Comparison A/B | scope: full | If comparison detected |
+
+**Batching order:** Group active tracks into pairs and launch sequentially. Example for Standard+ with security: Batch 1 (Local+T1) → Batch 2 (T2+T3) → Batch 3 (T4+Security) → Batch 4 (Comparison if needed). Apply saturation gate after each batch.
 
 ### Phase 4: Synthesize
 
@@ -87,11 +89,4 @@ Executive summary, evidence hierarchy (primary T1-T2, supporting T3-T4), contrad
 
 ## Source Tiers
 
-| Tier | Sources | Score |
-|------|---------|-------|
-| T1 | Official docs, specs | 95-100 |
-| T2 | GitHub, changelogs | 85-94 |
-| T3 | Major blogs, tutorials | 70-84 |
-| T4 | Stack Overflow, forums | 55-69 |
-| T5 | Personal blogs | 40-54 |
-| T6 | Unknown | <40 (discard) |
+Per cco-agent-research: Source Tiers & CRAAP+ Scoring. T1 (official docs, 95-100) through T6 (unknown, <40 discard). Score <50 → discard.
