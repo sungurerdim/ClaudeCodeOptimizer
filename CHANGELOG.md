@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.5.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.4.0...v4.5.0) (2026-02-24)
+
+
+### Features
+
+* **skills:** add --force-approve flag and harden extras ([#63](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/63)) ([361b750](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/361b750ab299836852f3a51d2262aeccbf43e3b4))
+
 ## [4.4.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.3.0...v4.4.0) (2026-02-23)
 
 
