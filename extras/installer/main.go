@@ -1,13 +1,19 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
+
+// errUpToDate is a sentinel error indicating the installed version is current.
+var errUpToDate = errors.New("already up to date")
 
 func main() {
 	if len(os.Args) < 2 {
@@ -15,19 +21,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	var err error
 	switch os.Args[1] {
 	case "install":
 		tag := ""
 		if len(os.Args) >= 3 {
 			tag = os.Args[2]
 		}
-		runInstall(tag)
+		err = runInstall(tag)
 	case "uninstall":
-		runUninstall()
+		err = runUninstall()
 	case "version":
-		runVersion()
+		err = runVersion()
 	default:
 		printUsage()
+		os.Exit(1)
+	}
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -58,21 +70,15 @@ type installInfo struct {
 	testContent    string
 }
 
-func runInstall(tag string) {
+func runInstall(tag string) error {
 	base, err := claudeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
-	// State recovery: detect interrupted previous install
 	stateFile := filepath.Join(base, ".cco-installing")
-	if _, err := os.Stat(stateFile); err == nil {
-		fmt.Println("  Note: Previous installation may have been interrupted.")
-		fmt.Println("  Proceeding with fresh install...")
-		fmt.Println()
-	}
-	if err := os.WriteFile(stateFile, []byte("installing"), 0600); err != nil {
+	checkStaleState(stateFile)
+	if err := writeStateFile(stateFile); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not write state file: %v\n", err)
 	}
 	defer func() { _ = os.Remove(stateFile) }()
@@ -80,75 +86,139 @@ func runInstall(tag string) {
 	fmt.Println("CCO Installer")
 	fmt.Println("=============")
 
-	info, ok := resolveAndVerify(base, tag)
-	if !ok {
+	info, err := resolveAndVerify(base, tag)
+	if errors.Is(err, errUpToDate) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	failed, err := downloadAllFiles(base, info)
+	if err != nil {
+		return err
+	}
+
+	legacyRemoved := cleanupLegacy(base)
+	printSummary(base, info, failed, legacyRemoved)
+
+	if failed > 0 {
+		return fmt.Errorf("installation completed with %d error(s). Re-run the installer or download files manually", failed)
+	}
+	return nil
+}
+
+// writeStateFile writes a state file with the current Unix timestamp.
+func writeStateFile(path string) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0750); err != nil {
+		return err
+	}
+	content := fmt.Sprintf("%d", time.Now().Unix())
+	return os.WriteFile(path, []byte(content), 0600)
+}
+
+// checkStaleState checks for an interrupted previous install and warns the user.
+// State files older than 1 hour are considered stale and removed silently.
+func checkStaleState(path string) {
+	info, err := os.Stat(path)
+	if err != nil {
 		return
 	}
 
-	failed := downloadAllFiles(base, info)
-
-	legacyRemoved := cleanupLegacy(base)
-
-	printSummary(base, info, failed, legacyRemoved)
-}
-
-// resolveAndVerify resolves the release tag, downloads cco-rules.md for
-// source verification, and compares versions. Returns (info, false) if
-// the installed version is already up to date and no action is needed.
-func resolveAndVerify(base, tag string) (installInfo, bool) {
-	// Detect currently installed version
-	currentVersion := ""
-	if content, err := os.ReadFile(filepath.Join(base, "rules", "cco-rules.md")); err == nil { //nolint:gosec // G304: path constructed from home directory
-		currentVersion = extractVersion(string(content))
-	}
-
-	// Resolve release tag
-	var ref string
-	if tag != "" {
-		ref = tag
-		fmt.Printf("Channel: pinned (%s)\n", ref)
-	} else {
-		ref = resolveLatestTag()
-		if ref == "main" {
-			fmt.Println("Channel: stable (main — no tags found)")
-		} else {
-			fmt.Printf("Channel: stable (%s)\n", ref)
+	content, readErr := os.ReadFile(path) //nolint:gosec // G304: path constructed from home directory
+	if readErr == nil {
+		if ts, parseErr := strconv.ParseInt(strings.TrimSpace(string(content)), 10, 64); parseErr == nil {
+			age := time.Since(time.Unix(ts, 0))
+			if age > time.Hour {
+				fmt.Printf("  Note: Found stale installation state (%s old). Cleaning up.\n", age.Truncate(time.Minute))
+				_ = os.Remove(path)
+				return
+			}
 		}
 	}
 
+	// Fallback: use file modification time if content parsing fails
+	if time.Since(info.ModTime()) > time.Hour {
+		fmt.Println("  Note: Found stale installation state. Cleaning up.")
+		_ = os.Remove(path)
+		return
+	}
+
+	fmt.Println("  Note: Previous installation may have been interrupted.")
+	fmt.Println("  Proceeding with fresh install...")
+	fmt.Println()
+}
+
+// detectCurrentVersion reads the installed cco-rules.md and extracts its version.
+func detectCurrentVersion(base string) string {
+	content, err := os.ReadFile(filepath.Join(base, "rules", "cco-rules.md")) //nolint:gosec // G304: path constructed from home directory
+	if err != nil {
+		return ""
+	}
+	return extractVersion(string(content))
+}
+
+// resolveChannel determines the git ref to download from.
+func resolveChannel(tag string) string {
+	if tag != "" {
+		fmt.Printf("Channel: pinned (%s)\n", tag)
+		return tag
+	}
+	ref := resolveLatestTag()
+	if ref == "main" {
+		fmt.Println("Channel: stable (main — no tags found)")
+	} else {
+		fmt.Printf("Channel: stable (%s)\n", ref)
+	}
+	return ref
+}
+
+// printVersionInfo displays version comparison information.
+func printVersionInfo(current, new, tag string) {
+	switch {
+	case current != "" && new != "":
+		switch {
+		case current == new && tag == "":
+			fmt.Printf("  Version: v%s (already up to date)\n", current)
+		case current == new:
+			fmt.Printf("  Version: v%s (reinstalling)\n", current)
+		default:
+			fmt.Printf("  Update: v%s → v%s\n", current, new)
+		}
+	case current != "":
+		fmt.Printf("  Installed: v%s\n", current)
+	case new != "":
+		fmt.Printf("  Version: v%s (fresh install)\n", new)
+	}
+}
+
+// resolveAndVerify resolves the release tag, downloads cco-rules.md for
+// source verification, and compares versions. Returns errUpToDate if
+// the installed version is already current and no action is needed.
+func resolveAndVerify(base, tag string) (installInfo, error) {
+	currentVersion := detectCurrentVersion(base)
+	ref := resolveChannel(tag)
 	baseURL := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s", repo, ref)
 
-	// Source verification
 	fmt.Println()
 	fmt.Println("Verifying source...")
 	testContent, err := downloadFile(baseURL, "rules/cco-rules.md")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "  Source verification failed: %s does not contain CCO files.\n", ref)
-		fmt.Fprintf(os.Stderr, "  Check the repository for updates: https://github.com/%s\n", repo)
-		os.Exit(1)
+		return installInfo{}, fmt.Errorf(
+			"source verification failed: %s does not contain CCO files.\n"+
+				"  Check the repository for updates: https://github.com/%s", ref, repo)
 	}
 
 	newVersion := extractVersion(testContent)
 	fmt.Printf("  Source verified (%s)\n", ref)
 
-	// Show version info
-	switch {
-	case currentVersion != "" && newVersion != "":
-		switch {
-		case currentVersion == newVersion && tag == "":
-			fmt.Printf("  Version: v%s (already up to date)\n", currentVersion)
-			fmt.Println()
-			fmt.Println("Already up to date. Nothing to do.")
-			return installInfo{}, false
-		case currentVersion == newVersion:
-			fmt.Printf("  Version: v%s (reinstalling)\n", currentVersion)
-		default:
-			fmt.Printf("  Update: v%s → v%s\n", currentVersion, newVersion)
-		}
-	case currentVersion != "":
-		fmt.Printf("  Installed: v%s\n", currentVersion)
-	case newVersion != "":
-		fmt.Printf("  Version: v%s (fresh install)\n", newVersion)
+	printVersionInfo(currentVersion, newVersion, tag)
+
+	if currentVersion != "" && newVersion != "" && currentVersion == newVersion && tag == "" {
+		fmt.Println()
+		fmt.Println("Already up to date. Nothing to do.")
+		return installInfo{}, errUpToDate
 	}
 
 	return installInfo{
@@ -157,7 +227,7 @@ func resolveAndVerify(base, tag string) (installInfo, bool) {
 		currentVersion: currentVersion,
 		newVersion:     newVersion,
 		testContent:    testContent,
-	}, true
+	}, nil
 }
 
 // installFile represents a file to download and install, with its manifest group.
@@ -174,32 +244,29 @@ type downloadResult struct {
 	err     error
 }
 
-// downloadAllFiles downloads all manifest files in parallel, writes them
-// sequentially, and returns the count of non-critical failures.
-func downloadAllFiles(base string, info installInfo) int {
-	var allFiles []installFile
+// buildFileList constructs the complete list of files to install from manifests.
+func buildFileList() []installFile {
+	var files []installFile
 	for _, f := range rulesFiles {
-		allFiles = append(allFiles, installFile{f, "rules"})
+		files = append(files, installFile{f, "rules"})
 	}
 	for _, f := range skillFiles {
-		allFiles = append(allFiles, installFile{f, "skills"})
+		files = append(files, installFile{f, "skills"})
 	}
 	for _, f := range agentFiles {
-		allFiles = append(allFiles, installFile{f, "agents"})
+		files = append(files, installFile{f, "agents"})
 	}
+	return files
+}
 
-	// Critical files that must succeed for a valid installation
-	criticalFiles := map[string]bool{
-		"rules/cco-rules.md": true,
-	}
-
-	// Download all files in parallel
-	results := make([]downloadResult, len(allFiles))
+// downloadInParallel downloads files concurrently using a bounded semaphore.
+// The already-verified rules/cco-rules.md is reused from the verification step.
+func downloadInParallel(files []installFile, info installInfo) []downloadResult {
+	results := make([]downloadResult, len(files))
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 10)
 
-	for i, f := range allFiles {
-		// Reuse already-downloaded content from verification step
+	for i, f := range files {
 		if f.path == "rules/cco-rules.md" {
 			results[i] = downloadResult{path: f.path, group: f.group, content: info.testContent}
 			continue
@@ -215,10 +282,15 @@ func downloadAllFiles(base string, info installInfo) int {
 	}
 
 	wg.Wait()
+	return results
+}
 
-	// Write files and print output sequentially
+// writeResults writes downloaded content to disk and reports progress.
+// Returns the count of non-critical failures and an error for critical failures.
+func writeResults(base string, results []downloadResult, criticalFiles map[string]bool) (int, error) {
 	failed := 0
 	currentGroup := ""
+
 	for _, r := range results {
 		if r.group != currentGroup {
 			fmt.Println()
@@ -229,8 +301,7 @@ func downloadAllFiles(base string, info installInfo) int {
 		if r.err != nil {
 			fmt.Fprintf(os.Stderr, "  ! %s (%v)\n", r.path, r.err)
 			if criticalFiles[r.path] {
-				fmt.Fprintf(os.Stderr, "\nCritical file failed. Installation aborted.\n")
-				os.Exit(1)
+				return failed, fmt.Errorf("critical file failed: %s (%v)", r.path, r.err)
 			}
 			failed++
 			continue
@@ -239,8 +310,7 @@ func downloadAllFiles(base string, info installInfo) int {
 		if err := writeFile(base, r.path, r.content); err != nil {
 			fmt.Fprintf(os.Stderr, "  ! %s (%v)\n", r.path, err)
 			if criticalFiles[r.path] {
-				fmt.Fprintf(os.Stderr, "\nCritical file write failed. Installation aborted.\n")
-				os.Exit(1)
+				return failed, fmt.Errorf("critical file write failed: %s (%v)", r.path, err)
 			}
 			failed++
 			continue
@@ -249,7 +319,21 @@ func downloadAllFiles(base string, info installInfo) int {
 		fmt.Printf("  + %s\n", r.path)
 	}
 
-	return failed
+	return failed, nil
+}
+
+// downloadAllFiles downloads all manifest files in parallel, writes them
+// sequentially, and returns the count of non-critical failures.
+// Returns an error only for critical file failures.
+func downloadAllFiles(base string, info installInfo) (int, error) {
+	files := buildFileList()
+
+	criticalFiles := map[string]bool{
+		"rules/cco-rules.md": true,
+	}
+
+	results := downloadInParallel(files, info)
+	return writeResults(base, results, criticalFiles)
 }
 
 // printSummary outputs the installation result and next steps.
@@ -284,26 +368,23 @@ func printSummary(base string, info installInfo, failed int, legacyRemoved []str
 	} else {
 		fmt.Fprintf(os.Stderr, "Installation completed with %d error(s).\n", failed)
 		fmt.Fprintf(os.Stderr, "Re-run the installer or download files manually.\n")
-		os.Exit(1)
 	}
 }
 
-func runUninstall() {
+func runUninstall() error {
 	base, err := claudeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Println("CCO Uninstaller")
 	fmt.Println("===============")
 	fmt.Println()
 
-	// Check if CCO is installed
 	rulesPath := filepath.Join(base, "rules", "cco-rules.md")
 	if _, err := os.Stat(rulesPath); os.IsNotExist(err) {
 		fmt.Println("CCO is not installed.")
-		return
+		return nil
 	}
 
 	fmt.Print("Remove all CCO files? [y/N] ")
@@ -314,7 +395,7 @@ func runUninstall() {
 
 	if strings.ToLower(answer) == "y" {
 		removeAll(base)
-		return
+		return nil
 	}
 
 	// Per-group removal
@@ -381,6 +462,7 @@ func runUninstall() {
 	fmt.Println("      CCO_CONTEXT_START/END, CCO_PRINCIPLES_START/END")
 	fmt.Println()
 	fmt.Println("CCO uninstalled. Restart Claude Code to apply changes.")
+	return nil
 }
 
 func removeAll(base string) {
@@ -411,18 +493,17 @@ func removeAll(base string) {
 	fmt.Println("CCO uninstalled. Restart Claude Code to apply changes.")
 }
 
-func runVersion() {
+func runVersion() error {
 	base, err := claudeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 	rulesPath := filepath.Join(base, "rules", "cco-rules.md")
 
 	content, err := os.ReadFile(rulesPath) //nolint:gosec // G304: path constructed from home directory
 	if err != nil {
 		fmt.Println("CCO is not installed.")
-		return
+		return nil
 	}
 
 	if version := extractVersion(string(content)); version != "" {
@@ -430,4 +511,5 @@ func runVersion() {
 	} else {
 		fmt.Println("CCO installed (version unknown)")
 	}
+	return nil
 }

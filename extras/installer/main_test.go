@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -40,6 +41,16 @@ func TestWriteFile(t *testing.T) {
 		content, _ := os.ReadFile(filepath.Join(base, "a", "b", "c.md")) //nolint:gosec // G304: test path
 		if string(content) != "second" {
 			t.Errorf("got %q, want %q", string(content), "second")
+		}
+	})
+
+	t.Run("no temp file remains after write", func(t *testing.T) {
+		if err := writeFile(base, "atomic/test.md", "data"); err != nil {
+			t.Fatal(err)
+		}
+		tmpPath := filepath.Join(base, "atomic", "test.md.tmp")
+		if _, err := os.Stat(tmpPath); !os.IsNotExist(err) {
+			t.Error("temp file should not remain after successful write")
 		}
 	})
 }
@@ -102,6 +113,10 @@ func TestRemoveDirIfExists(t *testing.T) {
 }
 
 func TestDownloadFile(t *testing.T) {
+	originalBackoff := retryBackoff
+	defer func() { retryBackoff = originalBackoff }()
+	retryBackoff = func(_ int) time.Duration { return time.Millisecond }
+
 	t.Run("successful download with valid content", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, _ = fmt.Fprint(w, "---\nname: test\n---\n# Content")
@@ -150,11 +165,74 @@ func TestDownloadFile(t *testing.T) {
 			t.Error("expected error for connection failure")
 		}
 	})
+
+	t.Run("retries on 5xx and succeeds", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			if attempts < 3 {
+				w.WriteHeader(500)
+				return
+			}
+			_, _ = fmt.Fprint(w, "---\ntest: true\n---\n# Content")
+		}))
+		defer server.Close()
+
+		content, err := downloadFile(server.URL, "test.md")
+		if err != nil {
+			t.Fatalf("downloadFile should succeed after retries: %v", err)
+		}
+		if !strings.HasPrefix(content, "---") {
+			t.Error("content should start with ---")
+		}
+		if attempts != 3 {
+			t.Errorf("expected 3 attempts, got %d", attempts)
+		}
+	})
+
+	t.Run("does not retry on 404", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			w.WriteHeader(404)
+		}))
+		defer server.Close()
+
+		_, err := downloadFile(server.URL, "missing.md")
+		if err == nil {
+			t.Error("expected error for 404")
+		}
+		if attempts != 1 {
+			t.Errorf("should not retry 404, got %d attempts", attempts)
+		}
+	})
+
+	t.Run("gives up after max retries", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			w.WriteHeader(500)
+		}))
+		defer server.Close()
+
+		_, err := downloadFile(server.URL, "fail.md")
+		if err == nil {
+			t.Error("expected error after max retries")
+		}
+		if attempts != 4 { // 1 initial + 3 retries
+			t.Errorf("expected 4 attempts, got %d", attempts)
+		}
+	})
 }
 
 func TestResolveLatestTag(t *testing.T) {
 	originalClient := httpClient
-	defer func() { httpClient = originalClient }()
+	originalBackoff := retryBackoff
+	defer func() {
+		httpClient = originalClient
+		retryBackoff = originalBackoff
+	}()
+	retryBackoff = func(_ int) time.Duration { return time.Millisecond }
 
 	t.Run("returns tag name on success", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -399,4 +477,238 @@ func TestManifestConsistency(t *testing.T) {
 			t.Errorf("agent %q in expected set but not in agentFiles", name)
 		}
 	})
+}
+
+func TestBuildFileList(t *testing.T) {
+	files := buildFileList()
+
+	expectedCount := len(rulesFiles) + len(skillFiles) + len(agentFiles)
+	if len(files) != expectedCount {
+		t.Errorf("got %d files, want %d", len(files), expectedCount)
+	}
+
+	for _, f := range files {
+		switch {
+		case strings.HasPrefix(f.path, "rules/"):
+			if f.group != "rules" {
+				t.Errorf("rules file %s has group %q, want 'rules'", f.path, f.group)
+			}
+		case strings.HasPrefix(f.path, "skills/"):
+			if f.group != "skills" {
+				t.Errorf("skills file %s has group %q, want 'skills'", f.path, f.group)
+			}
+		case strings.HasPrefix(f.path, "agents/"):
+			if f.group != "agents" {
+				t.Errorf("agents file %s has group %q, want 'agents'", f.path, f.group)
+			}
+		default:
+			t.Errorf("unexpected path prefix: %s", f.path)
+		}
+	}
+}
+
+func TestWriteResults(t *testing.T) {
+	criticalFiles := map[string]bool{"rules/cco-rules.md": true}
+
+	t.Run("writes all files successfully", func(t *testing.T) {
+		base := t.TempDir()
+		results := []downloadResult{
+			{path: "rules/cco-rules.md", group: "rules", content: "---\ntest\n---\ncontent"},
+			{path: "skills/cco-test/SKILL.md", group: "skills", content: "---\nskill\n---\ncontent"},
+		}
+
+		failed, err := writeResults(base, results, criticalFiles)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if failed != 0 {
+			t.Errorf("got %d failures, want 0", failed)
+		}
+
+		// Verify files were written
+		for _, r := range results {
+			content, readErr := os.ReadFile(filepath.Join(base, filepath.FromSlash(r.path))) //nolint:gosec // G304: test path
+			if readErr != nil {
+				t.Errorf("file %s not written: %v", r.path, readErr)
+			}
+			if string(content) != r.content {
+				t.Errorf("file %s content mismatch", r.path)
+			}
+		}
+	})
+
+	t.Run("counts non-critical failures", func(t *testing.T) {
+		base := t.TempDir()
+		results := []downloadResult{
+			{path: "skills/cco-bad/SKILL.md", group: "skills", err: fmt.Errorf("download error")},
+		}
+
+		failed, err := writeResults(base, results, criticalFiles)
+		if err != nil {
+			t.Fatalf("unexpected critical error: %v", err)
+		}
+		if failed != 1 {
+			t.Errorf("got %d failures, want 1", failed)
+		}
+	})
+
+	t.Run("returns error on critical download failure", func(t *testing.T) {
+		base := t.TempDir()
+		results := []downloadResult{
+			{path: "rules/cco-rules.md", group: "rules", err: fmt.Errorf("critical download error")},
+		}
+
+		_, err := writeResults(base, results, criticalFiles)
+		if err == nil {
+			t.Error("expected error for critical file failure")
+		}
+		if !strings.Contains(err.Error(), "critical file failed") {
+			t.Errorf("error should mention critical failure, got: %v", err)
+		}
+	})
+}
+
+func TestStateFile(t *testing.T) {
+	t.Run("writes timestamp", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), ".claude", ".cco-installing")
+		before := time.Now().Unix()
+		if err := writeStateFile(path); err != nil {
+			t.Fatalf("writeStateFile failed: %v", err)
+		}
+		after := time.Now().Unix()
+
+		content, err := os.ReadFile(path) //nolint:gosec // G304: test path
+		if err != nil {
+			t.Fatalf("read failed: %v", err)
+		}
+		ts, err := strconv.ParseInt(strings.TrimSpace(string(content)), 10, 64)
+		if err != nil {
+			t.Fatalf("parse failed: %v", err)
+		}
+		if ts < before || ts > after {
+			t.Errorf("timestamp %d not between %d and %d", ts, before, after)
+		}
+	})
+
+	t.Run("checkStaleState removes stale file", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), ".cco-installing")
+		// Write a timestamp from 2 hours ago
+		oldTs := fmt.Sprintf("%d", time.Now().Add(-2*time.Hour).Unix())
+		_ = os.WriteFile(path, []byte(oldTs), 0600)
+
+		checkStaleState(path)
+
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Error("stale state file should have been removed")
+		}
+	})
+
+	t.Run("checkStaleState keeps recent file", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), ".cco-installing")
+		recentTs := fmt.Sprintf("%d", time.Now().Unix())
+		_ = os.WriteFile(path, []byte(recentTs), 0600)
+
+		checkStaleState(path)
+
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Error("recent state file should not be removed")
+		}
+	})
+
+	t.Run("checkStaleState handles missing file", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), ".cco-installing")
+		// Should not panic
+		checkStaleState(path)
+	})
+}
+
+func TestDetectCurrentVersion(t *testing.T) {
+	t.Run("returns version from installed rules", func(t *testing.T) {
+		base := t.TempDir()
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"), []byte("---\ncco_version: 4.4.0\n---\n"), 0600)
+
+		v := detectCurrentVersion(base)
+		if v != "4.4.0" {
+			t.Errorf("got %q, want %q", v, "4.4.0")
+		}
+	})
+
+	t.Run("returns empty when not installed", func(t *testing.T) {
+		v := detectCurrentVersion(t.TempDir())
+		if v != "" {
+			t.Errorf("got %q, want empty", v)
+		}
+	})
+}
+
+func TestExtractVersion(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    string
+	}{
+		{"standard version", "---\ncco_version: 4.4.0\n---\n", "4.4.0"},
+		{"version with comment", "---\ncco_version: 4.4.0 # current\n---\n", "4.4.0"},
+		{"no version", "---\nname: test\n---\n", ""},
+		{"empty content", "", ""},
+		{"version at end without newline", "cco_version: 1.0.0", "1.0.0"},
+		{"multiple fields", "---\nname: test\ncco_version: 3.2.1\nlast_update: today\n---\n", "3.2.1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractVersion(tt.input)
+			if got != tt.want {
+				t.Errorf("extractVersion(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsRetryable(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"500 error", &httpError{StatusCode: 500, Path: "test"}, true},
+		{"502 error", &httpError{StatusCode: 502, Path: "test"}, true},
+		{"429 rate limit", &httpError{StatusCode: 429, Path: "test"}, true},
+		{"404 not found", &httpError{StatusCode: 404, Path: "test"}, false},
+		{"403 forbidden", &httpError{StatusCode: 403, Path: "test"}, false},
+		{"download failed", fmt.Errorf("download failed: connection refused"), true},
+		{"read failed", fmt.Errorf("read failed: timeout"), true},
+		{"frontmatter error", fmt.Errorf("unexpected content for test.md (missing YAML frontmatter)"), false},
+		{"generic error", fmt.Errorf("something else"), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isRetryable(tt.err)
+			if got != tt.want {
+				t.Errorf("isRetryable(%v) = %v, want %v", tt.err, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestResolveChannel(t *testing.T) {
+	t.Run("returns tag when specified", func(t *testing.T) {
+		ref := resolveChannel("v4.0.0")
+		if ref != "v4.0.0" {
+			t.Errorf("got %q, want %q", ref, "v4.0.0")
+		}
+	})
+}
+
+func TestPrintVersionInfo(t *testing.T) {
+	// Just verify it doesn't panic with various inputs
+	printVersionInfo("", "", "")
+	printVersionInfo("4.0.0", "", "")
+	printVersionInfo("", "4.1.0", "")
+	printVersionInfo("4.0.0", "4.1.0", "")
+	printVersionInfo("4.0.0", "4.0.0", "")
+	printVersionInfo("4.0.0", "4.0.0", "v4.0.0")
 }
