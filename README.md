@@ -39,8 +39,9 @@ Restart Claude Code. Done.
 ## Quick Start
 
 1. **`/cco-blueprint`** — Create a project profile in CLAUDE.md (priorities, constraints, targets)
-2. **`/cco-align`** — Architecture gap analysis
-3. **`/cco-optimize`** — Scan and fix security, quality, and hygiene issues
+2. **`/cco-docs`** — Find documentation gaps and generate missing content
+3. **`/cco-align`** — Architecture gap analysis
+4. **`/cco-optimize`** — Scan and fix security, quality, and hygiene issues
 
 ---
 
@@ -90,12 +91,10 @@ Rules are active in every session — no commands needed.
 
 | Category | What it does |
 |----------|-------------|
-| Scope Control | Every changed line traces to the request; unrelated issues mentioned, not fixed |
-| Complexity Limits | CC≤15, Method≤50 lines, File≤500 lines, Nesting≤3, Params≤4 |
-| Production Standards | Security, privacy, performance, error handling applied by default |
-| Output Brevity | Concise responses; no unnecessary praise, filler, or emojis |
-| Verification | Verify imports and APIs exist before using; match existing code style |
-| Uncertainty Protocol | State confidence levels; ask before proceeding on ambiguous tasks |
+| Failure Prevention | 3 prohibitions (scope drift, test weakening, cross-file breaks) + 5 verification gates |
+| Quality Thresholds | CC≤15, Method≤50 lines, File≤500 lines, Nesting≤3, Params≤4 |
+| Process Framework | Goal anchoring, phase gates, completion verification, uncertainty protocol |
+| CCO Operations | Accounting, severity levels, model routing, parallel execution, and more |
 
 Full reference: [docs/rules.md](docs/rules.md)
 

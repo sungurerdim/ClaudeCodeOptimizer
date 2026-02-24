@@ -27,16 +27,7 @@ For tactical file-level fixes, use `/cco-optimize`.
 
 ## Scopes (8 scopes, 92 checks)
 
-| Scope | ID Range | Focus |
-|-------|----------|-------|
-| architecture | ARC-01 to ARC-15 | Coupling, cohesion, layers, dependencies |
-| patterns | PAT-01 to PAT-15 | Design patterns, consistency, SOLID, framework-specific anti-patterns |
-| testing | TST-01 to TST-10 | Coverage strategy, test quality, gaps |
-| maintainability | MNT-01 to MNT-12 | Complexity, readability, documentation |
-| ai-architecture | AIA-01 to AIA-10 | Over-engineering, local solutions, drift |
-| functional-completeness | FUN-01 to FUN-18 | API completeness, CRUD, pagination, edge cases, schema validation |
-| production-readiness | PRD-01 to PRD-07 | Health endpoints, graceful shutdown, config validation, secret management, deployment hygiene, observability hooks, scaling readiness |
-| cross-cutting | XCT-01 to XCT-05 | Decision impact tracing across areas |
+Per cco-agent-analyze: Review Scopes — architecture, patterns, testing, maintainability, ai-architecture, functional-completeness, production-readiness, cross-cutting.
 
 ## Execution Flow
 
@@ -60,21 +51,20 @@ AskUserQuestion([{
 }])
 ```
 
-### Phase 2: Analyze [PARALLEL: 4 calls]
+### Phase 2: Analyze [BATCHED: 2+2]
 
 If blueprint profile exists in CLAUDE.md, read context (projectType, stack, qualityTarget, dataSensitivity, constraints) and pass to agent calls.
 
-Launch scope groups as parallel Task calls to cco-agent-analyze (mode: review, context: from profile if available) in a SINGLE message WITHOUT `run_in_background`:
-- Structure: architecture, patterns, cross-cutting
-- Quality: testing, maintainability
-- Production: production-readiness
-- Completeness: functional-completeness, ai-architecture
+Per CCO Rules: Parallel Execution, Agent Contract, Model Routing.
 
-**Agent invocation:** Send ALL 4 Task calls in one message. Do NOT use `run_in_background` for Task calls. Wait for ALL results before proceeding.
+| Batch | Tracks | Model |
+|-------|--------|-------|
+| 1 | Structure (architecture, patterns, cross-cutting) + Quality (testing, maintainability) — mode: review | sonnet |
+| 2 | Production (production-readiness) + Completeness (functional-completeness, ai-architecture) — mode: review | sonnet |
 
-Merge findings. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A.
+Wait for ALL batches. Phase gate: do not proceed until all tracks return or fail.
 
-**Phase gate:** Do NOT proceed to Phase 3 until all 4 agent groups have returned results or failed.
+Merge findings. Per CCO Rules: CRITICAL Escalation — if any CRITICAL findings, run single opus validation call before proceeding.
 
 **Gate:** If findings = 0 → skip Phase 5-6, display gap analysis (Phase 3-4) with: `cco-align: OK | No structural issues | Gaps: {metric table}`
 
@@ -115,26 +105,7 @@ Categorize by effort/impact: Quick Win → Moderate → Complex → Major.
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
-Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews showing scope per option:
-
-```javascript
-AskUserQuestion([{
-  question: "{totalFindings} findings. How would you like to proceed?",
-  header: "Action",
-  options: [
-    { label: "Fix All (Recommended)", description: "Apply all fixable findings",
-      markdown: "{full findings table: ID | Severity | Title | Location}" },
-    { label: "By Severity", description: "Choose which severity levels to fix",
-      markdown: "CRITICAL: {n}\nHIGH:     {n}\nMEDIUM:   {n}\nLOW:      {n}" },
-    { label: "Review Each", description: "Decide on each finding individually",
-      markdown: "{full findings table}" },
-    { label: "Report Only", description: "No fixes, just save the report" }
-  ],
-  multiSelect: false
-}])
-```
-
-If "By Severity": severity multiselect (CRITICAL / HIGH / MEDIUM / LOW).
+Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews. Options: Fix All (recommended) / By Severity / Review Each / Report Only.
 
 ### Phase 6: Apply [SKIP if --preview]
 
