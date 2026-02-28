@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.6.0...v4.6.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* **skills:** auto-pull main before committing when behind upstream ([#67](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/67)) ([e8ea63a](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/e8ea63a3c302542b789a796439583c489dbda615))
+
 ## [4.6.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.5.0...v4.6.0) (2026-02-28)
 
 
