@@ -1,5 +1,5 @@
 ---
-cco_version: 4.6.0 # x-release-please-version
+cco_version: 4.6.1 # x-release-please-version
 description: Minimal behavior framework for AI-assisted development — quality, efficiency, security, speed
 last_update_check: 2026-02-21T13:30:00Z
 ---
