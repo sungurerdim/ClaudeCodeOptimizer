@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.5.0...v4.6.0) (2026-02-28)
+
+
+### Features
+
+* **skills:** add history tidy to cco-pr ([#65](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/65)) ([720170a](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/720170a01a0e47aff4b30dc462cccd702951e00b))
+
 ## [4.5.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.4.0...v4.5.0) (2026-02-24)
 
 
