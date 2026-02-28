@@ -43,6 +43,7 @@ Pre-checks → Analyze → Execute → Verify → Summary
 2. Verify git repo: `git rev-parse --git-dir` → not a repo: stop with "Not a git repository. Run `git init` first."
 3. Verify not detached HEAD: `git branch --show-current` → empty: stop with "Detached HEAD — checkout a branch first"
 4. `git fetch origin 2>/dev/null` (best-effort, no stop on failure)
+4a. On main/master: if behind upstream → `git pull origin {branch}` silently. Log: "Pulled {n} commit(s) from origin/{branch}."
 
 **1.2 Branch management:**
 
