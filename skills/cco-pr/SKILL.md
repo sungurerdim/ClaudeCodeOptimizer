@@ -35,10 +35,11 @@ Run `git diff {base}...HEAD` (where `{base}` is detected in Phase 1) and describ
 | `--no-auto-merge` | Skip auto-merge setup |
 | `--preview` | Show PR plan without creating |
 | `--draft` | Create as draft PR (implies --no-auto-merge) |
+| `--no-tidy` | Skip history tidy, push commits as-is |
 
 ## Execution Flow
 
-Validate → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → [Cleanup] → Summary
+Validate → History Tidy → Quality Gates → Analyze → Build → [Review] → Create → [Merge Setup] → [Cleanup] → Summary
 
 ### Phase 1: Validate
 
@@ -61,7 +62,7 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 8. `git fetch origin {base}`
 9. No commits ahead of {base} → stop: "No commits to create PR for."
 10. Branch behind {base} → ask rebase (--auto: rebase automatically, abort on conflict)
-11. Unpushed commits → `git push -u origin {branch}`
+11. Unpushed commits detected → note count for Phase 1.5; push deferred until after History Tidy
 12. PR already exists → show URL, ask: Update / Skip
 13. Verify repo settings: `gh api repos/{owner}/{repo} --jq '{squash: .allow_squash_merge, title: .squash_merge_commit_title, msg: .squash_merge_commit_message, delete: .delete_branch_on_merge, auto_merge: .allow_auto_merge}'`
     - Expected: squash=true, title=PR_TITLE, msg=PR_BODY, delete=true
@@ -70,6 +71,77 @@ Validate → Quality Gates → Analyze → Build → [Review] → Create → [Me
 14. Stale branch scan: `git for-each-ref --sort=committerdate refs/heads/ --format='%(refname:short) %(committerdate:relative)' --no-merged={base}` — exclude current branch, cross-reference with `gh pr list --state open --json headRefName --jq '.[].headRefName'`
     - Branches with no open PR and last commit >7 days ago → display: "Possibly forgotten: {branch} ({age}). Create PR or delete?"
     - --auto: skip (informational only)
+
+### Phase 1.5: History Tidy [CONDITIONAL]
+
+**Skip when:** ≤1 unpushed commit, OR `--no-tidy`, OR `--preview`.
+
+**Goal:** Unpushed commits are local WIP. Before publishing, collapse to net diff and re-plan atomically.
+
+**Step 1 — Gather data (parallel):**
+```bash
+git log origin/{base}...HEAD --oneline           # commit list
+git diff origin/{base}...HEAD --stat             # net diff summary
+git diff origin/{base}...HEAD --numstat          # per-file line counts
+```
+
+**Step 2 — Detect WIP signals:**
+
+| Signal | Check |
+|--------|-------|
+| WIP keywords | Commit message contains: wip, fix, fixup, temp, debug, oops, squash, forgot, whoops, typo, revert, undo, test, trying |
+| File overlap | Same file modified in 2+ commits |
+| Micro-commit | Commit changes ≤2 lines total |
+
+**Skip conditions (commits appear intentional):**
+- ≤3 commits AND zero WIP signals AND no file overlap → SKIP, proceed to push
+
+**Step 3 — Plan:**
+
+Analyze net diff → propose atomic commit plan (same grouping logic as cco-commit Phase 2):
+- Single logical area → 1 commit
+- Multiple distinct areas → split by area, max 1 commit per area
+
+**Step 4 — Display:**
+
+```
+Current history ({n} commits):
+  {hash} {title}  [{files changed}]
+  ...
+
+Proposed ({m} commit(s)):
+  {type}({scope}): {summary}  [{files}]
+  ...
+```
+
+**Step 5 — Confirm [SKIP if --auto]:**
+
+```javascript
+AskUserQuestion([{
+  question: "Tidy {n} WIP commits into {m} clean commit(s)?",
+  header: "History",
+  options: [
+    { label: "Tidy (Recommended)", description: "Collapse to net diff, re-plan atomically" },
+    { label: "Keep as-is", description: "Push {n} commits unchanged" }
+  ],
+  multiSelect: false
+}])
+```
+
+--auto: tidy silently.
+
+**Step 6 — Execute tidy (on "Tidy" or --auto):**
+
+1. Capture current HEAD: `ORIG_HEAD=$(git rev-parse HEAD)` — for recovery
+2. `git reset --mixed origin/{base}` — dissolves commits, working tree intact, all changes unstaged
+3. Stage and commit per atomic plan (follow cco-commit Phase 3 message format)
+4. On any failure: `git reset --hard $ORIG_HEAD` — full restore, warn user
+
+**Step 7 — Push:**
+
+```bash
+git push -u origin {branch}     # push after tidy (or immediately if "Keep as-is")
+```
 
 ### Phase 2: Quality Gates [ENTIRE PROJECT]
 
