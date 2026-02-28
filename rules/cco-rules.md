@@ -84,6 +84,10 @@ Flag missing i18n/a11y as HIGH on user-facing apps. Don't auto-fix — propose f
 
 ## CCO Operations
 
+### Commit History
+
+Unpushed commits are local WIP — not permanent record. Before push: if >1 commit with WIP signals (wip/fix/debug/temp messages, same file in multiple commits, micro-commits ≤2 lines), collapse to net diff and re-plan atomically. Net diff is source of truth, not individual WIP steps.
+
 ### Accounting
 
 applied + failed + needs_approval = total. No declined category.
