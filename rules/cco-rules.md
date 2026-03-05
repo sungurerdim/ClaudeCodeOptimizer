@@ -100,6 +100,20 @@ When --auto active: no questions, no deferrals. Fix everything except large arch
 
 Agents return structured data as final text message. Never write to files. On failure: {"error": "message"}. Validate before processing; retry once if malformed. On second failure, continue with remaining groups. Score failed dimensions as N/A.
 
+**Bash sanitization:** When agents construct Bash commands dynamically (file paths from findings, user-provided scope names), never interpolate raw values into shell strings. Use `--` to terminate flag parsing, quote all path arguments, and reject values containing shell metacharacters (`;`, `|`, `&`, `$`, `` ` ``, `\n`). Prefer passing arguments as separate tokens over string concatenation.
+
+### Hook Integration
+
+Claude Code supports `PreToolUse`, `PostToolUse`, `Stop`, and `InstructionsLoaded` hooks in skill and agent frontmatter. CCO leverages hooks where they add portable, cross-project value:
+
+| Hook | Where | Purpose |
+|------|-------|---------|
+| `InstructionsLoaded` | User config | Auto-trigger `/cco-update --check` on session start (optional, user-configured) |
+| `PreToolUse` | Skills using Bash | Validate dynamically constructed commands before execution (sanitization gate) |
+| `PostToolUse` | Agent apply | Verify edit/write results against expectations (cascade trigger) |
+
+Hook commands must be portable (no OS-specific or project-specific tool assumptions). Hooks that require external tools (gitleaks, linters) follow Tool Prerequisites: skip silently if unavailable.
+
 ### Tool Prerequisites
 
 Verify required external tools before execution.
@@ -173,7 +187,7 @@ Agent frontmatter `model: haiku` is the default. Skills override via Task tool's
 
 When any analyze agent reports a CRITICAL finding:
 1. Skill isolates the CRITICAL finding(s)
-2. Single Task call to cco-agent-analyze (model: opus, scopes: [original scope], mode: review) with only the file(s) containing CRITICAL findings
+2. Single Task call to cco-agent-analyze (model: opus, scopes: [original scope], mode: review) with only the file(s) containing CRITICAL findings. Include "ultrathink" in the prompt to ensure high effort — default medium effort on Opus 4.6 may miss nuanced security patterns.
 3. Opus confirms → keep CRITICAL. Opus rejects → downgrade to HIGH or discard.
 4. Applied in all modes including --auto. CRITICAL false positives are costlier than one extra validation.
 5. Max 1 escalation call per skill invocation (batch all CRITICALs into one call).

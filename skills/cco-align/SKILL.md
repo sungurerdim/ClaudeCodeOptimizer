@@ -1,7 +1,14 @@
 ---
 description: Align codebase with ideal architecture — gap analysis and strategic fixes. Use for architecture review, structural improvements, or design pattern evaluation.
 argument-hint: "[--auto] [--preview] [--force-approve]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Edit
+  - Bash
+  - Task
+  - AskUserQuestion
 ---
 
 # /cco-align

@@ -1,7 +1,12 @@
 ---
 name: cco-agent-research
 description: "Sub-agent: web search, source scoring, and CRAAP+ synthesis. Used by /cco-research skill and autonomously for research tasks."
-tools: WebSearch, WebFetch, Read, Grep, Glob
+tools:
+  - WebSearch
+  - WebFetch
+  - Read
+  - Grep
+  - Glob
 model: haiku
 ---
 

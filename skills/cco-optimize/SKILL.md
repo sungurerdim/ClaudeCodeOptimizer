@@ -1,7 +1,14 @@
 ---
 description: Fix security, hygiene, types, performance issues in code. Use when code needs quality review, security audit, or cleanup.
 argument-hint: "[--auto] [--preview] [--scope=<name>] [--force-approve]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Edit
+  - Bash
+  - Task
+  - AskUserQuestion
 ---
 
 # /cco-optimize

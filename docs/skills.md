@@ -266,6 +266,22 @@ Update CCO to the latest version.
 
 ---
 
+## CCO vs Built-in Commands
+
+Claude Code includes built-in `/simplify` and `/batch` commands (v2.1.63+). Key differences from CCO:
+
+| Feature | `/simplify` (built-in) | `/cco-optimize` |
+|---------|----------------------|-----------------|
+| Scope | Changed code only (reuse, quality, efficiency) | 9 scopes, 97 checks across entire codebase |
+| Severity scoring | No | CRITICAL/HIGH/MEDIUM/LOW with confidence |
+| Parallel analysis | No | Batched agent analysis |
+| Accounting | No | applied + failed + needs_approval = total |
+| Blueprint integration | No | Feeds into `/cco-blueprint` health scores |
+
+Use `/simplify` for quick post-edit cleanup. Use `/cco-optimize` for comprehensive code quality analysis.
+
+---
+
 ## Common Patterns
 
 ### Unattended Mode

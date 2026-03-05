@@ -1,7 +1,14 @@
 ---
 description: Multi-source research with CRAAP+ reliability scoring and tiered synthesis. Use when researching a topic, comparing technologies, or investigating solutions.
 argument-hint: "[--quick] [--deep]"
-allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
+allowed-tools:
+  - WebSearch
+  - WebFetch
+  - Read
+  - Grep
+  - Glob
+  - Task
+  - AskUserQuestion
 ---
 
 # /cco-research

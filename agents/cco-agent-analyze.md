@@ -1,7 +1,11 @@
 ---
 name: cco-agent-analyze
 description: "Sub-agent: codebase analysis with severity scoring — security, privacy, hygiene, types, performance, robustness, functional-completeness. Used by /cco-optimize, /cco-align, /cco-blueprint and autonomously for code audits."
-tools: Glob, Read, Grep, Bash
+tools:
+  - Glob
+  - Read
+  - Grep
+  - Bash
 model: haiku
 ---
 

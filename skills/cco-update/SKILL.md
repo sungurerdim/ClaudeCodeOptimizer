@@ -1,7 +1,12 @@
 ---
 description: Check for updates and upgrade CCO to the latest version. Use when checking for CCO updates or upgrading.
 argument-hint: "[--auto] [--check]"
-allowed-tools: WebFetch, Read, Edit, Bash, AskUserQuestion
+allowed-tools:
+  - WebFetch
+  - Read
+  - Edit
+  - Bash
+  - AskUserQuestion
 disable-model-invocation: true
 ---
 
@@ -69,3 +74,20 @@ Read the **installed** `~/.claude/rules/cco-rules.md` from disk → confirm `cco
 | Interactive | Version info, restart reminder |
 
 **Restart reminder:** "Restart Claude Code session to load updated rules."
+
+## Auto-Check via Hook (Optional)
+
+Users can configure an `InstructionsLoaded` hook to auto-trigger update checks on session start. Add to Claude Code settings (`~/.claude/settings.json`):
+
+```json
+{
+  "hooks": {
+    "InstructionsLoaded": [{
+      "command": "echo 'Run /cco-update --check to check for updates'",
+      "once": true
+    }]
+  }
+}
+```
+
+This fires once per session when CCO rules are loaded. The `once: true` flag prevents repeated triggers.

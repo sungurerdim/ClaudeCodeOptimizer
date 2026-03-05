@@ -1,7 +1,15 @@
 ---
 description: Documentation gap analysis — compare ideal vs current docs, generate missing content. Use when documentation needs to be created, updated, or audited.
 argument-hint: "[--auto] [--preview] [--scope=<name>] [--update] [--force-approve]"
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Edit
+  - Write
+  - Bash
+  - Task
+  - AskUserQuestion
 ---
 
 # /cco-docs
