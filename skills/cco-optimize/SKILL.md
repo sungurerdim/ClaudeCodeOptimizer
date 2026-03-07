@@ -1,7 +1,14 @@
 ---
 description: Fix security, hygiene, types, performance issues in code. Use when code needs quality review, security audit, or cleanup.
 argument-hint: "[--auto] [--preview] [--scope=<name>] [--force-approve]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Edit
+  - Bash
+  - Task
+  - AskUserQuestion
 ---
 
 # /cco-optimize
@@ -24,6 +31,22 @@ For strategic architecture assessment, use `/cco-align`.
 | `--loop` | Re-run until clean or max 3 iterations. Combines with `--auto`. |
 | `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
+## State Management
+
+Per CCO Rules: State Management. This skill uses task prefix `[OPT]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[OPT] Analyze Batch 1` | Phase 2 Batch 1 launch | Batch 1 done |
+| `[OPT] Analyze Batch 2` | Phase 2 Batch 2 launch | Batch 2 done |
+| `[OPT] Plan Review` | Phase 3 start | Phase 3 end |
+| `[OPT] Apply` | Phase 4 start | Phase 4 end |
+| `[OPT] Summary` | Phase 5 start | Phase 5 end |
+
+**Recovery:** At Phase 1 start, run TaskList. If `[OPT]` tasks exist with incomplete status → per State Management recovery protocol.
+
+**Loop mode:** Each iteration appends iteration number to task descriptions (e.g., "iter:2").
+
 ## Context
 
 - Git status: !`git status --short --branch`
@@ -36,6 +59,8 @@ Setup → Analyze → Gate → [Plan] → Apply → Summary
 ### Phase 1: Setup [SKIP if --auto]
 
 **Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for optimize).
+
+**Recovery check:** TaskList → filter `[OPT]` prefix. If incomplete tasks found → per State Management recovery protocol.
 
 ```javascript
 AskUserQuestion([
@@ -76,15 +101,27 @@ Per CCO Rules: Parallel Execution, Agent Contract, Model Routing.
 
 Wait for ALL batches. Phase gate: do not proceed until all tracks return or fail.
 
+**State update:** After each batch, TaskCreate + TaskUpdate `[OPT] Analyze Batch N` → completed, write findings to description in compact format.
+
 Merge findings. Filter by user-selected scopes. Categorize: autoFixable vs approvalRequired. Per CCO Rules: CRITICAL Escalation — if any CRITICAL findings, run single opus validation call before proceeding.
 
 **Gate:** If findings = 0 after analysis → skip Phase 3-4, go directly to Phase 5 with: `cco-optimize: OK | No issues found | Scopes: {scoped list}`
 
 ### Phase 3: Plan Review [findings > 0, SKIP if --auto]
 
+TaskCreate `[OPT] Plan Review` (status: in_progress).
+
 Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews. Options: Fix All (recommended) / By Severity / Review Each / Report Only.
 
+Per CCO Rules: Plan Review Protocol item 5 (fix planning) — display fix execution plan before apply.
+
+TaskUpdate `[OPT] Plan Review` → completed. Store user choice in description.
+
 ### Phase 4: Apply [SYNCHRONOUS, SKIP if --preview]
+
+TaskCreate `[OPT] Apply` (status: in_progress).
+
+**Recovery-aware read:** If findings not in conversation context (compaction occurred), reconstruct from TaskGet on `[OPT] Analyze Batch 1/2` task descriptions.
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Group by file. Count findings, not locations. On failure: retry with alternative, then count as failed.
 
@@ -102,6 +139,8 @@ If applied > 0:
 Max 3 iterations. Summary shows per-iteration breakdown.
 
 ### Phase 5: Summary
+
+**State cleanup:** TaskUpdate all `[OPT]` tasks → completed. TaskCreate `[OPT] Summary` with final accounting in description.
 
 Per CCO Rules: Accounting, Auto Mode.
 

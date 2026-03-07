@@ -100,6 +100,20 @@ When --auto active: no questions, no deferrals. Fix everything except large arch
 
 Agents return structured data as final text message. Never write to files. On failure: {"error": "message"}. Validate before processing; retry once if malformed. On second failure, continue with remaining groups. Score failed dimensions as N/A.
 
+**Bash sanitization:** When agents construct Bash commands dynamically (file paths from findings, user-provided scope names), never interpolate raw values into shell strings. Use `--` to terminate flag parsing, quote all path arguments, and reject values containing shell metacharacters (`;`, `|`, `&`, `$`, `` ` ``, `\n`). Prefer passing arguments as separate tokens over string concatenation.
+
+### Hook Integration
+
+Claude Code supports `PreToolUse`, `PostToolUse`, `Stop`, and `InstructionsLoaded` hooks in skill and agent frontmatter. CCO leverages hooks where they add portable, cross-project value:
+
+| Hook | Where | Purpose |
+|------|-------|---------|
+| `InstructionsLoaded` | User config | Auto-trigger `/cco-update --check` on session start (optional, user-configured) |
+| `PreToolUse` | Skills using Bash | Validate dynamically constructed commands before execution (sanitization gate) |
+| `PostToolUse` | Agent apply | Verify edit/write results against expectations (cascade trigger) |
+
+Hook commands must be portable (no OS-specific or project-specific tool assumptions). Hooks that require external tools (gitleaks, linters) follow Tool Prerequisites: skip silently if unavailable.
+
 ### Tool Prerequisites
 
 Verify required external tools before execution.
@@ -128,6 +142,7 @@ When findings > 0 and not --auto, display plan table before asking:
 2. If "By Severity": severity filter (multiselect) — CRITICAL / HIGH / MEDIUM / LOW
 3. Use `markdown` preview on each option to show the findings that would be affected (full table for Fix All, filtered for By Severity, etc.)
 4. If the user's response includes annotations (notes), use them to adjust behavior — e.g., "skip test coverage items" filters findings before apply
+5. **Fix planning** (skills with apply phase): Before applying, group findings by file dependency and display execution plan — independent groups can be applied in parallel, dependent groups sequentially
 
 ### Needs-Approval Protocol
 
@@ -173,7 +188,7 @@ Agent frontmatter `model: haiku` is the default. Skills override via Task tool's
 
 When any analyze agent reports a CRITICAL finding:
 1. Skill isolates the CRITICAL finding(s)
-2. Single Task call to cco-agent-analyze (model: opus, scopes: [original scope], mode: review) with only the file(s) containing CRITICAL findings
+2. Single Task call to cco-agent-analyze (model: opus, scopes: [original scope], mode: review) with only the file(s) containing CRITICAL findings. Include "ultrathink" in the prompt to ensure high effort — default medium effort on Opus 4.6 may miss nuanced security patterns.
 3. Opus confirms → keep CRITICAL. Opus rejects → downgrade to HIGH or discard.
 4. Applied in all modes including --auto. CRITICAL false positives are costlier than one extra validation.
 5. Max 1 escalation call per skill invocation (batch all CRITICALs into one call).
@@ -183,6 +198,28 @@ When any analyze agent reports a CRITICAL finding:
 Fix suggestions and applied changes must comply with: DRY (no duplicate logic), SSOT (no second source of truth), SoC (stay within module boundary), KISS (simplest solution), Consistency (match project patterns). A fix that violates these principles is a new problem, not a solution.
 
 Agents verify before suggesting/applying: existing pattern exists? → reference it. New abstraction needed? → only if 3+ uses. Cross-module change? → needs_approval.
+
+### State Management
+
+Skills with 3+ phases use Task tools for compaction-resilient progress tracking. No files are created.
+
+**Task lifecycle:**
+1. TaskCreate at skill start — one task per major phase group, prefixed: `[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `[RSC]`, `[DOC]`
+2. TaskUpdate after each phase gate — status: in_progress → completed, description: compact findings
+3. Recovery: TaskList at skill start — if own-prefix tasks exist with incomplete status, offer resume
+
+**Compact findings format** (stored in task description):
+
+    ID|SEVERITY|file:line|title
+
+One line per finding. Apply phase reads these via TaskGet to reconstruct context.
+
+**Recovery protocol:**
+- Own-prefix tasks found + incomplete → offer resume (--auto: resume silently, skip completed phases, re-run incomplete)
+- Own-prefix tasks found + all completed → stale, start fresh
+- No own-prefix tasks → proceed normally
+
+**Fix planning:** Before apply phase (findings > 0, not --auto, not --preview), group findings by file dependency and display execution plan with independent/dependent groups.
 
 ### Project Types
 

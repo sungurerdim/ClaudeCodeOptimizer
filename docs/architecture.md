@@ -86,7 +86,16 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 Skills use Claude Code's native skill mechanism with `SKILL.md` files in `~/.claude/skills/{name}/`. Frontmatter fields (`allowed-tools`, `description`) are enforced by Claude Code, unlike the legacy `commands/` directory.
 
-6 skills have auto-invoke enabled (triggered by natural language), 2 require explicit invocation (`/cco-blueprint`, `/cco-update`).
+8 skills total: 6 have auto-invoke enabled (triggered by natural language) and 2 require explicit invocation.
+
+| Mode | Skills |
+|------|--------|
+| Auto-invoke | `cco-optimize`, `cco-align`, `cco-commit`, `cco-research`, `cco-docs`, `cco-pr` |
+| Explicit only | `cco-blueprint` (`/cco-blueprint`), `cco-update` (`/cco-update`) |
+
+### Skill Variables
+
+Claude Code provides `${CLAUDE_SKILL_DIR}` (v2.1.69+), which resolves to the skill's own directory at runtime. CCO skills currently use inline content and reference agents by name, so this variable is not yet used. It becomes relevant when skills need to reference local assets (templates, schemas, config files) stored alongside SKILL.md.
 
 ### Shared Patterns
 
@@ -159,6 +168,18 @@ Skills invoke agents using these standard groupings:
 4. On second failure, continue with remaining groups; score failed dimensions as N/A
 5. Merge findings, deduplicate by file:line (keep highest severity)
 6. Per CCO Rules: CRITICAL Escalation — validate CRITICAL findings with opus before proceeding
+
+### Compaction Resilience
+
+Long-running skills use Task tools for compaction-resilient state tracking.
+
+| Layer | Mechanism | Survives Compaction |
+|-------|-----------|---------------------|
+| Phase progress | TaskCreate/TaskUpdate status | Yes |
+| Findings summary | Task description (compact format) | Yes |
+| Recovery anchor | TaskList + prefix filter | Yes |
+
+Skills with 3+ phases create prefixed tasks (`[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `[RSC]`, `[DOC]`) and update them at phase gates. On compaction, TaskList retrieves completed phases and TaskGet reconstructs findings from compact descriptions. See CCO Rules: State Management.
 
 ### File Manifest Sync
 
