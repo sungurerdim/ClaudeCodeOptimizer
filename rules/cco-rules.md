@@ -142,6 +142,7 @@ When findings > 0 and not --auto, display plan table before asking:
 2. If "By Severity": severity filter (multiselect) — CRITICAL / HIGH / MEDIUM / LOW
 3. Use `markdown` preview on each option to show the findings that would be affected (full table for Fix All, filtered for By Severity, etc.)
 4. If the user's response includes annotations (notes), use them to adjust behavior — e.g., "skip test coverage items" filters findings before apply
+5. **Fix planning** (skills with apply phase): Before applying, group findings by file dependency and display execution plan — independent groups can be applied in parallel, dependent groups sequentially
 
 ### Needs-Approval Protocol
 
@@ -197,6 +198,28 @@ When any analyze agent reports a CRITICAL finding:
 Fix suggestions and applied changes must comply with: DRY (no duplicate logic), SSOT (no second source of truth), SoC (stay within module boundary), KISS (simplest solution), Consistency (match project patterns). A fix that violates these principles is a new problem, not a solution.
 
 Agents verify before suggesting/applying: existing pattern exists? → reference it. New abstraction needed? → only if 3+ uses. Cross-module change? → needs_approval.
+
+### State Management
+
+Skills with 3+ phases use Task tools for compaction-resilient progress tracking. No files are created.
+
+**Task lifecycle:**
+1. TaskCreate at skill start — one task per major phase group, prefixed: `[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `[RSC]`, `[DOC]`
+2. TaskUpdate after each phase gate — status: in_progress → completed, description: compact findings
+3. Recovery: TaskList at skill start — if own-prefix tasks exist with incomplete status, offer resume
+
+**Compact findings format** (stored in task description):
+
+    ID|SEVERITY|file:line|title
+
+One line per finding. Apply phase reads these via TaskGet to reconstruct context.
+
+**Recovery protocol:**
+- Own-prefix tasks found + incomplete → offer resume (--auto: resume silently, skip completed phases, re-run incomplete)
+- Own-prefix tasks found + all completed → stale, start fresh
+- No own-prefix tasks → proceed normally
+
+**Fix planning:** Before apply phase (findings > 0, not --auto, not --preview), group findings by file dependency and display execution plan with independent/dependent groups.
 
 ### Project Types
 

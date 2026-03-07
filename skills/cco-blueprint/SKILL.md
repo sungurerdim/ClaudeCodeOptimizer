@@ -27,6 +27,26 @@ disable-model-invocation: true
 | `--scope=X` | Specific area: stack, deps, dx, structure, code, architecture, docs, memory, all |
 | `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
+## State Management
+
+Per CCO Rules: State Management. This skill uses task prefix `[BP]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[BP] Discovery+Init` | Phase 1 start | Phase 2 end |
+| `[BP] Assess Batch 1` | Phase 3 Batch 1 launch | Batch 1 done |
+| `[BP] Assess Batch 2` | Phase 3 Batch 2 launch | Batch 2 done |
+| `[BP] Assess Batch 3` | Phase 3 Batch 3 launch | Batch 3 done |
+| `[BP] Consolidate+Plan` | Phase 4 start | Phase 5 end |
+| `[BP] Apply+Update` | Phase 6 start | Phase 8 end |
+
+**Recovery:** At Phase 1 start, run TaskList. If `[BP]` tasks exist with incomplete status:
+- `--auto`: Resume silently — skip completed phases, re-run from first incomplete
+- Interactive: Ask "Resume from {phase} / Start fresh"
+- "Start fresh": Mark stale tasks completed, proceed normally
+
+**Compact findings:** After each agent batch returns, write findings to task description in compact format. Phase 4 (Consolidate) reads from TaskGet if context was compacted.
+
 ## Context
 
 - Git status: !`git status --short --branch`
@@ -108,6 +128,8 @@ Discovery → [Init Flow] → Assess [PARALLEL] → Consolidate → Plan → [Ap
 ### Phase 1: Discovery [PARALLEL]
 
 **Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for blueprint).
+
+**Recovery check:** TaskList → filter `[BP]` prefix. If incomplete tasks found → per State Management recovery protocol. TaskCreate `[BP] Discovery+Init` (status: in_progress).
 
 1. Search CLAUDE.md for `<!-- cco-blueprint-start -->`
 2. Parallel project detection via Glob/Grep/Read: language (majority file ext), framework (express/fastapi/react/etc), project type (routes→API, pages→Web, bin→CLI, src/lib→Library), toolchain (.eslintrc, tsconfig, biome.json), CI/CD, Docker, tests, data sensitivity (password/email/token patterns), git status
@@ -295,6 +317,8 @@ If project type has no UI → skip user-facing-defaults entirely.
 
 Wait for ALL batches. Phase gate: do not proceed until all 5 tracks return or fail.
 
+**State update:** After each batch completes, TaskUpdate the corresponding `[BP] Assess Batch N` task — set status to completed, write findings to description in compact format. If a track fails, record `TRACK_FAIL|N/A|track_name|Agent returned error` in description.
+
 Per CCO Rules: CRITICAL Escalation — if any CRITICAL findings, run single opus validation call before proceeding to Phase 3.1.
 
 ### Phase 3.1: Project Map
@@ -304,6 +328,10 @@ Build from Discovery + Assess results. Generated from directory structure, entry
 Always displayed (including --auto). Written to profile on first run, updated on subsequent runs.
 
 ### Phase 4: Consolidate
+
+TaskCreate `[BP] Consolidate+Plan` (status: in_progress).
+
+**Recovery-aware read:** If track results are not in conversation context (compaction occurred), reconstruct from TaskGet on `[BP] Assess Batch 1/2/3` task descriptions → parse compact findings format.
 
 Merge all track results, deduplicate by file:line.
 
@@ -382,7 +410,13 @@ Display blueprint dashboard: project info, health scores table (Current/Target/G
 
 Per CCO Rules: Plan Review Protocol — display findings, ask with markdown previews. Blueprint-specific options: Fix All (recommended) / Critical+High only / Quick wins only / Report Only.
 
+Per CCO Rules: Plan Review Protocol item 5 (fix planning) — display fix execution plan before apply.
+
+TaskUpdate `[BP] Consolidate+Plan` → completed. User's plan review choice stored in description.
+
 ### Phase 6: Apply [SKIP if --preview]
+
+TaskCreate `[BP] Apply+Update` (status: in_progress).
 
 Send findings to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto) in priority order: CRITICAL/security → Code quality → Architecture → Documentation. Per CCO Rules: on error, count as failed, continue.
 
@@ -429,6 +463,8 @@ Clean up Claude Code auto-memory files: `{user home}/.claude/projects/{project-h
 In --auto: silent cleanup. Interactive: confirm if >5 entries removed. Partial cleanup acceptable.
 
 ### Phase 8: Summary
+
+**State cleanup:** TaskUpdate all `[BP]` tasks → completed. TaskUpdate `[BP] Apply+Update` description with final accounting.
 
 Per CCO Rules: Accounting, Auto Mode.
 

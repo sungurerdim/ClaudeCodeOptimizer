@@ -30,6 +30,19 @@ Every sentence earns its place. Show > tell, examples > prose. Headers/bullets/t
 | `--update` | Regenerate even if docs exist |
 | `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
+## State Management
+
+Per CCO Rules: State Management. This skill uses task prefix `[DOC]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[DOC] Analysis` | Phase 2 start | Phase 2 end |
+| `[DOC] Gap` | Phase 3 start | Phase 3 end |
+| `[DOC] Generate` | Phase 5 start | Phase 5 end |
+| `[DOC] Summary` | Phase 6 start | Phase 6 end |
+
+**Recovery:** At Phase 1 start, run TaskList. If `[DOC]` tasks exist with incomplete status → per State Management recovery protocol.
+
 ## Context
 
 - Git status: !`git status --short --branch`
@@ -55,6 +68,8 @@ Setup → Analysis → Gap Analysis → [Plan] → Generate → Summary
 ### Phase 1: Setup [SKIP if --auto]
 
 **Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for docs).
+
+**Recovery check:** TaskList → filter `[DOC]` prefix. If incomplete tasks found → per State Management recovery protocol.
 
 ```javascript
 AskUserQuestion([
@@ -86,9 +101,15 @@ In --auto: generation scopes only (refine/verify require explicit `--scope=`).
 
 ### Phase 2: Analysis
 
+TaskCreate `[DOC] Analysis` (status: in_progress).
+
 Delegate to cco-agent-analyze (scopes: [doc-sync], mode: auto): scan existing docs, detect project type, detect documentation needs. Per CCO Rules: Agent Contract — validate agent JSON output, retry once on malformed response, on second failure continue with remaining groups, score failed dimensions as N/A. Fallback: file existence checks.
 
+TaskUpdate `[DOC] Analysis` → completed. Write gap findings to description in compact format.
+
 ### Phase 3: Gap Analysis [IDEAL vs CURRENT]
+
+TaskCreate `[DOC] Gap` (status: in_progress).
 
 Ideal docs by project type (Per CCO Rules: Project Types):
 
@@ -121,11 +142,17 @@ Display plan (target files, sections, sources). Ask: Generate All (recommended) 
 
 ### Phase 5: Generate Documentation [SKIP if --preview]
 
+TaskUpdate `[DOC] Gap` → completed. TaskCreate `[DOC] Generate` (status: in_progress).
+
+**Recovery-aware read:** If gap analysis results not in conversation context (compaction occurred), reconstruct from TaskGet on `[DOC] Analysis` and `[DOC] Gap` task descriptions.
+
 Delegate to cco-agent-apply (scope: docs, operations: [{action, scope, file, sections, sources, projectType}]). Extract from actual source files. Apply: brevity, examples, scannability, actionability. Avoid: filler, "this document explains...", long paragraphs. On error: count as failed, continue.
 
 **Source mandate:** Every documented flag, endpoint, or config value MUST have Grep/Read verification before inclusion. Never document features from memory or inference.
 
 ### Phase 6: Summary
+
+**State cleanup:** TaskUpdate all `[DOC]` tasks → completed. TaskCreate `[DOC] Summary` with final accounting in description.
 
 Per CCO Rules: Accounting.
 

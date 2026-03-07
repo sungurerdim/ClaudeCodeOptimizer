@@ -28,6 +28,19 @@ Hybrid: Local (Glob/Grep) + Web (cco-agent-research).
 
 Without flags: ask depth question.
 
+## State Management
+
+Per CCO Rules: State Management. This skill uses task prefix `[RSC]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[RSC] Research Batch N` | Phase 3 each batch launch | Each batch done |
+| `[RSC] Synthesize` | Phase 4 start | Phase 4 end |
+
+**Recovery:** At Phase 1 start, run TaskList. If `[RSC]` tasks exist with incomplete status → per State Management recovery protocol. This provides `--deep` resumable behavior.
+
+**Compact sources:** After each research batch, write source summaries to task description: `TIER|SCORE|domain|title`.
+
 **Do NOT:** Fabricate sources or URLs, present T5/T6 sources without confidence caveat, skip contradiction resolution when sources disagree, or synthesize without citing specific source tiers.
 
 ## Execution Flow
@@ -80,9 +93,15 @@ Launch Task calls to cco-agent-research in batches of max 2 per message (runtime
 | Security (NVD/CVE/Snyk) | scope: dependency | If security query |
 | Comparison A/B | scope: full | If comparison detected |
 
+**State update:** After each batch, TaskCreate + TaskUpdate `[RSC] Research Batch N` → completed, write sources to description in compact format.
+
 **Batching order:** Group active tracks into pairs and launch sequentially. Example for Standard+ with security: Batch 1 (Local+T1) → Batch 2 (T2+T3) → Batch 3 (T4+Security) → Batch 4 (Comparison if needed). Apply saturation gate after each batch.
 
 ### Phase 4: Synthesize
+
+TaskCreate `[RSC] Synthesize` (status: in_progress).
+
+**Recovery-aware read:** If research results not in conversation context (compaction occurred), reconstruct from TaskGet on `[RSC] Research Batch N` task descriptions.
 
 Validate agent outputs. Malformed → retry once, exclude on second failure.
 
@@ -91,6 +110,8 @@ T1-T2 sources → cco-agent-research (scope: synthesize) for conflict resolution
 **Mandatory saturation gate:** After each search batch: if 3+ T1/T2 sources agree → skip remaining lower-tier searches, proceed to synthesis. This check is not optional.
 
 ### Phase 5: Output
+
+**State cleanup:** TaskUpdate all `[RSC]` tasks → completed.
 
 Executive summary, evidence hierarchy (primary T1-T2, supporting T3-T4), contradictions resolved, knowledge gaps, recommendation (DO/DON'T/CONSIDER), sources with tier/score.
 

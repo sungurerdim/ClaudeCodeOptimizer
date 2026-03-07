@@ -30,6 +30,20 @@ At start, verify CCO repo using Claude's native tools:
 
 **Use Glob/Read for file detection. Git commands are cross-platform.**
 
+## State Management
+
+Per CCO Rules: State Management. This command uses task prefix `[FR]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[FR] Inventory` | Step-2 start | Step-2 end |
+| `[FR] Analyze Batch 1` | Step-3 Batch 1 launch | Batch 1 done |
+| `[FR] Analyze Batch 2` | Step-3 Batch 2 launch | Batch 2 done |
+| `[FR] Prioritize` | Step-4 start | Step-4 end |
+| `[FR] Apply` | Step-6 start | Step-6 end |
+
+**Recovery:** At Step-1, run TaskList. If `[FR]` tasks exist with incomplete status → per State Management recovery protocol.
+
 ## Context Check [CRITICAL]
 
 If not in CCO repository root:
@@ -45,7 +59,7 @@ Run this command from the ClaudeCodeOptimizer directory.
 |------|------|--------|
 | 1 | Setup | Q1: Review mode selection |
 | 2 | Inventory | Detect counts via Glob |
-| 3 | Analyze | 4 Explore agent groups (parallel) |
+| 3 | Analyze | 2+2 batched Explore agent groups |
 | 4 | Prioritize | 80/20 findings |
 | 5 | Approval | Q2: Select fixes (conditional) |
 | 6 | Apply | Delegate to cco-agent-apply |
@@ -74,6 +88,10 @@ if (!isUnattended && !isReportOnly) {
 
 ## Step-2: Inventory Detection
 
+**Recovery check:** TaskList → filter `[FR]` prefix. If incomplete tasks found → per State Management recovery protocol.
+
+TaskCreate `[FR] Inventory` (status: in_progress).
+
 ```javascript
 // Cross-platform detection using Claude's native tools — all counts are dynamic
 skills    = Glob("skills/cco-*/SKILL.md").length
@@ -87,11 +105,20 @@ inventory = { skills, agents, docs, workflows, version }
 
 **Note:** Rules are in `rules/cco-rules.md` (single source of truth). Never hardcode expected counts — always detect dynamically and compare across reference files.
 
+TaskUpdate `[FR] Inventory` → completed. Store counts in description.
+
 ---
 
-## Step-3: 8-Category Analysis [PARALLEL AGENTS]
+## Step-3: 8-Category Analysis [BATCHED: 2+2 AGENTS]
 
-Launch 4 parallel Explore agents covering 8 categories:
+Per CCO Rules: Parallel Execution (max 2 Task calls per message). Launch in 2 batches:
+
+**Batch 1:** Group A (Inventory & Release) + Group B (Skill & Agent Quality + Architecture)
+**Batch 2:** Group C (AI Communication + Efficiency) + Group D (Production Standards + Documentation)
+
+Wait for Batch 1 to complete before launching Batch 2. After each batch, TaskUpdate corresponding `[FR] Analyze Batch N` → completed, write findings to description in compact format.
+
+8 categories across 4 groups:
 
 ### Group A: Inventory & Release (Cat 1 + Cat 8)
 
@@ -215,10 +242,14 @@ Per CCO Rules: Severity Levels.
 
 ## Step-4: Prioritize
 
+TaskCreate `[FR] Prioritize` (status: in_progress).
+
 Rank findings by 80/20 rule:
 1. **Quick Win** — CRITICAL + HIGH, auto-fixable
 2. **Moderate** — MEDIUM, requires targeted edit
 3. **Complex** — LOW or multi-file structural changes
+
+TaskUpdate `[FR] Prioritize` → completed. Store prioritized findings in description.
 
 ---
 
@@ -247,6 +278,10 @@ if (findings.length > 0) {
 
 ## Step-6: Apply Fixes [DELEGATE TO AGENT]
 
+TaskCreate `[FR] Apply` (status: in_progress).
+
+**Recovery-aware read:** If findings not in conversation context (compaction occurred), reconstruct from TaskGet on `[FR] Analyze Batch 1/2` task descriptions.
+
 ```javascript
 if (toApply.length > 0) {
   Task("cco-agent-apply", `
@@ -267,6 +302,8 @@ if (toApply.length > 0) {
 ---
 
 ## Step-7: Summary
+
+**State cleanup:** TaskUpdate all `[FR]` tasks → completed.
 
 ```
 ═══════════════════════════════════════════════════════════

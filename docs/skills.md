@@ -296,6 +296,16 @@ Use `/simplify` for quick post-edit cleanup. Use `/cco-optimize` for comprehensi
 
 Per CCO Rules: `applied + failed + needs_approval = total` (no silent skips)
 
+### Compaction Resilience
+
+Long-running skills (`/cco-blueprint`, `/cco-optimize`, `/cco-align`, `/cco-research`, `/cco-docs`, `/full-review`) track progress via Task tools. If context compaction occurs mid-skill:
+
+1. TaskList shows completed vs pending phases
+2. Completed phase findings are preserved in task descriptions
+3. Only incomplete phases are re-run
+
+Per CCO Rules: State Management.
+
 ### Recovery
 
 | Situation | Command |

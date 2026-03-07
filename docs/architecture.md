@@ -169,6 +169,18 @@ Skills invoke agents using these standard groupings:
 5. Merge findings, deduplicate by file:line (keep highest severity)
 6. Per CCO Rules: CRITICAL Escalation — validate CRITICAL findings with opus before proceeding
 
+### Compaction Resilience
+
+Long-running skills use Task tools for compaction-resilient state tracking.
+
+| Layer | Mechanism | Survives Compaction |
+|-------|-----------|---------------------|
+| Phase progress | TaskCreate/TaskUpdate status | Yes |
+| Findings summary | Task description (compact format) | Yes |
+| Recovery anchor | TaskList + prefix filter | Yes |
+
+Skills with 3+ phases create prefixed tasks (`[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `[RSC]`, `[DOC]`) and update them at phase gates. On compaction, TaskList retrieves completed phases and TaskGet reconstructs findings from compact descriptions. See CCO Rules: State Management.
+
 ### File Manifest Sync
 
 The file list in `extras/installer/manifest.go` is the single source of truth for installed files. When adding or removing a skill/agent file, update `manifest.go`.
