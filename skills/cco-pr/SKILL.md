@@ -1,7 +1,12 @@
 ---
 description: Create pull requests with conventional commit titles for clean release-please changelogs. Use when creating a PR or preparing changes for merge.
 argument-hint: "[--auto] [--no-auto-merge] [--preview] [--draft]"
-allowed-tools: Read, Grep, Glob, Bash, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - AskUserQuestion
 ---
 
 # /cco-pr

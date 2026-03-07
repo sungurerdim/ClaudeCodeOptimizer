@@ -1,7 +1,14 @@
 ---
 description: Align codebase with ideal architecture — gap analysis and strategic fixes. Use for architecture review, structural improvements, or design pattern evaluation.
 argument-hint: "[--auto] [--preview] [--force-approve]"
-allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Edit
+  - Bash
+  - Task
+  - AskUserQuestion
 ---
 
 # /cco-align
@@ -22,6 +29,20 @@ For tactical file-level fixes, use `/cco-optimize`.
 | `--preview` | Analyze only, show gaps and findings, don't apply |
 | `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
+## State Management
+
+Per CCO Rules: State Management. This skill uses task prefix `[ALN]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[ALN] Analyze Batch 1` | Phase 2 Batch 1 launch | Batch 1 done |
+| `[ALN] Analyze Batch 2` | Phase 2 Batch 2 launch | Batch 2 done |
+| `[ALN] Gap+Recs` | Phase 3 start | Phase 4 end |
+| `[ALN] Apply` | Phase 6 start | Phase 6 end |
+| `[ALN] Summary` | Phase 7 start | Phase 7 end |
+
+**Recovery:** At Phase 1 start, run TaskList. If `[ALN]` tasks exist with incomplete status → per State Management recovery protocol.
+
 ## Context
 
 - Git status: !`git status --short --branch`
@@ -37,6 +58,8 @@ Setup → Analyze → Gap Analysis → Recommendations → [Plan] → Apply → 
 ### Phase 1: Setup [SKIP if --auto]
 
 **Pre-flight:** Verify git repo: `git rev-parse --git-dir 2>/dev/null` → not a repo: warn "Not a git repo — git context unavailable" and continue (git optional for align).
+
+**Recovery check:** TaskList → filter `[ALN]` prefix. If incomplete tasks found → per State Management recovery protocol.
 
 ```javascript
 AskUserQuestion([{
@@ -65,11 +88,15 @@ Per CCO Rules: Parallel Execution, Agent Contract, Model Routing.
 
 Wait for ALL batches. Phase gate: do not proceed until all tracks return or fail.
 
+**State update:** After each batch, TaskCreate + TaskUpdate `[ALN] Analyze Batch N` → completed, write findings to description in compact format.
+
 Merge findings. Per CCO Rules: CRITICAL Escalation — if any CRITICAL findings, run single opus validation call before proceeding.
 
 **Gate:** If findings = 0 → skip Phase 5-6, display gap analysis (Phase 3-4) with: `cco-align: OK | No structural issues | Gaps: {metric table}`
 
 ### Phase 3: Gap Analysis [CURRENT vs IDEAL]
+
+TaskCreate `[ALN] Gap+Recs` (status: in_progress).
 
 If blueprint profile exists in CLAUDE.md: use its Ideal Metrics as targets. Otherwise: use project-type defaults per `/cco-blueprint`.
 
@@ -106,9 +133,17 @@ Categorize by effort/impact: Quick Win → Moderate → Complex → Major.
 
 ### Phase 5: Plan Review [findings > 0, SKIP if --auto]
 
+TaskUpdate `[ALN] Gap+Recs` → completed.
+
 Per CCO Rules: Plan Review Protocol — display findings table (ID, severity, title, file:line), then ask with markdown previews. Options: Fix All (recommended) / By Severity / Review Each / Report Only.
 
+Per CCO Rules: Plan Review Protocol item 5 (fix planning) — display fix execution plan before apply.
+
 ### Phase 6: Apply [SKIP if --preview]
+
+TaskCreate `[ALN] Apply` (status: in_progress).
+
+**Recovery-aware read:** If findings not in conversation context (compaction occurred), reconstruct from TaskGet on `[ALN] Analyze Batch 1/2` task descriptions.
 
 Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count findings, not locations. On error: count as failed, continue.
 
@@ -117,6 +152,8 @@ Send to cco-agent-apply (scope: fix, findings: [...], fixAll: --auto). Count fin
 Per CCO Rules: Needs-Approval Protocol.
 
 ### Phase 7: Summary
+
+**State cleanup:** TaskUpdate all `[ALN]` tasks → completed. TaskCreate `[ALN] Summary` with final accounting in description.
 
 Per CCO Rules: Accounting, Auto Mode.
 

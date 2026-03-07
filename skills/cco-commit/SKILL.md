@@ -1,7 +1,12 @@
 ---
 description: Smart git commits with quality gates, atomic grouping, and conventional commit format. Use when committing changes or the user asks to commit.
 argument-hint: "[--preview] [--single] [--staged-only]"
-allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
+allowed-tools:
+  - Read
+  - Grep
+  - Edit
+  - Bash
+  - AskUserQuestion
 ---
 
 # /cco-commit
