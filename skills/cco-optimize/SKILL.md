@@ -169,6 +169,6 @@ Status: OK (failed=0), WARN (failed>0 no CRITICAL), FAIL (CRITICAL unfixed or er
 
 Next: `/cco-commit` (commit fixes) | `/cco-align` (check architecture) | `/cco-blueprint` (track progress)
 
-## Scopes (9 scopes, 97 checks)
+## Scopes
 
 Per cco-agent-analyze: Optimize Scopes — security, hygiene, types, performance, ai-hygiene, robustness, privacy, doc-sync, simplify.

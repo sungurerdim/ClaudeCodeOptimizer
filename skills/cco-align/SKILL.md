@@ -25,7 +25,7 @@ For tactical file-level fixes, use `/cco-optimize`.
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | All 8 scopes, all severities, no questions, single-line summary |
+| `--auto` | All scopes, all severities, no questions, single-line summary |
 | `--preview` | Analyze only, show gaps and findings, don't apply |
 | `--force-approve` | Auto-apply needs_approval items (architectural changes). Combines with `--auto`. |
 
@@ -47,7 +47,7 @@ Per CCO Rules: State Management. This skill uses task prefix `[ALN]`.
 
 - Git status: !`git status --short --branch`
 
-## Scopes (8 scopes, 92 checks)
+## Scopes
 
 Per cco-agent-analyze: Review Scopes — architecture, patterns, testing, maintainability, ai-architecture, functional-completeness, production-readiness, cross-cutting.
 

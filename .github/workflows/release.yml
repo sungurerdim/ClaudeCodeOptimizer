@@ -69,9 +69,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify CI passed on this commit
+        # Guards against releasing a commit that failed CI.
+        # Branch protection is the recommended long-term fix; this is a defence-in-depth check.
+        run: |
+          CI_STATUS=$(gh run list --workflow=ci.yml --commit="${{ github.sha }}" --limit=1 --json conclusion --jq '.[0].conclusion // "not-found"')
+          echo "CI status for ${{ github.sha }}: $CI_STATUS"
+          # Block on anything that is not 'success' (covers failure, cancelled, not-found, pending, in_progress).
+          # Branch protection is the recommended permanent fix; this is a defence-in-depth check.
+          if [ "$CI_STATUS" != "success" ]; then
+            echo "Error: CI did not pass for this commit (status: $CI_STATUS). Aborting release."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # Using minor-flexible pin (1.23.x) balances reproducibility with automatic security patches.
+          # To pin exact patch for stricter binary reproducibility, use e.g. '1.23.4' and update each Go release.
+          go-version: '1.23.x'
           cache: false
 
       - name: Lint before release
@@ -95,7 +112,7 @@ jobs:
 
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: '~> v2'
+          version: '~> v2.9'
           args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

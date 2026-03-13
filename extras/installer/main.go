@@ -15,6 +15,13 @@ import (
 // errUpToDate is a sentinel error indicating the installed version is current.
 var errUpToDate = errors.New("already up to date")
 
+// staleStateTimeout is the age threshold above which an installation state file is considered stale.
+const staleStateTimeout = time.Hour
+
+// maxConcurrentDownloads caps parallel file fetches.
+// GitHub raw CDN allows ~15 concurrent connections per host; 10 leaves headroom for other traffic.
+const maxConcurrentDownloads = 10
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -48,12 +55,15 @@ func printUsage() {
 	fmt.Println("CCO — Claude Code Optimizer")
 	fmt.Println()
 	fmt.Println("Usage:")
-	fmt.Println("  cco install [tag]   Install or update CCO (optional: specific version tag)")
-	fmt.Println("  cco uninstall       Remove CCO files")
-	fmt.Println("  cco version         Show installed version")
+	fmt.Println("  cco install [tag]        Install or update CCO (optional: specific version tag)")
+	fmt.Println("  cco uninstall            Remove CCO files")
+	fmt.Println("  cco version [--json]     Show installed version (--json: machine-readable output)")
 }
 
 func claudeDir() (string, error) {
+	if dir := os.Getenv("CCO_CLAUDE_DIR"); dir != "" {
+		return dir, nil
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("cannot determine home directory: %w", err)
@@ -130,7 +140,7 @@ func checkStaleState(path string) {
 	if readErr == nil {
 		if ts, parseErr := strconv.ParseInt(strings.TrimSpace(string(content)), 10, 64); parseErr == nil {
 			age := time.Since(time.Unix(ts, 0))
-			if age > time.Hour {
+			if age > staleStateTimeout {
 				fmt.Printf("  Note: Found stale installation state (%s old). Cleaning up.\n", age.Truncate(time.Minute))
 				_ = os.Remove(path)
 				return
@@ -139,7 +149,7 @@ func checkStaleState(path string) {
 	}
 
 	// Fallback: use file modification time if content parsing fails
-	if time.Since(info.ModTime()) > time.Hour {
+	if time.Since(info.ModTime()) > staleStateTimeout {
 		fmt.Println("  Note: Found stale installation state. Cleaning up.")
 		_ = os.Remove(path)
 		return
@@ -264,7 +274,7 @@ func buildFileList() []installFile {
 func downloadInParallel(files []installFile, info installInfo) []downloadResult {
 	results := make([]downloadResult, len(files))
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, 10)
+	sem := make(chan struct{}, maxConcurrentDownloads)
 
 	for i, f := range files {
 		if f.path == "rules/cco-rules.md" {
@@ -371,6 +381,43 @@ func printSummary(base string, info installInfo, failed int, legacyRemoved []str
 	}
 }
 
+// uninstallGroup describes a set of CCO files or directories to selectively remove.
+type uninstallGroup struct {
+	name    string
+	paths   []string
+	isDirs  bool
+	display string
+}
+
+// promptYN displays a question and reads a y/N answer from stdin.
+// Returns true only if the user explicitly enters "y".
+func promptYN(question string) bool {
+	fmt.Print(question)
+	var answer string
+	if _, err := fmt.Scanln(&answer); err != nil {
+		return false
+	}
+	return strings.ToLower(answer) == "y"
+}
+
+// removeGroupFiles removes files or directories for one uninstall group.
+// Returns the list of paths removed.
+func removeGroupFiles(base string, g uninstallGroup) []string {
+	if g.isDirs {
+		return removeDirEntries(
+			filepath.Join(base, "skills"), "skills/",
+			func(e os.DirEntry) bool { return e.IsDir() && strings.HasPrefix(e.Name(), "cco-") },
+		)
+	}
+	var removed []string
+	for _, p := range g.paths {
+		if removeIfExists(base, p) {
+			removed = append(removed, p)
+		}
+	}
+	return removed
+}
+
 func runUninstall() error {
 	base, err := claudeDir()
 	if err != nil {
@@ -387,51 +434,24 @@ func runUninstall() error {
 		return nil
 	}
 
-	fmt.Print("Remove all CCO files? [y/N] ")
-	var answer string
-	if _, err := fmt.Scanln(&answer); err != nil {
-		answer = "n"
-	}
-
-	if strings.ToLower(answer) == "y" {
+	if promptYN("Remove all CCO files? [y/N] ") {
 		removeAll(base)
 		return nil
 	}
 
 	// Per-group removal
-	groups := []struct {
-		name    string
-		paths   []string
-		isDirs  bool
-		display string
-	}{
+	groups := []uninstallGroup{
 		{"CCO rules", []string{"rules/cco-rules.md"}, false, "1 file"},
 		{"CCO skills", nil, true, fmt.Sprintf("%d skills", len(skillFiles))},
 		{"CCO agents", agentFiles, false, fmt.Sprintf("%d files", len(agentFiles))},
 	}
 
 	for _, g := range groups {
-		fmt.Printf("Remove %s? (%s) [y/N] ", g.name, g.display)
-		if _, err := fmt.Scanln(&answer); err != nil {
-			answer = "n"
-		}
-		if strings.ToLower(answer) != "y" {
+		if !promptYN(fmt.Sprintf("Remove %s? (%s) [y/N] ", g.name, g.display)) {
 			continue
 		}
-
-		if g.name == "CCO skills" {
-			for _, p := range removeDirEntries(
-				filepath.Join(base, "skills"), "skills/",
-				func(e os.DirEntry) bool { return e.IsDir() && strings.HasPrefix(e.Name(), "cco-") },
-			) {
-				fmt.Printf("  - %s\n", p)
-			}
-		} else {
-			for _, p := range g.paths {
-				if removeIfExists(base, p) {
-					fmt.Printf("  - %s\n", p)
-				}
-			}
+		for _, p := range removeGroupFiles(base, g) {
+			fmt.Printf("  - %s\n", p)
 		}
 	}
 
@@ -439,16 +459,12 @@ func runUninstall() error {
 	statuslineBin := ""
 	switch runtime.GOOS {
 	case "windows":
-		statuslineBin = filepath.Join(base, "statusline", "cco-statusline-windows-amd64.exe")
+		statuslineBin = filepath.Join(base, "statusline", fmt.Sprintf("cco-statusline-windows-%s.exe", runtime.GOARCH))
 	default:
 		statuslineBin = filepath.Join(base, "statusline", fmt.Sprintf("cco-statusline-%s-%s", runtime.GOOS, runtime.GOARCH))
 	}
 	if _, err := os.Stat(statuslineBin); err == nil {
-		fmt.Print("Remove statusline binary? [y/N] ")
-		if _, err := fmt.Scanln(&answer); err != nil {
-			answer = "n"
-		}
-		if strings.ToLower(answer) == "y" {
+		if promptYN("Remove statusline binary? [y/N] ") {
 			if err := os.Remove(statuslineBin); err != nil {
 				fmt.Fprintf(os.Stderr, "  ! Warning: could not remove %s: %v\n", statuslineBin, err)
 			}
@@ -494,6 +510,8 @@ func removeAll(base string) {
 }
 
 func runVersion() error {
+	jsonOutput := len(os.Args) >= 3 && os.Args[2] == "--json"
+
 	base, err := claudeDir()
 	if err != nil {
 		return err
@@ -502,14 +520,26 @@ func runVersion() error {
 
 	content, err := os.ReadFile(rulesPath) //nolint:gosec // G304: path constructed from home directory
 	if err != nil {
-		fmt.Println("CCO is not installed.")
+		if jsonOutput {
+			fmt.Println(`{"installed":false}`)
+		} else {
+			fmt.Println("CCO is not installed.")
+		}
 		return nil
 	}
 
 	if version := extractVersion(string(content)); version != "" {
-		fmt.Printf("CCO v%s\n", version)
+		if jsonOutput {
+			fmt.Printf("{\"version\":\"%s\"}\n", version)
+		} else {
+			fmt.Printf("CCO v%s\n", version)
+		}
 	} else {
-		fmt.Println("CCO installed (version unknown)")
+		if jsonOutput {
+			fmt.Println(`{"installed":true,"version":null}`)
+		} else {
+			fmt.Println("CCO installed (version unknown)")
+		}
 	}
 	return nil
 }

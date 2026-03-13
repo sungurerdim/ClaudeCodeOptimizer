@@ -93,10 +93,9 @@ func cleanupLegacy(base string) []string {
 	)...)
 
 	// Any cco-*.md in agents/ that isn't current
-	currentAgents := map[string]bool{
-		"cco-agent-analyze.md":  true,
-		"cco-agent-apply.md":    true,
-		"cco-agent-research.md": true,
+	currentAgents := make(map[string]bool, len(agentFiles))
+	for _, f := range agentFiles {
+		currentAgents[filepath.Base(f)] = true
 	}
 	removed = append(removed, removeDirEntries(
 		filepath.Join(base, "agents"), "agents/",
@@ -117,16 +116,9 @@ func cleanupLegacy(base string) []string {
 	}
 
 	// Stale skill directories and v2 plugin symlinks in skills/
-	currentSkills := map[string]bool{
-		"cco-optimize":  true,
-		"cco-align":     true,
-		"cco-commit":    true,
-		"cco-research":  true,
-		"cco-docs":      true,
-		"cco-update":    true,
-		"cco-blueprint": true,
-		"cco-pr":        true,
-		"cco-repo":      true,
+	currentSkills := make(map[string]bool, len(skillFiles))
+	for _, f := range skillFiles {
+		currentSkills[filepath.Base(filepath.Dir(f))] = true
 	}
 	removed = append(removed, removeDirEntries(
 		filepath.Join(base, "skills"), "skills/",

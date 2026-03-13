@@ -8,9 +8,12 @@ Your first 10 minutes with CCO.
 
 ### Using Go Binary (Recommended)
 
+> **Note:** These commands are also used in `skills/cco-update/SKILL.md` (update path).
+> Update both files if the binary distribution scheme changes.
+
 **macOS / Linux:**
 ```bash
-mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$ARCH -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
 ```
 
 **Windows (PowerShell):**
@@ -33,7 +36,7 @@ If you already have CCO installed, update to v4:
 ~/.claude/
 ├── rules/
 │   └── cco-rules.md            # Core rules (auto-loaded)
-├── skills/                        # 8 skills
+├── skills/                        # 9 skills
 │   ├── cco-optimize/SKILL.md
 │   ├── cco-align/SKILL.md
 │   ├── cco-commit/SKILL.md
@@ -41,7 +44,8 @@ If you already have CCO installed, update to v4:
 │   ├── cco-docs/SKILL.md
 │   ├── cco-blueprint/SKILL.md
 │   ├── cco-pr/SKILL.md
-│   └── cco-update/SKILL.md
+│   ├── cco-update/SKILL.md
+│   └── cco-repo/SKILL.md
 └── agents/
     ├── cco-agent-analyze.md     # 3 subagents
     ├── cco-agent-apply.md

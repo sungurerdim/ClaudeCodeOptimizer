@@ -27,7 +27,7 @@ Without flags: check for update, ask before upgrading.
 
 ### Step 1: Version Check
 
-1. Use the Read tool to read the **installed** `~/.claude/rules/cco-rules.md` (resolve `~` to user home). Extract `cco_version` from YAML frontmatter.
+1. Run `cco version --json` via Bash → parse `{"version":"X.Y.Z"}`. If `cco` is not in PATH or returns `{"installed":false}`, fall back to: Read `~/.claude/rules/cco-rules.md` and extract `cco_version` from YAML frontmatter.
 2. WebFetch `https://api.github.com/repos/sungurerdim/ClaudeCodeOptimizer/tags?per_page=1` → extract latest tag name, strip `v` prefix
 3. Compare current vs latest semver
 
@@ -53,9 +53,12 @@ AskUserQuestion([{
 
 Detect platform, run the appropriate install one-liner:
 
+> **Note:** These commands are identical to the installation commands in `docs/getting-started.md`.
+> Update both files if the binary distribution scheme changes.
+
 **macOS / Linux:**
 ```bash
-mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$ARCH -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
 ```
 
 **Windows (PowerShell):**

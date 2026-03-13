@@ -24,6 +24,8 @@ var agentFiles = []string{
 	"agents/cco-agent-research.md",
 }
 
+// TODO(v6+): Remove legacyV2Commands and legacyV3Commands batches after v6.0 release.
+
 // v3 legacy command files to remove
 var legacyV3Commands = []string{
 	"commands/cco-optimize.md",

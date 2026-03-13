@@ -20,7 +20,7 @@ Batch write operations with verification. Fix everything, leave nothing behind.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `findings` | `Finding[]` | For fix scope | Findings to fix with file, line, description |
+| `findings` | `Finding[]` | For fix scope | Findings to fix with file, line, description. `location` must be a nested object `{ "file": "...", "line": N }` — reject findings where location is a plain string. |
 | `operations` | `Operation[]` | For config scope | File write/delete/merge operations |
 | `fixAll` | `boolean` | No | When true, fix everything regardless of effort/impact |
 | `scope` | `string` | No | `"fix"` (default) or `"docs"` |
