@@ -65,7 +65,7 @@ jobs:
       (needs.release-please.outputs.release_created == 'true' || inputs.tag != '')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -84,7 +84,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           # Using minor-flexible pin (1.23.x) balances reproducibility with automatic security patches.
           # To pin exact patch for stricter binary reproducibility, use e.g. '1.23.4' and update each Go release.
@@ -92,14 +92,14 @@ jobs:
           cache: false
 
       - name: Lint before release
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
           working-directory: extras/installer
           args: --config ../../.golangci.yml
 
       - name: Lint statusline before release
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
           working-directory: extras/statusline
@@ -110,7 +110,7 @@ jobs:
           cd extras/installer && go test -race -count=1 ./...
           cd ../../extras/statusline && go test -race -count=1 ./...
 
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2.9'
           args: release
