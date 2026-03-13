@@ -76,8 +76,8 @@ Rule categories: Scope Control, Code Integrity, Production Standards, Output Bre
 ### Adding a New Skill
 
 1. Create `skills/cco-{name}/SKILL.md` with YAML frontmatter
-2. Update `extras/installer/main.go` file manifest
-3. Update `skills/cco-update/SKILL.md` file manifest
+2. Update `extras/installer/manifest.go` — add to `skillFiles` slice (canonical source of truth)
+3. CI `manifest-sync` job validates this automatically on push
 4. Update `docs/skills.md` and `docs/agents.md` if applicable
 
 ### Updating Documentation

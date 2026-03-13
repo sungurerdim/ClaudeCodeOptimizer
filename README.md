@@ -23,7 +23,7 @@
 **macOS / Linux:**
 
 ```bash
-mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$(uname -m) -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && mkdir -p ~/.local/bin && curl -fsSL https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/latest/download/cco-$(uname -s | tr A-Z a-z)-$ARCH -o ~/.local/bin/cco && chmod +x ~/.local/bin/cco && ~/.local/bin/cco install
 ```
 
 **Windows (PowerShell):**

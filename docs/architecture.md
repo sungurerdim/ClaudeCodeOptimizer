@@ -187,9 +187,14 @@ Skills with 3+ phases create prefixed tasks (`[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `
 
 ### File Manifest Sync
 
-The file list in `extras/installer/manifest.go` is the single source of truth for installed files. When adding or removing a skill/agent file, update `manifest.go`.
+The file list in `extras/installer/manifest.go` is the single source of truth for installed files.
 
-Note: The installed file structure is also documented in `docs/getting-started.md` for user reference and in `CLAUDE.md` for project context. These are manually kept in sync — `manifest.go` remains the canonical source for the Go installer.
+**When adding or removing a skill/agent file:**
+1. Update `manifest.go` first (`skillFiles` or `agentFiles` slice)
+2. The CI `manifest-sync` job validates this automatically on every push
+3. Manually sync `docs/getting-started.md` if the installed file tree shown there changes
+
+Note: The installed file structure is also documented in `docs/getting-started.md` for user reference and in `CLAUDE.md` for project context. These are intentionally duplicated for human readers — `manifest.go` remains the canonical source for the Go installer.
 
 ---
 
