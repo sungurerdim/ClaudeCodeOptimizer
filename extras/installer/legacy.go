@@ -126,6 +126,7 @@ func cleanupLegacy(base string) []string {
 		"cco-update":    true,
 		"cco-blueprint": true,
 		"cco-pr":        true,
+		"cco-repo":      true,
 	}
 	removed = append(removed, removeDirEntries(
 		filepath.Join(base, "skills"), "skills/",

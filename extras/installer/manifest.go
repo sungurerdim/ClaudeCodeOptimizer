@@ -15,6 +15,7 @@ var skillFiles = []string{
 	"skills/cco-update/SKILL.md",
 	"skills/cco-blueprint/SKILL.md",
 	"skills/cco-pr/SKILL.md",
+	"skills/cco-repo/SKILL.md",
 }
 
 var agentFiles = []string{

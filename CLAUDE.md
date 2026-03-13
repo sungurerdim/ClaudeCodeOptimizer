@@ -15,7 +15,7 @@
 Entry: extras/installer/ (Go binary) → GitHub release download → ~/.claude/
 Modules:
   rules/           → Core rules (1 file, auto-loaded)
-  skills/          → Slash skills (8 directories, each with SKILL.md)
+  skills/          → Slash skills (9 directories, each with SKILL.md)
   agents/          → Subagents (3 files)
   extras/          → Optional add-ons (statusline: Go, installer: Go)
   docs/            → Documentation (5 files)

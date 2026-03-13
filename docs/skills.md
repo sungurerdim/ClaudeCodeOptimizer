@@ -16,8 +16,9 @@ All CCO slash commands (skills) with flags, scopes, and examples.
 | `/cco-blueprint` | Project health + memory cleanup | `--auto`, `--preview`, `--init`, `--refresh`, `--scope=X` |
 | `/cco-pr` | Release-please PRs | `--auto`, `--no-auto-merge`, `--preview`, `--draft` |
 | `/cco-update` | Update CCO | `--auto`, `--check` |
+| `/cco-repo` | Repository health, settings, CI/CD | `--auto`, `--preview`, `--scope=X` |
 
-6 skills auto-invoke on natural language. 2 require explicit `/command` invocation (blueprint, update).
+6 skills auto-invoke on natural language. 3 require explicit `/command` invocation (blueprint, update, repo).
 
 ---
 
@@ -265,6 +266,20 @@ Update CCO to the latest version.
 ```
 
 ---
+
+## /cco-repo
+
+Repository health — audit and configure repo settings, branch policies, CI/CD, and team structure.
+
+```bash
+/cco-repo             # Full audit, interactive
+/cco-repo --auto      # All scopes, fix everything
+/cco-repo --preview   # Audit only, no changes
+/cco-repo --scope=ci  # Specific scope
+```
+
+---
+
 
 ## CCO vs Built-in Commands
 
