@@ -80,8 +80,9 @@ main → /cco-commit → feature branch → work → /cco-pr → main
 | [`/cco-docs`](docs/skills.md#cco-docs) | Find documentation gaps and generate missing content | `--auto`, `--preview`, `--scope=X`, `--update` |
 | [`/cco-research`](docs/skills.md#cco-research) | Multi-source research with CRAAP+ reliability scoring | `--quick`, `--deep` |
 | [`/cco-update`](docs/skills.md#cco-update) | Check for updates and install latest version | `--auto`, `--check` |
+| [`/cco-repo`](docs/skills.md#cco-repo) | Repository health, settings, CI/CD, and team config | `--auto`, `--preview`, `--scope=X` |
 
-8 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
+9 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
 
 ---
 

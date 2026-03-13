@@ -438,6 +438,7 @@ func TestManifestConsistency(t *testing.T) {
 			"cco-update":    true,
 			"cco-blueprint": true,
 			"cco-pr":        true,
+			"cco-repo":      true,
 		}
 
 		for _, f := range skillFiles {
