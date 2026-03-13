@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.7.0](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.6.1...v4.7.0) (2026-03-13)
+
+
+### Features
+
+* **quality:** cco-optimize + cco-align improvements ([af28fac](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/af28fac18215540627dec2c7b14623d8e2942cac))
+* **skills:** add cco-repo skill and sync with upstream compaction resilience changes ([#69](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues/69)) ([00f83cb](https://github.com/sungurerdim/ClaudeCodeOptimizer/commit/00f83cbba01330ced39c7080e1fafa565c489e89))
+
 ## [4.6.1](https://github.com/sungurerdim/ClaudeCodeOptimizer/compare/v4.6.0...v4.6.1) (2026-02-28)
 
 
