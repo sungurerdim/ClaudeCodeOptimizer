@@ -13,10 +13,12 @@ import (
 	"time"
 )
 
+const maxDownloadSize = 10 * 1024 * 1024
+
 var httpClient = &http.Client{
 	Timeout: 30 * time.Second,
 	Transport: &http.Transport{
-		MaxIdleConns:        10,
+		MaxIdleConns:        150,
 		MaxIdleConnsPerHost: 15,
 		IdleConnTimeout:     30 * time.Second,
 	},
@@ -28,6 +30,8 @@ var retryBackoff = func(attempt int) time.Duration {
 	return time.Duration(1<<uint(attempt)) * time.Second // 1s, 2s, 4s
 }
 
+// resolveLatestTag fetches the most recent release tag from GitHub.
+// Single-shot with graceful fallback: transient failures here return "main" rather than blocking install.
 func resolveLatestTag() string {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/tags?per_page=1", repo)
 	resp, err := httpClient.Get(url)
@@ -81,25 +85,40 @@ func (e *httpError) Error() string {
 	return fmt.Sprintf("HTTP %d for %s", e.StatusCode, e.Path)
 }
 
+// retryableNetworkError wraps a network-level I/O error that is safe to retry.
+// Using a typed wrapper (rather than string prefix matching) makes isRetryable
+// immune to error message text changes.
+type retryableNetworkError struct {
+	cause error
+	op    string // "download" or "read"
+}
+
+func (e *retryableNetworkError) Error() string {
+	return fmt.Sprintf("%s failed: %v", e.op, e.cause)
+}
+
+func (e *retryableNetworkError) Unwrap() error {
+	return e.cause
+}
+
 // isRetryable returns true for transient errors worth retrying:
 // network errors, 5xx server errors, and 429 rate limiting.
 // Content validation errors and 4xx client errors are not retryable.
+// All checks use errors.As with typed sentinels — no string-prefix matching.
 func isRetryable(err error) bool {
 	var he *httpError
 	if errors.As(err, &he) {
 		return he.StatusCode >= 500 || he.StatusCode == http.StatusTooManyRequests
 	}
-	// Only retry network-level errors (download failed / read failed),
-	// not content validation errors (frontmatter check).
-	msg := err.Error()
-	return strings.HasPrefix(msg, "download failed:") || strings.HasPrefix(msg, "read failed:")
+	var ne *retryableNetworkError
+	return errors.As(err, &ne)
 }
 
 func tryDownload(baseURL, path string) (string, error) {
 	url := fmt.Sprintf("%s/%s", baseURL, path)
 	resp, err := httpClient.Get(url)
 	if err != nil {
-		return "", fmt.Errorf("download failed: %w", err)
+		return "", &retryableNetworkError{cause: err, op: "download"}
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -107,19 +126,26 @@ func tryDownload(baseURL, path string) (string, error) {
 		return "", &httpError{StatusCode: resp.StatusCode, Path: path}
 	}
 
-	const maxFileSize = 10 * 1024 * 1024
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFileSize))
+	// httpClient.Timeout (30s) covers the full lifecycle including body reads,
+	// so no separate context deadline is needed here.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxDownloadSize))
 	if err != nil {
-		return "", fmt.Errorf("read failed: %w", err)
+		return "", &retryableNetworkError{cause: err, op: "read"}
 	}
 	// Check for truncation: if there's more data, the file exceeds the limit
 	probe := make([]byte, 1)
 	if n, _ := resp.Body.Read(probe); n > 0 {
-		return "", fmt.Errorf("file exceeds 10MB limit: %s", path)
+		return "", fmt.Errorf("file exceeds %dMB limit: %s", maxDownloadSize/1024/1024, path)
 	}
 
 	if !bytes.HasPrefix(body, []byte("---\n")) || !bytes.Contains(body, []byte("\n---\n")) {
 		return "", fmt.Errorf("unexpected content for %s (missing YAML frontmatter)", path)
+	}
+	// Verify frontmatter contains at least one YAML field (guards against error pages
+	// that happen to start with "---" but carry no valid CCO content).
+	fmEnd := bytes.Index(body, []byte("\n---\n"))
+	if fmEnd <= 4 || !bytes.Contains(body[4:fmEnd], []byte(":")) {
+		return "", fmt.Errorf("unexpected content for %s (empty YAML frontmatter)", path)
 	}
 
 	return string(body), nil

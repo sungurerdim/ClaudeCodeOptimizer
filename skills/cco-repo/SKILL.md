@@ -42,6 +42,18 @@ allowed-tools:
 | team | CODEOWNERS, review assignments, contributor guidelines |
 | structure | Directory conventions, .gitignore completeness, config sprawl |
 
+## State Management
+
+Per CCO Rules: State Management. This skill uses task prefix `[RPO]`.
+
+| Task | Created | Completed |
+|------|---------|-----------|
+| `[RPO] Repo audit: {scopes}` | Phase 1 complete | Phase 6 end |
+| `[RPO] Audit: {N} findings` | Phase 2 complete | — (updated in-place) |
+| `[RPO] Applied: {N}` | Phase 5 complete | — (updated in-place) |
+
+**Recovery:** At Phase 1 start, run `TaskList`. If a `[RPO]` task exists with status `in_progress` → resume from last completed phase using task description as context anchor.
+
 ## Execution Flow
 
 Setup → Audit → Gap Analysis → Plan Review → Apply → Summary

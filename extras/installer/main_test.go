@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -300,7 +301,7 @@ func TestResolveLatestTag(t *testing.T) {
 	})
 }
 
-// rewriteTransport redirects all requests to a test server URL.
+// rewriteTransport redirects all requests to a test server URL for testing with mocked GitHub API responses.
 type rewriteTransport struct {
 	base string
 }
@@ -426,9 +427,9 @@ func TestCleanupLegacy(t *testing.T) {
 
 func TestManifestConsistency(t *testing.T) {
 	t.Run("skillFiles matches currentSkills map in cleanupLegacy", func(t *testing.T) {
-		// Verify that the file manifest arrays are consistent with the
-		// cleanup maps. If a skill is added to skillFiles but not to
-		// currentSkills, legacy cleanup would incorrectly remove it.
+		// Verify that skillFiles contains all expected skill entries.
+		// cleanupLegacy now derives currentSkills from skillFiles directly,
+		// so this test guards against accidental removal of a skill from the manifest.
 		expectedSkills := map[string]bool{
 			"cco-optimize":  true,
 			"cco-align":     true,
@@ -621,6 +622,27 @@ func TestStateFile(t *testing.T) {
 		// Should not panic
 		checkStaleState(path)
 	})
+
+	t.Run("checkStaleState handles unparseable timestamp", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), ".cco-installing")
+		_ = os.WriteFile(path, []byte("not-a-number"), 0600)
+		// Falls back to ModTime; file is recent so it should not be removed.
+		checkStaleState(path)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Error("recent file with unparseable timestamp should not be removed")
+		}
+	})
+
+	t.Run("writeStateFile fails when parent is a file", func(t *testing.T) {
+		base := t.TempDir()
+		// Block the parent directory path with a regular file.
+		blocker := filepath.Join(base, "blocked")
+		_ = os.WriteFile(blocker, []byte("x"), 0600)
+		err := writeStateFile(filepath.Join(blocker, "state"))
+		if err == nil {
+			t.Error("expected error when parent path is a file, not a directory")
+		}
+	})
 }
 
 func TestDetectCurrentVersion(t *testing.T) {
@@ -679,8 +701,8 @@ func TestIsRetryable(t *testing.T) {
 		{"429 rate limit", &httpError{StatusCode: 429, Path: "test"}, true},
 		{"404 not found", &httpError{StatusCode: 404, Path: "test"}, false},
 		{"403 forbidden", &httpError{StatusCode: 403, Path: "test"}, false},
-		{"download failed", fmt.Errorf("download failed: connection refused"), true},
-		{"read failed", fmt.Errorf("read failed: timeout"), true},
+		{"download network error", &retryableNetworkError{cause: fmt.Errorf("connection refused"), op: "download"}, true},
+		{"read network error", &retryableNetworkError{cause: fmt.Errorf("timeout"), op: "read"}, true},
 		{"frontmatter error", fmt.Errorf("unexpected content for test.md (missing YAML frontmatter)"), false},
 		{"generic error", fmt.Errorf("something else"), false},
 	}
@@ -702,6 +724,341 @@ func TestResolveChannel(t *testing.T) {
 			t.Errorf("got %q, want %q", ref, "v4.0.0")
 		}
 	})
+
+	t.Run("resolves latest tag when no tag specified", func(t *testing.T) {
+		originalClient := httpClient
+		defer func() { httpClient = originalClient }()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_ = json.NewEncoder(w).Encode([]struct {
+				Name string `json:"name"`
+			}{{"v4.9.0"}})
+		}))
+		defer server.Close()
+		httpClient = &http.Client{
+			Timeout:   5 * time.Second,
+			Transport: &rewriteTransport{base: server.URL},
+		}
+
+		ref := resolveChannel("")
+		if ref != "v4.9.0" {
+			t.Errorf("got %q, want %q", ref, "v4.9.0")
+		}
+	})
+
+	t.Run("falls back to main when tags API fails", func(t *testing.T) {
+		originalClient := httpClient
+		defer func() { httpClient = originalClient }()
+
+		httpClient = &http.Client{
+			Timeout:   1 * time.Second,
+			Transport: &rewriteTransport{base: "http://127.0.0.1:1"},
+		}
+
+		ref := resolveChannel("")
+		if ref != "main" {
+			t.Errorf("got %q, want %q", ref, "main")
+		}
+	})
+}
+
+func TestResolveAndVerify(t *testing.T) {
+	originalClient := httpClient
+	originalBackoff := retryBackoff
+	defer func() {
+		httpClient = originalClient
+		retryBackoff = originalBackoff
+	}()
+	retryBackoff = func(_ int) time.Duration { return time.Millisecond }
+
+	validContent := "---\ncco_version: 4.9.0\ndescription: test\n---\n# Rules"
+
+	t.Run("fresh install extracts version", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = fmt.Fprint(w, validContent)
+		}))
+		defer server.Close()
+		httpClient = &http.Client{
+			Timeout:   5 * time.Second,
+			Transport: &rewriteTransport{base: server.URL},
+		}
+
+		base := t.TempDir()
+		info, err := resolveAndVerify(base, "v4.9.0")
+		if err != nil {
+			t.Fatalf("resolveAndVerify failed: %v", err)
+		}
+		if info.newVersion != "4.9.0" {
+			t.Errorf("got version %q, want %q", info.newVersion, "4.9.0")
+		}
+		if info.ref != "v4.9.0" {
+			t.Errorf("got ref %q, want %q", info.ref, "v4.9.0")
+		}
+	})
+
+	t.Run("already up to date returns errUpToDate", func(t *testing.T) {
+		// The up-to-date check only fires when tag=="" (no explicit pin).
+		// Server must handle both the tags API and file content requests.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.Contains(r.URL.RawQuery, "per_page") {
+				_ = json.NewEncoder(w).Encode([]struct {
+					Name string `json:"name"`
+				}{{"v4.9.0"}})
+				return
+			}
+			_, _ = fmt.Fprint(w, validContent)
+		}))
+		defer server.Close()
+		httpClient = &http.Client{
+			Timeout:   5 * time.Second,
+			Transport: &rewriteTransport{base: server.URL},
+		}
+
+		base := t.TempDir()
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"), []byte(validContent), 0600)
+
+		_, err := resolveAndVerify(base, "") // no pin → resolves v4.9.0, matches installed
+		if err == nil {
+			t.Fatal("expected errUpToDate, got nil")
+		}
+		if err.Error() != errUpToDate.Error() {
+			t.Errorf("expected errUpToDate, got %v", err)
+		}
+	})
+
+	t.Run("source verification failure returns error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(404)
+		}))
+		defer server.Close()
+		httpClient = &http.Client{
+			Timeout:   5 * time.Second,
+			Transport: &rewriteTransport{base: server.URL},
+		}
+
+		_, err := resolveAndVerify(t.TempDir(), "v4.9.0")
+		if err == nil {
+			t.Fatal("expected error for 404 source")
+		}
+	})
+}
+
+func TestDownloadInParallel(t *testing.T) {
+	originalBackoff := retryBackoff
+	defer func() { retryBackoff = originalBackoff }()
+	retryBackoff = func(_ int) time.Duration { return time.Millisecond }
+
+	validContent := "---\ncco_version: 4.9.0\ndescription: test\n---\n# Content"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = fmt.Fprint(w, validContent)
+	}))
+	defer server.Close()
+
+	files := []installFile{
+		{path: "rules/cco-rules.md", group: "rules"},
+		{path: "skills/cco-test/SKILL.md", group: "skills"},
+		{path: "agents/cco-agent-test.md", group: "agents"},
+	}
+	info := installInfo{
+		baseURL:     server.URL,
+		testContent: validContent,
+	}
+
+	results := downloadInParallel(files, info)
+	if len(results) != len(files) {
+		t.Fatalf("got %d results, want %d", len(results), len(files))
+	}
+
+	// cco-rules.md must reuse pre-verified content without hitting server
+	if results[0].content != validContent {
+		t.Error("cco-rules.md should reuse pre-verified testContent")
+	}
+	if results[0].err != nil {
+		t.Errorf("cco-rules.md should not error: %v", results[0].err)
+	}
+
+	// Other files should be downloaded from the mock server
+	for i := 1; i < len(results); i++ {
+		if results[i].err != nil {
+			t.Errorf("file %s should not error: %v", results[i].path, results[i].err)
+		}
+		if results[i].content != validContent {
+			t.Errorf("file %s content mismatch", results[i].path)
+		}
+	}
+}
+
+func TestRunVersion(t *testing.T) {
+	t.Run("not installed", func(t *testing.T) {
+		t.Setenv("CCO_CLAUDE_DIR", t.TempDir())
+		if err := runVersion(); err != nil {
+			t.Fatalf("runVersion should not error when not installed: %v", err)
+		}
+	})
+
+	t.Run("installed with version", func(t *testing.T) {
+		base := t.TempDir()
+		t.Setenv("CCO_CLAUDE_DIR", base)
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
+			[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
+
+		if err := runVersion(); err != nil {
+			t.Fatalf("runVersion failed: %v", err)
+		}
+	})
+}
+
+func TestRunInstall(t *testing.T) {
+	originalClient := httpClient
+	originalBackoff := retryBackoff
+	defer func() {
+		httpClient = originalClient
+		retryBackoff = originalBackoff
+	}()
+	retryBackoff = func(_ int) time.Duration { return time.Millisecond }
+
+	validContent := "---\ncco_version: 4.9.0\ndescription: test\n---\n# Content"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.RawQuery, "per_page") {
+			_ = json.NewEncoder(w).Encode([]struct {
+				Name string `json:"name"`
+			}{{"v4.9.0"}})
+			return
+		}
+		_, _ = fmt.Fprint(w, validContent)
+	}))
+	defer server.Close()
+	httpClient = &http.Client{
+		Timeout:   5 * time.Second,
+		Transport: &rewriteTransport{base: server.URL},
+	}
+
+	base := t.TempDir()
+	t.Setenv("CCO_CLAUDE_DIR", base)
+
+	if err := runInstall("v4.9.0"); err != nil {
+		t.Fatalf("runInstall failed: %v", err)
+	}
+
+	// Verify critical rules file installed
+	rulesPath := filepath.Join(base, "rules", "cco-rules.md")
+	if _, err := os.Stat(rulesPath); os.IsNotExist(err) {
+		t.Error("rules/cco-rules.md should be installed")
+	}
+
+	// Verify all skill files installed
+	for _, f := range skillFiles {
+		p := filepath.Join(base, filepath.FromSlash(f))
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			t.Errorf("skill file %s should be installed", f)
+		}
+	}
+
+	// Verify all agent files installed
+	for _, f := range agentFiles {
+		p := filepath.Join(base, filepath.FromSlash(f))
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			t.Errorf("agent file %s should be installed", f)
+		}
+	}
+}
+
+func TestRunInstallPinnedReinstall(t *testing.T) {
+	originalClient := httpClient
+	originalBackoff := retryBackoff
+	defer func() {
+		httpClient = originalClient
+		retryBackoff = originalBackoff
+	}()
+	retryBackoff = func(_ int) time.Duration { return time.Millisecond }
+
+	validContent := "---\ncco_version: 4.9.0\ndescription: test\n---\n# Content"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = fmt.Fprint(w, validContent)
+	}))
+	defer server.Close()
+	httpClient = &http.Client{
+		Timeout:   5 * time.Second,
+		Transport: &rewriteTransport{base: server.URL},
+	}
+
+	base := t.TempDir()
+	t.Setenv("CCO_CLAUDE_DIR", base)
+
+	// Pre-install same version so installer detects "up to date"
+	rulesDir := filepath.Join(base, "rules")
+	_ = os.MkdirAll(rulesDir, 0750)
+	_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"), []byte(validContent), 0600)
+
+	// Should succeed without error (up-to-date is a clean exit)
+	if err := runInstall("v4.9.0"); err != nil {
+		t.Fatalf("runInstall up-to-date should not error: %v", err)
+	}
+}
+
+func TestRunUninstall(t *testing.T) {
+	t.Run("CCO not installed", func(t *testing.T) {
+		t.Setenv("CCO_CLAUDE_DIR", t.TempDir())
+		if err := runUninstall(); err != nil {
+			t.Fatalf("runUninstall should not error when not installed: %v", err)
+		}
+	})
+
+	t.Run("declines removal", func(t *testing.T) {
+		base := t.TempDir()
+		t.Setenv("CCO_CLAUDE_DIR", base)
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
+			[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
+
+		// Feed "n" to all stdin prompts
+		r, w, _ := os.Pipe()
+		oldStdin := os.Stdin
+		os.Stdin = r
+		defer func() { os.Stdin = oldStdin }()
+		_, _ = fmt.Fprint(w, "n\n")
+		w.Close()
+
+		if err := runUninstall(); err != nil {
+			t.Fatalf("runUninstall failed: %v", err)
+		}
+		// Rules file should still exist (answered n)
+		if _, err := os.Stat(filepath.Join(rulesDir, "cco-rules.md")); os.IsNotExist(err) {
+			t.Error("rules file should still exist after declining removal")
+		}
+	})
+
+	t.Run("confirms full removal", func(t *testing.T) {
+		base := t.TempDir()
+		t.Setenv("CCO_CLAUDE_DIR", base)
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
+			[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
+		// Create a skill dir too
+		_ = os.MkdirAll(filepath.Join(base, "skills", "cco-optimize"), 0750)
+
+		// Feed "y" to trigger full removal
+		r, w, _ := os.Pipe()
+		oldStdin := os.Stdin
+		os.Stdin = r
+		defer func() { os.Stdin = oldStdin }()
+		_, _ = fmt.Fprint(w, "y\n")
+		w.Close()
+
+		if err := runUninstall(); err != nil {
+			t.Fatalf("runUninstall failed: %v", err)
+		}
+		// Rules file should be removed (answered y)
+		if _, err := os.Stat(filepath.Join(rulesDir, "cco-rules.md")); !os.IsNotExist(err) {
+			t.Error("rules file should be removed after confirming full removal")
+		}
+	})
 }
 
 func TestPrintVersionInfo(t *testing.T) {
@@ -712,4 +1069,245 @@ func TestPrintVersionInfo(t *testing.T) {
 	printVersionInfo("4.0.0", "4.1.0", "")
 	printVersionInfo("4.0.0", "4.0.0", "")
 	printVersionInfo("4.0.0", "4.0.0", "v4.0.0")
+}
+
+func TestErrorMessages(t *testing.T) {
+	t.Run("httpError message", func(t *testing.T) {
+		e := &httpError{StatusCode: 404, Path: "test/file.md"}
+		got := e.Error()
+		if !strings.Contains(got, "404") || !strings.Contains(got, "test/file.md") {
+			t.Errorf("httpError.Error() = %q, want status and path", got)
+		}
+	})
+
+	t.Run("retryableNetworkError message", func(t *testing.T) {
+		cause := fmt.Errorf("connection refused")
+		e := &retryableNetworkError{cause: cause, op: "download"}
+		got := e.Error()
+		if !strings.Contains(got, "download") || !strings.Contains(got, "connection refused") {
+			t.Errorf("retryableNetworkError.Error() = %q, want op and cause", got)
+		}
+		if e.Unwrap() != cause {
+			t.Error("retryableNetworkError.Unwrap() should return cause")
+		}
+	})
+}
+
+func TestRunUninstallPerGroup(t *testing.T) {
+	base := t.TempDir()
+	t.Setenv("CCO_CLAUDE_DIR", base)
+
+	rulesDir := filepath.Join(base, "rules")
+	_ = os.MkdirAll(rulesDir, 0750)
+	_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
+		[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
+	_ = os.MkdirAll(filepath.Join(base, "skills", "cco-optimize"), 0750)
+	agentDir := filepath.Join(base, "agents")
+	_ = os.MkdirAll(agentDir, 0750)
+	_ = os.WriteFile(filepath.Join(agentDir, "cco-agent-analyze.md"), []byte("x"), 0600)
+
+	// Feed "n" (skip full removal), then "y/y/y" for per-group removal
+	r, w, _ := os.Pipe()
+	oldStdin := os.Stdin
+	os.Stdin = r
+	defer func() { os.Stdin = oldStdin }()
+	_, _ = fmt.Fprint(w, "n\ny\ny\ny\n")
+	w.Close()
+
+	if err := runUninstall(); err != nil {
+		t.Fatalf("runUninstall per-group failed: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(rulesDir, "cco-rules.md")); !os.IsNotExist(err) {
+		t.Error("rules file should be removed after per-group y")
+	}
+}
+
+func TestPrintSummaryWithFailures(t *testing.T) {
+	// Verify printSummary doesn't panic on failure case
+	info := installInfo{ref: "v4.9.0"}
+	printSummary(t.TempDir(), info, 2, nil)
+}
+
+func TestClaudeDirEnvOverride(t *testing.T) {
+	expected := t.TempDir()
+	t.Setenv("CCO_CLAUDE_DIR", expected)
+	got, err := claudeDir()
+	if err != nil {
+		t.Fatalf("claudeDir failed: %v", err)
+	}
+	if got != expected {
+		t.Errorf("got %q, want %q", got, expected)
+	}
+}
+
+func TestPrintUsage(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stdout
+	os.Stdout = w
+
+	printUsage()
+
+	_ = w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(r)
+	output := buf.String()
+
+	for _, want := range []string{"CCO", "install", "uninstall", "version"} {
+		if !strings.Contains(output, want) {
+			t.Errorf("usage output missing %q", want)
+		}
+	}
+}
+
+func TestEnsurePATHNotInPath(t *testing.T) {
+	// Set PATH to empty so the binary dir is guaranteed to be absent.
+	t.Setenv("PATH", "")
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stdout
+	os.Stdout = w
+
+	ensurePATH() // should print PATH advice without panicking
+
+	_ = w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(r)
+	if buf.Len() == 0 {
+		t.Error("ensurePATH should print advice when binary dir is not in PATH")
+	}
+}
+
+func TestWriteFileRenameFail(t *testing.T) {
+	base := t.TempDir()
+	// Place a file at "rules" so MkdirAll("base/rules") fails (file exists, not dir).
+	_ = os.WriteFile(filepath.Join(base, "rules"), []byte("blocking"), 0600)
+
+	err := writeFile(base, "rules/cco-rules.md", "---\ntest\n---\n")
+	if err == nil {
+		t.Fatal("expected error when target directory cannot be created")
+	}
+	if !strings.Contains(err.Error(), "mkdir failed") {
+		t.Errorf("expected mkdir error, got: %v", err)
+	}
+}
+
+func TestWriteResultsCriticalWriteFail(t *testing.T) {
+	base := t.TempDir()
+	// Block creation of the "rules" directory so writeFile fails on the critical file.
+	_ = os.WriteFile(filepath.Join(base, "rules"), []byte("blocking"), 0600)
+
+	criticalFiles := map[string]bool{"rules/cco-rules.md": true}
+	results := []downloadResult{
+		{path: "rules/cco-rules.md", group: "rules", content: "---\ntest\n---\ncontent"},
+	}
+
+	_, err := writeResults(base, results, criticalFiles)
+	if err == nil {
+		t.Fatal("expected error for critical file write failure")
+	}
+	if !strings.Contains(err.Error(), "critical file write failed") {
+		t.Errorf("expected critical write error, got: %v", err)
+	}
+}
+
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stdout
+	os.Stdout = w
+	fn()
+	_ = w.Close()
+	os.Stdout = old
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(r)
+	return buf.String()
+}
+
+func TestRunVersionJSON(t *testing.T) {
+	origArgs := os.Args
+	defer func() { os.Args = origArgs }()
+
+	t.Run("json with version", func(t *testing.T) {
+		base := t.TempDir()
+		t.Setenv("CCO_CLAUDE_DIR", base)
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
+			[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
+
+		os.Args = []string{"cco", "version", "--json"}
+		output := captureStdout(t, func() { _ = runVersion() })
+
+		if !strings.Contains(output, `"version"`) || !strings.Contains(output, "4.9.0") {
+			t.Errorf("expected version JSON, got: %q", output)
+		}
+	})
+
+	t.Run("json not installed", func(t *testing.T) {
+		t.Setenv("CCO_CLAUDE_DIR", t.TempDir())
+		os.Args = []string{"cco", "version", "--json"}
+		output := captureStdout(t, func() { _ = runVersion() })
+
+		if !strings.Contains(output, `"installed":false`) {
+			t.Errorf("expected installed:false JSON, got: %q", output)
+		}
+	})
+
+	t.Run("json installed but no version", func(t *testing.T) {
+		base := t.TempDir()
+		t.Setenv("CCO_CLAUDE_DIR", base)
+		rulesDir := filepath.Join(base, "rules")
+		_ = os.MkdirAll(rulesDir, 0750)
+		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
+			[]byte("---\nname: no-version-here\n---\n"), 0600)
+
+		os.Args = []string{"cco", "version", "--json"}
+		output := captureStdout(t, func() { _ = runVersion() })
+
+		if !strings.Contains(output, `"installed":true`) {
+			t.Errorf("expected installed:true JSON, got: %q", output)
+		}
+	})
+}
+
+func TestWriteFileRenameOverDir(t *testing.T) {
+	base := t.TempDir()
+	// Create target path as a directory — rename over a directory fails on all platforms.
+	targetDir := filepath.Join(base, "rules", "cco-rules.md")
+	_ = os.MkdirAll(targetDir, 0750)
+
+	err := writeFile(base, "rules/cco-rules.md", "---\ntest\n---\n")
+	if err == nil {
+		t.Fatal("expected error when target is a directory")
+	}
+	if !strings.Contains(err.Error(), "rename failed") {
+		t.Errorf("expected rename error, got: %v", err)
+	}
+}
+
+func TestRemoveIfExistsCannotRemove(t *testing.T) {
+	base := t.TempDir()
+	// Create a non-empty directory at the target path so os.Remove fails.
+	target := filepath.Join(base, "nonempty")
+	_ = os.MkdirAll(target, 0750)
+	_ = os.WriteFile(filepath.Join(target, "file.txt"), []byte("x"), 0600)
+
+	// removeIfExists on a non-empty dir returns false (os.Remove fails for non-empty dirs).
+	removed := removeIfExists(base, "nonempty")
+	if removed {
+		t.Error("expected false when remove fails on non-empty directory")
+	}
 }

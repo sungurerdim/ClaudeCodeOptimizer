@@ -37,12 +37,14 @@ Always return valid JSON:
 {
   "findings": [{
     "id": "SEC-01", "scope": "security", "severity": "HIGH",
-    "title": "Hardcoded API key", "location": { "file": "src/config.py", "line": 42 },
+    "title": "Hardcoded API key",
+    "location": { "file": "src/config.py", "line": 42 },
     "fixable": true, "fix": "Move to environment variable", "confidence": 95
   }],
   "scores": { "overall": 85, "security": 90 },
   "metrics": { "filesScanned": 50, "issuesFound": 12, "criticalCount": 1, "highCount": 3 },
   "excluded": { "count": 5, "reasons": ["test fixtures", "platform-specific"] },
+  "filters_applied": { "projectType": "devtool", "skipped": ["PRD:container", "FUN:UI"], "emphasized": ["DXQ", "DOC"] },
   "error": null
 }
 ```
@@ -54,6 +56,8 @@ On error: return `{"findings": [], "scores": {}, "metrics": {}, "error": "messag
 Finding ID format: `SCOPE-NN` (e.g., SEC-01). Severity: CRITICAL/HIGH/MEDIUM/LOW. Confidence: 0-100.
 
 Display format: `[{severity}] {id}: {title} in {location.file}:{location.line}`
+
+> **Note:** `location` is always a nested object `{ "file": "...", "line": N }`. Dot notation in this doc (`location.file`) refers to its nested fields, not top-level properties.
 
 **Output delivery:** Return the JSON as the final text message to the calling command. Do NOT write output to a file. Do NOT use `run_in_background`. The calling command reads the Task tool's return value directly.
 
@@ -116,8 +120,10 @@ UF = user-facing-defaults.
 | `game` | PRD: all. FUN: CRUD/pagination. ARC: layers. UF: partial | PRF: framerate, memory, assets. SEC: anti-cheat. ROB: save, crash |
 | `extension` | PRD: container/scaling. FUN: CRUD. UF: context-dependent | SEC: permissions, CSP. PAT: lifecycle, messaging. DXQ: manifest |
 
-When context is absent, apply all checks (no filtering).
+When context is absent, apply all checks (no filtering). Set `filters_applied` to `{}`.
 When `context.qualityTarget` is "Prototype", apply only security + hygiene scopes regardless of type.
+
+**Auditability:** Always populate `filters_applied` in output: `{ "projectType": "{type}", "skipped": ["{scope}:{check}", ...], "emphasized": ["{scope}", ...] }`. This lets callers verify the correct filter set was applied and catch misidentified project types.
 
 **Steps 1-2 are independent — run in parallel.**
 

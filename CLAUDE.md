@@ -19,9 +19,9 @@ Modules:
   agents/          → Subagents (3 files)
   extras/          → Optional add-ons (statusline: Go, installer: Go)
   docs/            → Documentation (5 files)
-  .github/         → CI/CD (2 workflows)
+  .github/         → CI/CD (2 workflows) + Dependabot
   .claude/commands → Custom commands (1 file)
-External: GitHub API (tags), release-please, gitleaks
+External: GitHub API (tags), release-please, gitleaks, Dependabot
 Toolchain: gofmt + go vet + golangci-lint | GoReleaser | GitHub Actions CI | No container
 ```
 
@@ -36,14 +36,14 @@ Toolchain: gofmt + go vet + golangci-lint | GoReleaser | GitHub Actions CI | No 
 ### Current Scores
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Security & Privacy | 93 | OK |
-| Code Quality | 92 | OK |
-| Architecture | 86 | OK |
-| Performance | 91 | OK |
-| Resilience | 92 | OK |
+| Security & Privacy | 92 | OK |
+| Code Quality | 88 | OK |
+| Architecture | 80 | WARN |
+| Performance | 89 | OK |
+| Resilience | 83 | OK |
 | Testing | 80 | WARN |
-| Stack Health | 90 | OK |
-| DX | 86 | OK |
-| Documentation | 80 | WARN |
-| Overall | 88 | OK |
+| Stack Health | 85 | OK |
+| DX | 79 | WARN |
+| Documentation | 72 | ALERT |
+| Overall | 84 | OK |
 <!-- cco-blueprint-end -->
