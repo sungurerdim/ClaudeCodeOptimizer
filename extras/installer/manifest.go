@@ -7,8 +7,7 @@ var rulesFiles = []string{
 }
 
 var skillFiles = []string{
-	"skills/cco-optimize/SKILL.md",
-	"skills/cco-align/SKILL.md",
+	"skills/cco-review/SKILL.md",
 	"skills/cco-commit/SKILL.md",
 	"skills/cco-research/SKILL.md",
 	"skills/cco-docs/SKILL.md",
@@ -16,6 +15,12 @@ var skillFiles = []string{
 	"skills/cco-blueprint/SKILL.md",
 	"skills/cco-pr/SKILL.md",
 	"skills/cco-repo/SKILL.md",
+}
+
+// v5 legacy skill directories to remove (cco-optimize + cco-align merged into cco-review)
+var legacyV5Skills = []string{
+	"skills/cco-optimize",
+	"skills/cco-align",
 }
 
 var agentFiles = []string{

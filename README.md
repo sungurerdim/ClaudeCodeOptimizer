@@ -40,8 +40,8 @@ Restart Claude Code. Done.
 
 1. **`/cco-blueprint`** — Create a project profile in CLAUDE.md (priorities, constraints, targets)
 2. **`/cco-docs`** — Find documentation gaps and generate missing content
-3. **`/cco-align`** — Architecture gap analysis
-4. **`/cco-optimize`** — Scan and fix security, quality, and hygiene issues
+3. **`/cco-review --architecture`** — Architecture gap analysis
+4. **`/cco-review --quality`** — Scan and fix security, quality, and hygiene issues
 
 ---
 
@@ -56,7 +56,7 @@ Restart Claude Code. Done.
 
 **Passive — Rules** load automatically at session start. Scope control, complexity limits, verification, and security patterns are always active. No commands needed.
 
-**Active — Skills** are invoked via `/cco-*` slash commands. Each skill orchestrates a specific workflow (optimize, commit, PR, etc.).
+**Active — Skills** are invoked via `/cco-*` slash commands. Each skill orchestrates a specific workflow (review, commit, PR, etc.).
 
 **Feature branch workflow:**
 
@@ -72,8 +72,7 @@ main → /cco-commit → feature branch → work → /cco-pr → main
 
 | Skill | What it does | Key Flags |
 |-------|-------------|-----------|
-| [`/cco-optimize`](docs/skills.md#cco-optimize) | Scan and fix security, types, performance, hygiene issues | `--auto`, `--preview`, `--scope=X`, `--loop` |
-| [`/cco-align`](docs/skills.md#cco-align) | Analyze architecture gaps and fix structural issues | `--auto`, `--preview` |
+| [`/cco-review`](docs/skills.md#cco-review) | Scan and fix code quality + architecture issues | `--quality`, `--architecture`, `--auto`, `--preview`, `--scope=X` |
 | [`/cco-commit`](docs/skills.md#cco-commit) | Quality-gated atomic commits with branch management | `--preview`, `--single`, `--staged-only` |
 | [`/cco-pr`](docs/skills.md#cco-pr) | Create release-please compatible PRs with auto-merge | `--auto`, `--preview`, `--no-auto-merge`, `--draft` |
 | [`/cco-blueprint`](docs/skills.md#cco-blueprint) | Profile project health, set targets, track progress | `--auto`, `--init`, `--refresh`, `--scope=X` |
@@ -82,7 +81,7 @@ main → /cco-commit → feature branch → work → /cco-pr → main
 | [`/cco-update`](docs/skills.md#cco-update) | Check for updates and install latest version | `--auto`, `--check` |
 | [`/cco-repo`](docs/skills.md#cco-repo) | Repository health, settings, CI/CD, and team config | `--auto`, `--preview`, `--scope=X` |
 
-9 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
+8 skills · 3 [specialized agents](docs/agents.md) · Core rules via [auto-loaded rules file](docs/rules.md)
 
 ---
 

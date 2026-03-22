@@ -372,9 +372,9 @@ func printSummary(base string, info installInfo, failed int, legacyRemoved []str
 		fmt.Println("Restart Claude Code to activate.")
 		fmt.Println()
 		fmt.Println("Quick Start:")
-		fmt.Println("  /cco-blueprint  — Create a project profile")
-		fmt.Println("  /cco-align      — Architecture gap analysis")
-		fmt.Println("  /cco-optimize   — Scan and fix issues")
+		fmt.Println("  /cco-blueprint              — Create a project profile")
+		fmt.Println("  /cco-review --quality       — Scan and fix issues")
+		fmt.Println("  /cco-review --architecture  — Architecture gap analysis")
 	} else {
 		fmt.Fprintf(os.Stderr, "Installation completed with %d error(s).\n", failed)
 		fmt.Fprintf(os.Stderr, "Re-run the installer or download files manually.\n")

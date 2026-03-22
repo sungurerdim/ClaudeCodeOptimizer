@@ -1,6 +1,6 @@
 ---
 cco_version: 4.6.1 # x-release-please-version
-description: Minimal behavior framework for AI-assisted development — quality, efficiency, security, speed
+description: Behavior framework for AI-assisted development — compensates for model blind spots, enforces quality gates
 last_update_check: 2026-02-21T13:30:00Z
 ---
 
@@ -8,242 +8,134 @@ last_update_check: 2026-02-21T13:30:00Z
 
 ## Failure Prevention
 
-### Scope Boundary [PROHIBITION]
-
-Only touch lines the task requires. Unrelated issues: mention, don't fix. Never reformat untouched code, add annotations to unmodified functions, reorder imports beyond what the change requires, or change whitespace in unmodified lines.
-
 ### Test Integrity [PROHIBITION]
 
-Never weaken, skip, mock away, or relax assertions to make a test pass. Fix the code, or fix the test to correctly validate real behavior. Test environment must use real OS paths, production-equivalent layouts, and native host verification — not bypassed in harness. Every bug fix includes a regression test.
+Never weaken, skip, mock away, or relax assertions to make a test pass. Fix the code, or fix the test to correctly validate real behavior. Test environment must use real OS paths and production-equivalent layouts. Every bug fix includes a regression test.
 
 ### Cross-file Consistency [PROHIBITION]
 
-After modifying file A, verify no file B depends on the changed interface, export, type, or constant in a now-broken way. Grep all consumers before declaring done. A change that breaks a dependent file is not done.
+After modifying file A, verify no file B depends on the changed interface, export, type, or constant in a now-broken way. Grep all consumers before declaring done.
+
+### Scope Discipline [PROHIBITION]
+
+Unrelated issues: mention, don't fix. Never reformat untouched code, add annotations to unmodified functions, or change whitespace in unmodified lines.
 
 ### Change Verification [GATE]
 
-After modifying a function → verify: all other behaviors in that function unchanged? All callers unaffected? No return type/shape changes beyond the fix? No conditional branch logic altered outside the target?
+After modifying a function → verify: all other behaviors unchanged? All callers unaffected? No return type/shape changes beyond the fix?
 
 ### Migration Sweep [GATE]
 
-After rename/move/interface change → grep/glob entire codebase: all imports, implementors, configs, env vars, docs, and tests reference the new name? Build passes with zero broken references?
+After rename/move/interface change → grep/glob entire codebase: all imports, configs, env vars, docs, and tests reference the new name? Zero broken references?
 
 ### Trust Verification [GATE]
 
-Before using any import, API, or dependency → verify it exists in codebase, registry, or docs. Check: package exists in registry? Version correct? API available in that version? Not transitive-only? Never assume from memory.
+Before using any import, API, or dependency → verify it exists via LSP diagnostics, grep, or docs. Never assume from memory — models hallucinate packages, versions, and API signatures.
 
 ### Format Preservation [GATE]
 
-During format/schema/data conversion → all fields preserved, including unknown ones? Target can't represent a source field → warn explicitly. Round-trip produces identical output?
+During format/schema/data conversion → all fields preserved, including unknown ones? Target can't represent a source field → warn explicitly.
 
 ### Artifact-First Recovery [GATE]
 
-After context gap → re-read files before modifying (conversation memory is not source of truth). Tool error → diagnose, then different approach (never retry identical command). Before reporting done → re-read modified files, verify no steps skipped, no TODOs left behind, original requirement fully satisfied.
+After context gap or compaction → re-read files before modifying (conversation memory is not source of truth). Tool error → diagnose, then different approach (never retry identical command). Before reporting done → re-read modified files, verify original requirement fully satisfied.
 
 ## Process Framework
 
-- **Before starting:** State the end goal. 3+ steps → use task tools for tracking.
-- **While working:** Phase gate — execute numbered steps in order. Verify each step's output before proceeding. Never skip a step.
+- **Before starting:** State the end goal. 3+ steps → use task tools.
+- **While working:** Execute steps in order. Verify each step before proceeding.
 - **Before finishing:** Re-read modified files. All steps completed? Original requirement fully met?
-- **On uncertainty:** State it explicitly. Ask, don't guess. Never assume requirements.
-- **On scope expansion:** Finding count exceeds 2× estimate → stop and ask before continuing.
+- **On uncertainty:** State it explicitly. Ask, don't guess.
+- **On scope expansion:** Finding count exceeds 2× estimate → stop and ask.
 
 ## Quality Thresholds
 
 ### Complexity Limits
 
-Flag when code approaches these limits. Refactor only when current task scope allows.
+Flag when approaching. Refactor only when current task scope allows.
 
-| Metric | Limit |
-|--------|-------|
-| Cyclomatic Complexity | ≤ 15 |
-| Method Lines | ≤ 50 |
-| File Lines | ≤ 500 |
-| Nesting Depth | ≤ 3 |
-| Parameters | ≤ 4 |
+| Metric | Limit | Metric | Limit |
+|--------|-------|--------|-------|
+| Cyclomatic Complexity | ≤ 15 | Nesting Depth | ≤ 3 |
+| Method Lines | ≤ 50 | Parameters | ≤ 4 |
+| File Lines | ≤ 500 | | |
 
-### Output & Edit Standards
+### Output Standards
 
-Tables over paragraphs. Bullets over prose. Summary: max 1-3 sentences. Preserve existing file indentation style and surrounding code patterns. On Windows, use the path format the project already uses.
+Tables over paragraphs. Bullets over prose. Max 1-3 sentence summaries. Preserve existing indentation style. On Windows, use the path format the project already uses.
 
-### Error Handling
+### i18n & Accessibility
 
-Catch specific exceptions, never broader. Propagate when unsure. Error handling must never hide a bug.
+Flag missing i18n/a11y as HIGH on user-facing apps. Don't auto-fix — propose the framework's official/canonical i18n solution and message format. Verify the recommended package exists in the project's ecosystem before suggesting.
 
-### i18n Stack Reference
+## Token Efficiency
 
-Flag missing i18n/a11y as HIGH on user-facing apps. Don't auto-fix — propose framework-native approach:
+### Incremental Reading
 
-| Stack | i18n Solution | Message Format |
-|-------|--------------|----------------|
-| Flutter/Dart | `flutter_localizations` + `intl` | ARB files (`lib/l10n/*.arb`) |
-| React/Next.js | `next-intl` or `react-intl` | JSON files |
-| Python CLI | `gettext` | PO files |
-| iOS (Swift) | `String(localized:)` | `.xcstrings` |
-| Android (Kotlin) | Android resources | `res/values-{locale}/strings.xml` |
+Before re-reading a file already read this session → was it modified since? If unchanged, reference prior read. When verifying changes, use offset/limit for modified sections only. Use LSP diagnostics for type/import checks instead of reading files.
+
+### Concise Output
+
+Avoid repeating file contents back to the user after reading. Summarize findings, don't echo. When explaining changes, describe the delta — not the full before/after.
 
 ## CCO Operations
 
-### Commit History
+### Commit & Accounting
 
-Unpushed commits are local WIP — not permanent record. Before push: if >1 commit with WIP signals (wip/fix/debug/temp messages, same file in multiple commits, micro-commits ≤2 lines), collapse to net diff and re-plan atomically. Net diff is source of truth, not individual WIP steps.
-
-### Accounting
-
-applied + failed + needs_approval = total. No declined category.
+Unpushed commits are local WIP. Before push: if >1 WIP commit, collapse to net diff and re-plan atomically. Accounting: applied + failed + needs_approval = total.
 
 ### Auto Mode
 
-When --auto active: no questions, no deferrals. Fix everything except large architectural changes (unless --force-approve). Never say "too complex", "might break", or "consider later".
+--auto: no questions, no deferrals. Fix everything except large architectural changes (unless --force-approve).
 
 ### Agent Contract
 
-Agents return structured data as final text message. Never write to files. On failure: {"error": "message"}. Validate before processing; retry once if malformed. On second failure, continue with remaining groups. Score failed dimensions as N/A.
+Agents return structured data as final text message, never write to files. On failure: `{"error": "message"}`. Retry once if malformed, then continue with remaining groups. Bash sanitization: never interpolate raw values into shell strings — use `--`, quote paths, reject metacharacters.
 
-**Bash sanitization:** When agents construct Bash commands dynamically (file paths from findings, user-provided scope names), never interpolate raw values into shell strings. Use `--` to terminate flag parsing, quote all path arguments, and reject values containing shell metacharacters (`;`, `|`, `&`, `$`, `` ` ``, `\n`). Prefer passing arguments as separate tokens over string concatenation.
+### Operational Rules
 
-### Hook Integration
+- **Tool prerequisites:** Critical (git, gh) → stop. Quality gate (linter) → skip silently. Non-critical → warn once.
+- **Confidence:** 0-100. Haiku: CRITICAL/HIGH capped at 85. Auto: fix all. Interactive: user decides.
+- **Skip patterns:** # noqa, # intentional, # safe:, _ prefix, TYPE_CHECKING, platform guards, test fixtures.
+- **Parallel execution:** Max 2 Task calls per message. Batch when more needed. `run_in_background` for long Bash only.
+- **Severity:** CRITICAL (security/data loss/crash) · HIGH (broken) · MEDIUM (suboptimal) · LOW (style). When uncertain → lower.
 
-Claude Code supports `PreToolUse`, `PostToolUse`, `Stop`, and `InstructionsLoaded` hooks in skill and agent frontmatter. CCO leverages hooks where they add portable, cross-project value:
+### Plan & Approval Protocols
 
-| Hook | Where | Purpose |
-|------|-------|---------|
-| `InstructionsLoaded` | User config | Auto-trigger `/cco-update --check` on session start (optional, user-configured) |
-| `PreToolUse` | Skills using Bash | Validate dynamically constructed commands before execution (sanitization gate) |
-| `PostToolUse` | Agent apply | Verify edit/write results against expectations (cascade trigger) |
+Findings > 0 and not --auto → plan table: Fix All / By Severity / Review Each / Report Only. Group by file dependency for parallel/sequential apply. Needs-approval > 0 → display items, then Fix All / Review Each / Skip All. --force-approve sends all to apply.
 
-Hook commands must be portable (no OS-specific or project-specific tool assumptions). Hooks that require external tools (gitleaks, linters) follow Tool Prerequisites: skip silently if unavailable.
+### Model Routing & Escalation
 
-### Tool Prerequisites
+| auto | review | audit | CRITICAL escalation |
+|------|--------|-------|---------------------|
+| haiku | sonnet | haiku | opus |
 
-Verify required external tools before execution.
-
-| Tool Role | Missing Behavior |
-|-----------|-----------------|
-| Critical (git, gh) | Stop with install instructions |
-| Quality gate (linter, formatter) | Skip silently — project-specific, absence expected |
-| Non-critical operational | Warn once, continue |
-
-### Confidence Scoring
-
-Findings include confidence (0-100). Auto mode: fix all except architectural redesign. Interactive: user decides.
-
-**Model-aware ceiling:** When analyze agent runs on haiku, CRITICAL/HIGH findings have confidence capped at 85. Review-mode on sonnet has no cap.
-
-### Skip Patterns
-
-Never flag intentionally marked code: # noqa, # intentional, # safe:, _ prefix, TYPE_CHECKING blocks, platform guards, test fixtures.
-
-### Plan Review Protocol
-
-When findings > 0 and not --auto, display plan table before asking:
-
-1. Action: Fix All / By Severity / Review Each / Report Only
-2. If "By Severity": severity filter (multiselect) — CRITICAL / HIGH / MEDIUM / LOW
-3. Use `markdown` preview on each option to show the findings that would be affected (full table for Fix All, filtered for By Severity, etc.)
-4. If the user's response includes annotations (notes), use them to adjust behavior — e.g., "skip test coverage items" filters findings before apply
-5. **Fix planning** (skills with apply phase): Before applying, group findings by file dependency and display execution plan — independent groups can be applied in parallel, dependent groups sequentially
-
-### Needs-Approval Protocol
-
-After apply phase completes, ALWAYS evaluate needs_approval count before proceeding to summary.
-
-If --force-approve: send ALL needs_approval items to cco-agent-apply without confirmation. Items become applied or failed — needs_approval count drops to 0 in final accounting.
-
-If needs_approval > 0 and not --auto and not --force-approve: display items table (ID, severity, issue, location, reason), then:
-
-1. Action: Fix All / Review Each / Skip All
-
-### Parallel Execution
-
-Use `run_in_background` for long Bash commands only; collect via TaskOutput before producing output. NEVER use `run_in_background` for Task (agent) calls — multiple Task calls in a single message already execute in parallel and return results directly.
-
-**Max concurrency:** Launch at most **2 Task (agent) calls per message**. When more agents are needed, batch them sequentially (e.g., 5 agents → batch 1: 2, batch 2: 2, batch 3: 1). Wait for each batch to complete before launching the next.
-
-### Severity Levels
-
-| Level | Criteria |
-|-------|----------|
-| CRITICAL | Security, data loss, crash |
-| HIGH | Broken functionality |
-| MEDIUM | Suboptimal but works |
-| LOW | Style only |
-
-When uncertain, choose lower severity.
-
-### Model Routing
-
-Skills specify model per Task call based on analysis mode:
-
-| Mode | Default Model |
-|------|--------------|
-| auto | haiku |
-| review | sonnet |
-| audit | haiku |
-| CRITICAL escalation | opus |
-
-Agent frontmatter `model: haiku` is the default. Skills override via Task tool's `model` parameter when invoking review-mode agents.
-
-### CRITICAL Escalation
-
-When any analyze agent reports a CRITICAL finding:
-1. Skill isolates the CRITICAL finding(s)
-2. Single Task call to cco-agent-analyze (model: opus, scopes: [original scope], mode: review) with only the file(s) containing CRITICAL findings. Include "ultrathink" in the prompt to ensure high effort — default medium effort on Opus 4.6 may miss nuanced security patterns.
-3. Opus confirms → keep CRITICAL. Opus rejects → downgrade to HIGH or discard.
-4. Applied in all modes including --auto. CRITICAL false positives are costlier than one extra validation.
-5. Max 1 escalation call per skill invocation (batch all CRITICALs into one call).
+CRITICAL finding → isolate → single cco-agent-analyze call (opus, review, "ultrathink") → confirms: keep. Rejects: downgrade to HIGH. Max 1 escalation per skill.
 
 ### Fix Quality
 
-Fix suggestions and applied changes must comply with: DRY (no duplicate logic), SSOT (no second source of truth), SoC (stay within module boundary), KISS (simplest solution), Consistency (match project patterns). A fix that violates these principles is a new problem, not a solution.
-
-Agents verify before suggesting/applying: existing pattern exists? → reference it. New abstraction needed? → only if 3+ uses. Cross-module change? → needs_approval.
+DRY, SSOT, SoC, KISS, Consistency. Existing pattern → reference it. New abstraction → only if 3+ uses. Cross-module → needs_approval.
 
 ### State Management
 
-Skills with 3+ phases use Task tools for compaction-resilient progress tracking. No files are created.
-
-**Task lifecycle:**
-1. TaskCreate at skill start — one task per major phase group, prefixed: `[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `[RSC]`, `[DOC]`
-2. TaskUpdate after each phase gate — status: in_progress → completed, description: compact findings
-3. Recovery: TaskList at skill start — if own-prefix tasks exist with incomplete status, offer resume
-
-**Compact findings format** (stored in task description):
-
-    ID|SEVERITY|file:line|title
-
-One line per finding. Apply phase reads these via TaskGet to reconstruct context.
-
-**Recovery protocol:**
-- Own-prefix tasks found + incomplete → offer resume (--auto: resume silently, skip completed phases, re-run incomplete)
-- Own-prefix tasks found + all completed → stale, start fresh
-- No own-prefix tasks → proceed normally
-
-**Fix planning:** Before apply phase (findings > 0, not --auto, not --preview), group findings by file dependency and display execution plan with independent/dependent groups.
+Skills with 3+ phases use Task tools (compaction-resilient). TaskCreate at start (prefixed: `[BP]`/`[REV]`/`[FR]`/`[RSC]`/`[DOC]`) → TaskUpdate per phase → Recovery via TaskList. Findings format: `ID|SEVERITY|file:line|title`.
 
 ### Project Types
 
-Standard project type taxonomy used across all CCO skills, agents, and scoring. Referenced as `context.projectType`.
+| Type | Signals | Category |
+|------|---------|----------|
+| cli | bin/, commander/yargs/cobra | Dev Tool |
+| library | src/lib exports, pkg main/exports | Dev Tool |
+| api | routes/controllers, REST/GraphQL | Backend |
+| web | pages/app, React/Vue/Svelte/Next | Frontend |
+| mobile | Flutter/RN/Swift/Kotlin | Frontend |
+| desktop | Electron/Tauri/Qt | Frontend |
+| monorepo | workspace config (lerna/nx/turbo) | Multi |
+| iac | Terraform/Pulumi/Ansible/Docker | Infra |
+| devtool | CLI+lib hybrid, plugin system | Dev Tool |
+| data/ml | ETL/Spark/dbt/training/inference | Backend |
+| embedded | Firmware, RTOS | Infra |
+| game | Engine, render loop, physics | Frontend |
+| extension | manifest.json, plugin hooks | Dev Tool |
 
-| Type ID | Detection Signals | UI Category |
-|---------|-------------------|-----------|
-| `cli` | bin/ entry, commander/yargs/cobra deps, no routes/pages | Developer Tool |
-| `library` | src/lib exports, package.json main/exports, no bin/routes | Developer Tool |
-| `api` | routes/controllers, express/fastapi/gin, REST/GraphQL endpoints | Backend |
-| `web` | pages/app dir, React/Vue/Svelte/Next.js, HTML templates | Frontend |
-| `mobile` | Flutter/React Native/Swift/Kotlin, ios/android dirs | Frontend |
-| `desktop` | Electron/Tauri/Qt, native window management | Frontend |
-| `monorepo` | packages/apps/modules dirs, workspace config (lerna, nx, turborepo, pnpm-workspace) | Multi |
-| `iac` | Terraform/Pulumi/Ansible, Dockerfile-only, CI configs, deploy scripts | Infrastructure |
-| `devtool` | CLI + library hybrid, plugin system, IDE extension, build tool | Developer Tool |
-| `data` | ETL scripts, Spark/Airflow/dbt, notebooks, data schemas | Backend |
-| `ml` | Model training, inference endpoints, notebooks, datasets | Backend |
-| `embedded` | Hardware abstraction, firmware, RTOS, resource-constrained | Infrastructure |
-| `game` | Game engine, render loop, physics, asset pipeline | Frontend |
-| `extension` | manifest.json (browser), package.json (vscode), plugin hooks | Developer Tool |
-
-**UI Categories:** Frontend (web, mobile, desktop, game) · Backend (api, data, ml) · Developer Tool (cli, library, devtool, extension) · Infrastructure (iac, embedded) · Multi (monorepo — sub-packages have own types)
-
-**Detection:** Most specific match wins. Multiple signals → prefer type with more matches. Ambiguous → ask user. Monorepo: root uses monorepo type, each sub-package uses its own detected type.
-
-**User-facing types** (web, mobile, desktop) require i18n (en + tr minimum), a11y, responsive design. Game: i18n/a11y optional.
+Most specific match wins. Frontend types (web/mobile/desktop) require i18n + a11y.

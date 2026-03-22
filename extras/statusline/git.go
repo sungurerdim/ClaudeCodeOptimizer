@@ -4,16 +4,15 @@ import (
 	"context"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-// gitTimeoutMs returns the git command timeout in milliseconds,
-// configurable via the CCO_GIT_TIMEOUT environment variable.
-func gitTimeoutMs() int {
+// gitTimeout is the git command timeout, resolved once at init from
+// CCO_GIT_TIMEOUT env var (default 5000ms, range 100-60000ms).
+var gitTimeout = func() time.Duration {
 	const (
 		defaultTimeout = 5000
 		minTimeout     = 100
@@ -21,14 +20,14 @@ func gitTimeoutMs() int {
 	)
 	if envTimeout := os.Getenv("CCO_GIT_TIMEOUT"); envTimeout != "" {
 		if t, err := strconv.Atoi(envTimeout); err == nil && t >= minTimeout && t <= maxTimeout {
-			return t
+			return time.Duration(t) * time.Millisecond
 		}
 	}
-	return defaultTimeout
-}
+	return defaultTimeout * time.Millisecond
+}()
 
 func execGit(args ...string) (string, bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(gitTimeoutMs())*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), gitTimeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "git", args...)
@@ -127,10 +126,8 @@ func getGitInfo() *GitInfo {
 	var wg sync.WaitGroup
 	var statusOut, tagOut string
 	var statusOk, tagOk bool
-	var repoRoot string
-	var rootOk bool
 
-	wg.Add(3)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
@@ -142,11 +139,6 @@ func getGitInfo() *GitInfo {
 		tagOut, tagOk = execGit("describe", "--tags", "--abbrev=0")
 	}()
 
-	go func() {
-		defer wg.Done()
-		repoRoot, rootOk = execGit("rev-parse", "--show-toplevel")
-	}()
-
 	wg.Wait()
 
 	if !statusOk {
@@ -154,10 +146,6 @@ func getGitInfo() *GitInfo {
 	}
 
 	info := &GitInfo{}
-
-	if rootOk {
-		info.RepoName = filepath.Base(repoRoot)
-	}
 	if tagOk && tagOut != "" {
 		info.Tag = tagOut
 	}

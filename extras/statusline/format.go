@@ -27,7 +27,7 @@ func formatK(n int64) string {
 
 func formatContextUsage(input *Input) string {
 	cw := input.ContextWindow
-	if cw == nil || cw.ContextWindowSize == 0 {
+	if cw == nil {
 		return ""
 	}
 
@@ -40,8 +40,7 @@ func formatContextUsage(input *Input) string {
 		tokens = cw.TotalInputTokens
 	}
 
-	percent := tokens * 100 / cw.ContextWindowSize
-	return fmt.Sprintf("%s %d%%", formatK(tokens), percent)
+	return fmt.Sprintf("%s %d%%", formatK(tokens), cw.UsedPercentage)
 }
 
 // abbreviateDir shortens a directory path for statusline display.

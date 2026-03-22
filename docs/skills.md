@@ -8,8 +8,7 @@ All CCO slash commands (skills) with flags, scopes, and examples.
 
 | Skill | Purpose | Key Flags |
 |-------|---------|-----------|
-| `/cco-optimize` | Fix code issues | `--auto`, `--preview`, `--scope=X`, `--loop` |
-| `/cco-align` | Architecture gaps | `--auto`, `--preview` |
+| `/cco-review` | Code quality + architecture | `--quality`, `--architecture`, `--auto`, `--preview`, `--scope=X`, `--loop` |
 | `/cco-commit` | Quality-gated commits | `--preview`, `--single`, `--staged-only` |
 | `/cco-research` | Multi-source research | `--quick`, `--deep` |
 | `/cco-docs` | Documentation gaps | `--auto`, `--preview`, `--scope=X`, `--update` |
@@ -18,22 +17,26 @@ All CCO slash commands (skills) with flags, scopes, and examples.
 | `/cco-update` | Update CCO | `--auto`, `--check` |
 | `/cco-repo` | Repository health, settings, CI/CD | `--auto`, `--preview`, `--scope=X` |
 
-6 skills auto-invoke on natural language. 3 require explicit `/command` invocation (blueprint, update, repo).
+5 skills auto-invoke on natural language. 3 require explicit `/command` invocation (blueprint, update, repo).
 
 ---
 
-## /cco-optimize
+## /cco-review
 
-Fix security, quality, and hygiene issues.
+Unified code quality and architecture analysis.
+
+### Quality Mode (--quality)
+
+Fix security, quality, and hygiene issues. File-level tactical fixes.
 
 ```bash
-/cco-optimize                      # Interactive selection
-/cco-optimize --scope=security     # Security focus only
-/cco-optimize --preview            # Report only, no fixes
-/cco-optimize --auto               # Unattended: fix all, no questions
+/cco-review --quality                      # Interactive selection
+/cco-review --quality --scope=security     # Security focus only
+/cco-review --quality --preview            # Report only, no fixes
+/cco-review --quality --auto               # Unattended: fix all, no questions
 ```
 
-### Scopes (9 scopes, 97 checks)
+#### Scopes (9 scopes)
 
 | Scope | Checks |
 |-------|--------|
@@ -47,32 +50,17 @@ Fix security, quality, and hygiene issues.
 | Doc-Sync | README outdated, comment-code drift |
 | Simplify | Nested conditionals, god functions |
 
-### Args
-
-| Flag | Description |
-|------|-------------|
-| `--auto` | Unattended: fix all, no questions |
-| `--preview` | Report only, no fixes |
-| `--scope=X` | Focus on specific scope |
-| `--loop` | Re-run until clean or max 3 iterations. Combines with `--auto`. |
-
-### Flow
-
-Setup → Analyze (parallel scopes) → Plan Review → Apply → Summary
-
----
-
-## /cco-align
+### Architecture Mode (--architecture)
 
 Strategic architecture analysis — current vs ideal state.
 
 ```bash
-/cco-align                         # Full review
-/cco-align --preview               # Analyze only, show gaps
-/cco-align --auto                  # Unattended mode
+/cco-review --architecture                 # Full review
+/cco-review --architecture --preview       # Analyze only, show gaps
+/cco-review --architecture --auto          # Unattended mode
 ```
 
-### Scopes (8 scopes, 92 checks)
+#### Scopes (8 scopes)
 
 | Scope | Focus |
 |-------|-------|
@@ -85,7 +73,19 @@ Strategic architecture analysis — current vs ideal state.
 | Functional-Completeness | CRUD, pagination, edge cases, validation |
 | Production-Readiness | Health endpoints, shutdown, config, deployment |
 
-### Gap Analysis
+### Args
+
+| Flag | Description |
+|------|-------------|
+| `--quality` | File-level tactical analysis (default if no mode specified) |
+| `--architecture` | System-level strategic analysis |
+| `--auto` | Unattended: fix all, no questions |
+| `--preview` | Report only, no fixes |
+| `--scope=X` | Focus on specific scope |
+| `--loop` | Re-run until clean or max 3 iterations (quality mode only) |
+| `--force-approve` | Auto-approve needs-approval items |
+
+### Gap Analysis (architecture mode)
 
 | Type | Coupling | Cohesion | Complexity | Coverage |
 |------|----------|----------|------------|----------|
@@ -96,6 +96,10 @@ Strategic architecture analysis — current vs ideal state.
 | Monorepo | <35% | >70% | <12 | 75%+ |
 | Mobile | <55% | >65% | <12 | 65%+ |
 | Infra/IaC | <45% | >70% | <10 | 60%+ |
+
+### Flow
+
+Setup → Analyze (parallel scopes) → Plan Review → Apply → Summary
 
 ---
 
@@ -197,7 +201,7 @@ Profile-based project health assessment, transformation, and progress tracking.
 ### How It Works
 
 1. **Profile** — Creates a profile in CLAUDE.md (between markers) with project config, ideal metrics, and scores
-2. **Assess** — Runs optimize, align, docs, and audit scopes in parallel (preview mode)
+2. **Assess** — Runs quality, architecture, docs, and audit scopes in parallel (preview mode)
 3. **Dashboard** — Shows Project Map + health scores with current vs target gaps
 4. **Transform** — Applies fixes based on priorities and constraints from profile
 5. **Memory** — Cleans stale auto-memory entries using project context (deleted file refs, outdated commands, contradictions)
@@ -207,12 +211,12 @@ Profile-based project health assessment, transformation, and progress tracking.
 
 | Dimension | Weight | Source |
 |-----------|--------|--------|
-| Security & Privacy | 18% | optimize: security + privacy |
-| Code Quality | 14% | optimize: hygiene + types + simplify |
-| Architecture | 14% | align: architecture + patterns + cross-cutting + maintainability |
-| Performance | 10% | optimize: performance |
-| Resilience | 10% | optimize: robustness + align: functional-completeness |
-| Testing | 10% | align: testing |
+| Security & Privacy | 18% | review --quality: security + privacy |
+| Code Quality | 14% | review --quality: hygiene + types + simplify |
+| Architecture | 14% | review --architecture: architecture + patterns + cross-cutting + maintainability |
+| Performance | 10% | review --quality: performance |
+| Resilience | 10% | review --quality: robustness + review --architecture: functional-completeness |
+| Testing | 10% | review --architecture: testing |
 | Stack Health | 10% | audit: stack-assessment + dependency-health |
 | DX | 7% | audit: dx-quality + project-structure |
 | Documentation | 7% | docs results |
@@ -285,15 +289,15 @@ Repository health — audit and configure repo settings, branch policies, CI/CD,
 
 Claude Code includes built-in `/simplify` and `/batch` commands (v2.1.63+). Key differences from CCO:
 
-| Feature | `/simplify` (built-in) | `/cco-optimize` |
+| Feature | `/simplify` (built-in) | `/cco-review --quality` |
 |---------|----------------------|-----------------|
-| Scope | Changed code only (reuse, quality, efficiency) | 9 scopes, 97 checks across entire codebase |
+| Scope | Changed code only (reuse, quality, efficiency) | 9 scopes across entire codebase |
 | Severity scoring | No | CRITICAL/HIGH/MEDIUM/LOW with confidence |
 | Parallel analysis | No | Batched agent analysis |
 | Accounting | No | applied + failed + needs_approval = total |
 | Blueprint integration | No | Feeds into `/cco-blueprint` health scores |
 
-Use `/simplify` for quick post-edit cleanup. Use `/cco-optimize` for comprehensive code quality analysis.
+Use `/simplify` for quick post-edit cleanup. Use `/cco-review --quality` for comprehensive code quality analysis.
 
 ---
 
@@ -302,9 +306,9 @@ Use `/simplify` for quick post-edit cleanup. Use `/cco-optimize` for comprehensi
 ### Unattended Mode
 
 ```bash
-/cco-optimize --auto    # Exit 0=OK, 1=WARN, 2=FAIL
-/cco-align --auto       # Same exit codes
-/cco-blueprint --auto   # Same exit codes
+/cco-review --quality --auto       # Exit 0=OK, 1=WARN, 2=FAIL
+/cco-review --architecture --auto  # Same exit codes
+/cco-blueprint --auto              # Same exit codes
 ```
 
 ### Accounting
@@ -313,7 +317,7 @@ Per CCO Rules: `applied + failed + needs_approval = total` (no silent skips)
 
 ### Compaction Resilience
 
-Long-running skills (`/cco-blueprint`, `/cco-optimize`, `/cco-align`, `/cco-research`, `/cco-docs`, `/full-review`) track progress via Task tools. If context compaction occurs mid-skill:
+Long-running skills (`/cco-blueprint`, `/cco-review`, `/cco-research`, `/cco-docs`, `/full-review`) track progress via Task tools. If context compaction occurs mid-skill:
 
 1. TaskList shows completed vs pending phases
 2. Completed phase findings are preserved in task descriptions

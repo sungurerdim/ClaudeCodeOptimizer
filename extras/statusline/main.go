@@ -60,6 +60,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "[cco-statusline] JSON parse error: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Debug: log raw JSON when CCO_STATUSLINE_DEBUG is set
+	if os.Getenv("CCO_STATUSLINE_DEBUG") != "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			_ = os.WriteFile(home+"/.claude/statusline-debug.json", data, 0644)
+		}
+	}
 	if input.CWD == "" {
 		input.CWD = "."
 	}

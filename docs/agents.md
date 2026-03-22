@@ -36,8 +36,8 @@ Need changes?
 
 Read-only analysis agent. Returns structured JSON with findings, scores, and metrics. No worktree isolation — read-only parallel access is safe.
 
-- **9 optimize scopes** (97 checks) — see agents/cco-agent-analyze.md
-- **8 review scopes** (92 checks) — see agents/cco-agent-analyze.md
+- **9 quality scopes** — see agents/cco-agent-analyze.md
+- **8 architecture scopes** — see agents/cco-agent-analyze.md
 - **4 audit scopes** (40 checks) — see agents/cco-agent-analyze.md
 - Context-aware filtering by project type, cross-scope dedup, negative evidence checks
 - Standardized score calculation formula (penalty-based with severity caps)
@@ -70,12 +70,12 @@ Research agent. Multi-source with CRAAP+ reliability scoring.
 
 | Skill | Analyze | Apply | Research |
 |-------|---------|-------|----------|
-| `/cco-optimize` | security, hygiene, types, etc. | Yes | dependency |
-| `/cco-align` | architecture, patterns, etc. | Yes | dependency |
+| `/cco-review --quality` | security, hygiene, types, etc. | Yes | dependency |
+| `/cco-review --architecture` | architecture, patterns, etc. | Yes | dependency |
 | `/cco-commit` | (quality gates only) | No | No |
 | `/cco-research` | - | No | full |
 | `/cco-docs` | docs scope | Yes | No |
-| `/cco-blueprint` | all scopes (optimize + review + audit) | Yes | No |
+| `/cco-blueprint` | all scopes (quality + architecture + audit) | Yes | No |
 | `/cco-pr` | - | No | No |
 | `/cco-update` | - | No | No |
 

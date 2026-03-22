@@ -31,9 +31,9 @@ type CurrentUsage struct {
 }
 
 type ContextWindow struct {
-	ContextWindowSize int64         `json:"context_window_size"`
-	TotalInputTokens  int64         `json:"total_input_tokens"`
-	CurrentUsage      *CurrentUsage `json:"current_usage"`
+	TotalInputTokens int64         `json:"total_input_tokens"`
+	UsedPercentage   int64         `json:"used_percentage"`
+	CurrentUsage     *CurrentUsage `json:"current_usage"`
 }
 
 type Workspace struct {
@@ -55,9 +55,8 @@ type Input struct {
 // ============================================================================
 
 type GitInfo struct {
-	Branch   string
-	RepoName string
-	Tag      string
+	Branch string
+	Tag    string
 	Mod      int
 	Add      int
 	Del      int

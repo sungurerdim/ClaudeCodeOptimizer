@@ -1,6 +1,6 @@
 ---
 name: cco-agent-apply
-description: "Sub-agent: batch write operations with verification, cascade fixing, and accounting. Used by /cco-optimize, /cco-align and autonomously for bulk fixes."
+description: "Sub-agent: batch write operations with verification, cascade fixing, and accounting. Used by /cco-review and autonomously for bulk fixes."
 tools:
   - Grep
   - Read

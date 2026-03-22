@@ -470,7 +470,7 @@ Per CCO Rules: Accounting, Auto Mode.
 
 Before/After delta table (9 dimensions), accounting (applied/failed/needs_approval/total), next steps.
 
-Next: `/cco-blueprint --preview` (check progress) | `/cco-optimize` (fix issues) | `/cco-align` (fix structure)
+Next: `/cco-blueprint --preview` (check progress) | `/cco-review --quality` (fix issues) | `/cco-review --architecture` (fix structure)
 
 --auto: `cco-blueprint: {OK|WARN|FAIL} | Health: {before}→{after}/{target} | Applied: {n} | Failed: {n} | Needs Approval: {n} | Total: {n}`
 
