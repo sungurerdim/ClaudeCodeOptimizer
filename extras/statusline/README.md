@@ -129,7 +129,7 @@ Claude Code pipes JSON to the statusline via stdin on every update:
   "model": { "id": "claude-opus-4-6", "display_name": "Opus 4.6" },
   "context_window": {
     "total_input_tokens": 15234,
-    "context_window_size": 200000,
+    "context_window_size": 1000000,
     "used_percentage": 8,
     "current_usage": {
       "input_tokens": 8500,

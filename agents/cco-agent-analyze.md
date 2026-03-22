@@ -1,6 +1,6 @@
 ---
 name: cco-agent-analyze
-description: "Sub-agent: codebase analysis with severity scoring — security, privacy, hygiene, types, performance, robustness, functional-completeness. Used by /cco-optimize, /cco-align, /cco-blueprint and autonomously for code audits."
+description: "Sub-agent: codebase analysis with severity scoring — security, privacy, hygiene, types, performance, robustness, functional-completeness. Used by /cco-review, /cco-blueprint and autonomously for code audits."
 tools:
   - Glob
   - Read
@@ -25,8 +25,8 @@ Comprehensive codebase analysis with severity scoring. Returns structured JSON.
 
 | Mode | Primary caller | Also used by | Mindset | Scope |
 |------|---------------|-------------|---------|-------|
-| `auto` | cco-optimize | cco-blueprint (Track A, D) | Tactical. Find fixable issues in individual files. Prefer small, safe, auto-applicable fixes. Flag only what can be acted on now. | Optimize scopes only |
-| `review` | cco-align | cco-blueprint (Track B, C) | Strategic. Evaluate patterns across the codebase. Flag structural issues even if not auto-fixable. Question consistency, not just correctness. | Review scopes only |
+| `auto` | cco-review --quality | cco-blueprint (Track A, D) | Tactical. Find fixable issues in individual files. Prefer small, safe, auto-applicable fixes. Flag only what can be acted on now. | Optimize scopes only |
+| `review` | cco-review --architecture | cco-blueprint (Track B, C) | Strategic. Evaluate patterns across the codebase. Flag structural issues even if not auto-fixable. Question consistency, not just correctness. | Review scopes only |
 | `audit` | cco-blueprint (Track E) | — | Assessment. Score and measure. Report state without suggesting fixes. Focus on metrics (coupling, cohesion, complexity, coverage). | Audit scopes only |
 
 ## Output Schema

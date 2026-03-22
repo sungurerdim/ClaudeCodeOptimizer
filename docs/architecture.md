@@ -16,7 +16,7 @@ How CCO works internally: rules, agents, and skill flow.
                           |
               ┌───────────┼───────────┐
               |           |           |
-        /cco-optimize  /cco-align  /cco-commit  ...
+        /cco-review  /cco-commit  /cco-blueprint  ...
               |           |           |
               └─────┬─────┴─────┬─────┘
                     |           |
@@ -41,9 +41,8 @@ Agents (execution, pure processors)
 ClaudeCodeOptimizer/
 ├── rules/
 │   └── cco-rules.md            # Core rules (single source of truth)
-├── skills/                     # Skills (9 directories)
-│   ├── cco-optimize/SKILL.md
-│   ├── cco-align/SKILL.md
+├── skills/                     # Skills (8 directories)
+│   ├── cco-review/SKILL.md
 │   ├── cco-commit/SKILL.md
 │   ├── cco-research/SKILL.md
 │   ├── cco-docs/SKILL.md
@@ -71,7 +70,7 @@ ClaudeCodeOptimizer/
 ├── rules/
 │   └── cco-rules.md            # Auto-loaded by Claude Code
 ├── skills/
-│   ├── cco-optimize/SKILL.md ... cco-update/SKILL.md
+│   ├── cco-review/SKILL.md ... cco-update/SKILL.md
 └── agents/
     ├── cco-agent-analyze.md ... cco-agent-research.md
 ```
@@ -90,11 +89,11 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 
 Skills use Claude Code's native skill mechanism with `SKILL.md` files in `~/.claude/skills/{name}/`. Frontmatter fields (`allowed-tools`, `description`) are enforced by Claude Code, unlike the legacy `commands/` directory.
 
-9 skills total: 6 have auto-invoke enabled (triggered by natural language) and 3 require explicit invocation.
+8 skills total: 5 have auto-invoke enabled (triggered by natural language) and 3 require explicit invocation.
 
 | Mode | Skills |
 |------|--------|
-| Auto-invoke | `cco-optimize`, `cco-align`, `cco-commit`, `cco-research`, `cco-docs`, `cco-pr` |
+| Auto-invoke | `cco-review`, `cco-commit`, `cco-research`, `cco-docs`, `cco-pr` |
 | Explicit only | `cco-blueprint` (`/cco-blueprint`), `cco-update` (`/cco-update`), `cco-repo` (`/cco-repo`) |
 
 ### Skill Variables
@@ -111,10 +110,12 @@ When updating these patterns, update the rules file — all skills and agents in
 
 | Flag | Meaning | Available In |
 |------|---------|-------------|
-| `--auto` | No questions, fix everything, single-line summary | optimize, align, blueprint, docs, pr, update |
-| `--preview` | Analyze only, no fixes applied | optimize, align, blueprint, docs, pr, commit |
-| `--scope=X` | Limit to specific scopes (comma-separated) | optimize, blueprint, docs |
-| `--loop` | Re-run until clean, max 3 iterations | optimize |
+| `--auto` | No questions, fix everything, single-line summary | review, blueprint, docs, pr, update |
+| `--preview` | Analyze only, no fixes applied | review, blueprint, docs, pr, commit |
+| `--quality` | File-level tactical analysis | review |
+| `--architecture` | System-level strategic analysis | review |
+| `--scope=X` | Limit to specific scopes (comma-separated) | review, blueprint, docs |
+| `--loop` | Re-run until clean, max 3 iterations | review (quality mode) |
 | `--init` | Create profile only | blueprint |
 | `--refresh` | Re-scan profile, preserve decisions | blueprint |
 | `--update` | Regenerate even if docs exist | docs |
@@ -183,7 +184,7 @@ Long-running skills use Task tools for compaction-resilient state tracking.
 | Findings summary | Task description (compact format) | Yes |
 | Recovery anchor | TaskList + prefix filter | Yes |
 
-Skills with 3+ phases create prefixed tasks (`[BP]`, `[OPT]`, `[ALN]`, `[FR]`, `[RSC]`, `[DOC]`) and update them at phase gates. On compaction, TaskList retrieves completed phases and TaskGet reconstructs findings from compact descriptions. See CCO Rules: State Management.
+Skills with 3+ phases create prefixed tasks (`[BP]`, `[REV]`, `[FR]`, `[RSC]`, `[DOC]`) and update them at phase gates. On compaction, TaskList retrieves completed phases and TaskGet reconstructs findings from compact descriptions. See CCO Rules: State Management.
 
 ### File Manifest Sync
 
@@ -200,10 +201,10 @@ Note: The installed file structure is also documented in `docs/getting-started.m
 
 ## Skill Flow
 
-### /cco-optimize
+### /cco-review
 
 ```
-User: /cco-optimize → Setup → Analyze (parallel) → Plan Review → Apply → Summary
+User: /cco-review → Setup → Analyze (parallel) → Plan Review → Apply → Summary
 ```
 
 ---

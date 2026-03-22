@@ -343,7 +343,7 @@ func TestCleanupLegacy(t *testing.T) {
 		skillsDir := filepath.Join(base, "skills")
 
 		// Create a current skill
-		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-optimize"), 0750)
+		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-review"), 0750)
 		// Create a stale skill
 		_ = os.MkdirAll(filepath.Join(skillsDir, "cco-oldskill"), 0750)
 
@@ -360,8 +360,8 @@ func TestCleanupLegacy(t *testing.T) {
 		}
 
 		// Current skill should still exist
-		if _, err := os.Stat(filepath.Join(skillsDir, "cco-optimize")); os.IsNotExist(err) {
-			t.Error("current skill cco-optimize should not be removed")
+		if _, err := os.Stat(filepath.Join(skillsDir, "cco-review")); os.IsNotExist(err) {
+			t.Error("current skill cco-review should not be removed")
 		}
 	})
 
@@ -431,8 +431,7 @@ func TestManifestConsistency(t *testing.T) {
 		// cleanupLegacy now derives currentSkills from skillFiles directly,
 		// so this test guards against accidental removal of a skill from the manifest.
 		expectedSkills := map[string]bool{
-			"cco-optimize":  true,
-			"cco-align":     true,
+			"cco-review":    true,
 			"cco-commit":    true,
 			"cco-research":  true,
 			"cco-docs":      true,
@@ -443,7 +442,7 @@ func TestManifestConsistency(t *testing.T) {
 		}
 
 		for _, f := range skillFiles {
-			// Extract skill name from path like "skills/cco-optimize/SKILL.md"
+			// Extract skill name from path like "skills/cco-review/SKILL.md"
 			parts := strings.Split(f, "/")
 			if len(parts) < 2 {
 				t.Errorf("unexpected skill path format: %s", f)
@@ -1041,7 +1040,7 @@ func TestRunUninstall(t *testing.T) {
 		_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
 			[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
 		// Create a skill dir too
-		_ = os.MkdirAll(filepath.Join(base, "skills", "cco-optimize"), 0750)
+		_ = os.MkdirAll(filepath.Join(base, "skills", "cco-review"), 0750)
 
 		// Feed "y" to trigger full removal
 		r, w, _ := os.Pipe()
@@ -1101,7 +1100,7 @@ func TestRunUninstallPerGroup(t *testing.T) {
 	_ = os.MkdirAll(rulesDir, 0750)
 	_ = os.WriteFile(filepath.Join(rulesDir, "cco-rules.md"),
 		[]byte("---\ncco_version: 4.9.0\n---\n"), 0600)
-	_ = os.MkdirAll(filepath.Join(base, "skills", "cco-optimize"), 0750)
+	_ = os.MkdirAll(filepath.Join(base, "skills", "cco-review"), 0750)
 	agentDir := filepath.Join(base, "agents")
 	_ = os.MkdirAll(agentDir, 0750)
 	_ = os.WriteFile(filepath.Join(agentDir, "cco-agent-analyze.md"), []byte("x"), 0600)

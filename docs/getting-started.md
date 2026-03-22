@@ -36,9 +36,8 @@ If you already have CCO installed, update to v4:
 ~/.claude/
 ├── rules/
 │   └── cco-rules.md            # Core rules (auto-loaded)
-├── skills/                        # 9 skills
-│   ├── cco-optimize/SKILL.md
-│   ├── cco-align/SKILL.md
+├── skills/                        # 8 skills
+│   ├── cco-review/SKILL.md
 │   ├── cco-commit/SKILL.md
 │   ├── cco-research/SKILL.md
 │   ├── cco-docs/SKILL.md
@@ -97,7 +96,7 @@ Compares ideal documentation against what exists and generates missing content. 
 ### Step 3: Architecture Gap Analysis
 
 ```
-/cco-align
+/cco-review --architecture
 ```
 
 Shows gap analysis between current state and ideal architecture. Use `--preview` for analysis without changes.
@@ -105,7 +104,7 @@ Shows gap analysis between current state and ideal architecture. Use `--preview`
 ### Step 4: Scan and Fix Issues
 
 ```
-/cco-optimize
+/cco-review --quality
 ```
 
 Auto-fixes safe issues: unused imports, missing type hints, simple security fixes, formatting.
@@ -169,8 +168,8 @@ Yes. Add `.md` files to `.claude/rules/` in your project. Claude Code loads them
 
 | Goal | Command |
 |------|---------|
-| Full security audit | `/cco-optimize --scope=security` |
-| Architecture review | `/cco-align` |
+| Full security audit | `/cco-review --quality --scope=security` |
+| Architecture review | `/cco-review --architecture` |
 | Quality-gated commit | `/cco-commit` |
 | Project health | `/cco-blueprint` |
 | Create PR | `/cco-pr` |

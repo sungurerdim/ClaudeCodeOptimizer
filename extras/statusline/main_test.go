@@ -102,7 +102,7 @@ func TestFormatContextUsage_Nil(t *testing.T) {
 func TestFormatContextUsage_WithCurrentUsage(t *testing.T) {
 	input := &Input{}
 	input.ContextWindow = &ContextWindow{
-		ContextWindowSize: 200000,
+		UsedPercentage: 36,
 		CurrentUsage: &CurrentUsage{
 			InputTokens:              30000,
 			CacheCreationInputTokens: 10000,
@@ -110,20 +110,20 @@ func TestFormatContextUsage_WithCurrentUsage(t *testing.T) {
 		},
 	}
 	got := formatContextUsage(input)
-	// tokens = 30000+10000+5000 = 45000, (45000+500)/1000=45, percent = 45000*100/200000=22
-	if got != "45K 22%" {
-		t.Errorf("formatContextUsage = %q", got)
+	// tokens = 45000, percent from CC's used_percentage = 36
+	if got != "45K 36%" {
+		t.Errorf("formatContextUsage = %q, want \"45K 36%%\"", got)
 	}
 }
 
 func TestFormatContextUsage_FallbackToTotal(t *testing.T) {
 	input := &Input{}
 	input.ContextWindow = &ContextWindow{
-		ContextWindowSize: 200000,
+		UsedPercentage: 5,
 		TotalInputTokens:  10000,
 	}
 	got := formatContextUsage(input)
-	// tokens=10000, (10000+500)/1000=10, percent=10000*100/200000=5
+	// tokens=10000, percent from CC's used_percentage = 5
 	if got != "10K 5%" {
 		t.Errorf("formatContextUsage(fallback) = %q", got)
 	}
@@ -245,8 +245,7 @@ func TestBuildStatusline_WithGit(t *testing.T) {
 
 	git := &GitInfo{
 		Branch:   "main",
-		RepoName: "myrepo",
-		Tag:      "v1.0.0",
+				Tag:      "v1.0.0",
 		Mod:      3,
 		Add:      1,
 		Ahead:    2,
@@ -453,7 +452,7 @@ func TestBuildLocationRow_NoGit(t *testing.T) {
 
 func TestBuildLocationRow_WithGitAndTag(t *testing.T) {
 	input := &Input{CWD: "/home/user/repo"}
-	git := &GitInfo{Branch: "dev", RepoName: "repo", Tag: "v2.0.0"}
+	git := &GitInfo{Branch: "dev",  Tag: "v2.0.0"}
 	row := buildLocationRow(input, git)
 	if len(row) != 2 {
 		t.Fatalf("expected 2 elements (repo:branch + tag), got %d", len(row))
@@ -588,7 +587,7 @@ func TestBuildStatusline_WithWorkspace(t *testing.T) {
 		AddedDirs: []string{"/home/user/shared"},
 	}
 
-	git := &GitInfo{Branch: "main", RepoName: "project"}
+	git := &GitInfo{Branch: "main"}
 	out := buildStatusline(input, git)
 	if !containsVisible(out, "+") {
 		t.Error("missing workspace row with + prefix")
@@ -601,7 +600,7 @@ func TestBuildStatusline_WithoutWorkspace(t *testing.T) {
 		Version: "2.1.47",
 	}
 	input.Model.DisplayName = "Claude Opus 4.6"
-	git := &GitInfo{Branch: "main", RepoName: "project"}
+	git := &GitInfo{Branch: "main"}
 
 	out := buildStatusline(input, git)
 	// Should have 3 content lines + 1 empty line (zero-width space)

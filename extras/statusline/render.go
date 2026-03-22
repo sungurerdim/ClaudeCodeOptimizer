@@ -2,19 +2,19 @@ package main
 
 import (
 	"fmt"
-	"os/user"
+	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 // buildLocationRow returns row 1: repo:branch + optional tag, or project name if no git.
 func buildLocationRow(input *Input, git *GitInfo) []string {
+	repoName := filepath.Base(input.CWD)
 	var repoDisplay string
 	if git != nil {
-		repoDisplay = git.RepoName + ":" + git.Branch
+		repoDisplay = repoName + ":" + git.Branch
 	} else {
-		repoDisplay = filepath.Base(input.CWD)
+		repoDisplay = repoName
 	}
 	row := []string{c(repoDisplay, green)}
 	if git != nil && git.Tag != "" {
@@ -75,14 +75,21 @@ func buildWorkspaceRow(input *Input) []string {
 	return parts
 }
 
+// getUsername returns the current username from environment variables.
+func getUsername() string {
+	// USERNAME (Windows) or USER (Unix) — no syscall or network lookup needed
+	if u := os.Getenv("USERNAME"); u != "" {
+		return u
+	}
+	if u := os.Getenv("USER"); u != "" {
+		return u
+	}
+	return "user"
+}
+
 // buildSessionRow returns row 3: username + CC version + model + context usage.
 func buildSessionRow(input *Input) []string {
-	username := "user"
-	if u, err := user.Current(); err == nil && u.Username != "" {
-		// On Windows, user.Current() returns DOMAIN\user
-		parts := strings.Split(u.Username, `\`)
-		username = parts[len(parts)-1]
-	}
+	username := getUsername()
 
 	versionStr := c("CC ?", gray)
 	if input.Version != "" {
