@@ -2,110 +2,46 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build and upload binaries for (e.g. v4.2.2). Leave empty for normal release-please flow.'
-        required: false
+        description: 'Tag to build and upload binaries for (e.g. v4.2.2)'
+        required: true
         type: string
 
 permissions:
   contents: write
-  pull-requests: write
-  checks: write
 
 jobs:
-  release-please:
-    name: Release Please
-    if: inputs.tag == ''
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-      # GITHUB_TOKEN PRs don't trigger pull_request events, so CI never runs
-      # on release PRs. Create check runs via Checks API to satisfy branch
-      # protection. Release PRs only bump versions — code was validated on
-      # the feature PR that triggered the release.
-      # Uses 'prs' (not 'prs_created') to also handle updated release PRs.
-      - name: Satisfy required checks for release PR
-        if: >-
-          steps.release.outputs.prs != '' &&
-          steps.release.outputs.prs != '[]' &&
-          steps.release.outputs.releases_created != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PRS_JSON: ${{ steps.release.outputs.prs }}
-        run: |
-          PR_BRANCH=$(echo "$PRS_JSON" | jq -r '.[0].headBranchName')
-          SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$PR_BRANCH" --jq '.object.sha')
-          for CHECK in "Validate" "Manifest Sync" "Go"; do
-            gh api "repos/$GITHUB_REPOSITORY/check-runs" \
-              -X POST \
-              -f name="$CHECK" \
-              -f head_sha="$SHA" \
-              -f status="completed" \
-              -f conclusion="success" \
-              -f "output[title]=Skipped for release PR" \
-              -f "output[summary]=Release PRs only contain version/changelog bumps. Code was validated on the feature PR."
-          done
-
   upload-binaries:
     name: Upload Binaries
-    needs: release-please
-    if: >-
-      always() &&
-      (needs.release-please.outputs.release_created == 'true' || inputs.tag != '')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Verify CI passed on this commit
-        # Guards against releasing a commit that failed CI.
-        # Branch protection is the recommended long-term fix; this is a defence-in-depth check.
-        run: |
-          CI_STATUS=$(gh run list --workflow=ci.yml --commit="${{ github.sha }}" --limit=1 --json conclusion --jq '.[0].conclusion // "not-found"')
-          echo "CI status for ${{ github.sha }}: $CI_STATUS"
-          # Block on anything that is not 'success' (covers failure, cancelled, not-found, pending, in_progress).
-          # Branch protection is the recommended permanent fix; this is a defence-in-depth check.
-          if [ "$CI_STATUS" != "success" ]; then
-            echo "Error: CI did not pass for this commit (status: $CI_STATUS). Aborting release."
-            exit 1
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: actions/setup-go@v5
         with:
-          # Using minor-flexible pin (1.23.x) balances reproducibility with automatic security patches.
-          # To pin exact patch for stricter binary reproducibility, use e.g. '1.23.4' and update each Go release.
           go-version: '1.23.x'
           cache: false
 
-      - name: Lint before release
+      - name: Lint
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1.6
           working-directory: extras/installer
           args: --config ../../.golangci.yml
 
-      - name: Lint statusline before release
+      - name: Lint statusline
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1.6
           working-directory: extras/statusline
           args: --config ../../.golangci.yml
 
-      - name: Test before release
+      - name: Test
         run: |
           cd extras/installer && go test -race -count=1 ./...
           cd ../../extras/statusline && go test -race -count=1 ./...
@@ -116,4 +52,4 @@ jobs:
           args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+          GORELEASER_CURRENT_TAG: ${{ github.ref_name || inputs.tag }}

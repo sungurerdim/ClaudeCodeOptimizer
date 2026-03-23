@@ -46,39 +46,6 @@ jobs:
           if [ "$FAIL" -eq 1 ]; then exit 1; fi
           echo "All files have valid frontmatter"
 
-      - name: Check version consistency
-        # CHANGELOG freshness is managed by release-please — no manual check needed.
-        run: |
-          VERSION=$(cat version.txt | tr -d '[:space:]')
-          RULES_VERSION=$(grep 'cco_version:' rules/cco-rules.md | head -1 | sed 's/cco_version: *//;s/ *#.*//')
-          MANIFEST_VERSION=$(grep -o '"[0-9][^"]*"' .release-please-manifest.json | tr -d '"')
-          echo "version.txt:    $VERSION"
-          echo "cco-rules.md:   $RULES_VERSION"
-          echo "manifest.json:  $MANIFEST_VERSION"
-          FAIL=0
-          if [ -z "$VERSION" ]; then
-            echo "Error: version.txt is empty or missing"
-            FAIL=1
-          fi
-          if [ -z "$RULES_VERSION" ]; then
-            echo "Error: cco_version not found in cco-rules.md"
-            FAIL=1
-          fi
-          if [ -z "$MANIFEST_VERSION" ]; then
-            echo "Error: version not found in .release-please-manifest.json"
-            FAIL=1
-          fi
-          if [ "$VERSION" != "$RULES_VERSION" ]; then
-            echo "Error: version.txt ($VERSION) != cco-rules.md ($RULES_VERSION)"
-            FAIL=1
-          fi
-          if [ "$VERSION" != "$MANIFEST_VERSION" ]; then
-            echo "Error: version.txt ($VERSION) != .release-please-manifest.json ($MANIFEST_VERSION)"
-            FAIL=1
-          fi
-          if [ "$FAIL" -eq 1 ]; then exit 1; fi
-          echo "All versions consistent: $VERSION"
-
   manifest-sync:
     name: Manifest Sync
     runs-on: ubuntu-latest
