@@ -1,5 +1,5 @@
 ---
-cco_version: 4.6.1 # x-release-please-version
+cco_version: 4.6.1
 description: Behavior framework for AI-assisted development — compensates for model blind spots, enforces quality gates
 last_update_check: 2026-02-21T13:30:00Z
 ---
